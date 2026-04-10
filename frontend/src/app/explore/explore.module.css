@@ -1,0 +1,114 @@
+.page { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px; min-height: 100vh;
+  background: var(--bg-secondary); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 24px 16px; gap: 32px;
+  position: sticky; top: 0;
+}
+.sidebarTop { display: flex; align-items: center; justify-content: space-between; }
+.sidebarLogo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+}
+.sidebarNav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.navItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-md);
+  font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;
+}
+.navItem:hover { background: var(--bg-card); color: var(--text-primary); }
+.navActive {
+  background: rgba(95, 133, 117, 0.1);
+  color: var(--primary) !important;
+  font-weight: 600;
+  border-right: 3px solid var(--primary);
+}
+.sidebarBottom { margin-top: auto; }
+.logoutBtn {
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-md);
+  font-size: 0.9rem; font-weight: 600; color: var(--danger); background: transparent;
+  border: none; cursor: pointer; transition: all 0.2s;
+}
+.logoutBtn:hover { background: rgba(255, 107, 107, 0.1); }
+
+.main { flex: 1; padding: 40px 48px; max-width: 900px; margin: 0 auto; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 40px; }
+.title { font-size: 2rem; font-weight: 800; font-family: 'Outfit', sans-serif; margin-bottom: 8px; color: var(--text-primary); }
+.subtitle { color: var(--text-secondary); font-size: 0.95rem; }
+
+/* ── Masonry Grid ── */
+.masonryGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ── Feed Card ── */
+.feedCard {
+  padding: 24px;
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.feedHeader {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+  position: relative;
+}
+.authorAvatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gradient-primary);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; color: white; flex-shrink: 0;
+}
+.authorName { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+.feedDate { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+.tplBadge {
+  position: absolute; right: 0; top: 0;
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 12px; border-radius: 20px;
+  background: rgba(95, 133, 117, 0.1); color: var(--primary);
+  font-size: 0.75rem; font-weight: 600;
+}
+
+.feedBody {
+  font-size: 0.95rem; line-height: 1.6; color: var(--text-secondary);
+  white-space: pre-wrap; margin-bottom: 20px;
+}
+
+.feedImages {
+  display: flex; gap: 12px; margin-top: 16px; overflow-x: auto;
+  padding-bottom: 8px;
+}
+.feedImageWrapper {
+  width: 200px; height: 140px; flex-shrink: 0;
+  border-radius: var(--radius-md); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.feedImage {
+  width: 100%; height: 100%; object-fit: cover;
+}
+
+/* ── Empty & Loading ── */
+.skeletonCard { height: 200px; border-radius: var(--radius-lg); }
+.emptyState { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 60px 24px; }
+.emptyIcon { font-size: 4rem; margin-bottom: 16px; opacity: 0.6; }
+
+.loadingPage { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 16px; color: var(--text-secondary); }
+.loadingSpin { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+  .page { flex-direction: column; }
+  .sidebar { width: 100%; min-height: auto; flex-direction: row; overflow-x: auto; padding: 12px 16px; gap: 0; }
+  .sidebarNav { flex-direction: row; gap: 4px; flex: 1; }
+  .navItem { white-space: nowrap; padding: 8px 12px; font-size: 0.82rem; }
+  .main { padding: 24px 16px; }
+  .header { flex-direction: column; gap: 16px; margin-bottom: 24px; }
+  .tplBadge { position: static; margin-top: 8px; }
+}

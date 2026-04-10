@@ -1,0 +1,116 @@
+/* ── Badges Page ── */
+.page { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px; min-height: 100vh;
+  background: var(--bg-secondary); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 24px 16px; gap: 32px;
+  position: sticky; top: 0;
+}
+.sidebarLogo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+}
+.sidebarNav { display: flex; flex-direction: column; gap: 4px; }
+.navItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-md);
+  font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;
+}
+.navItem:hover { background: var(--bg-card); color: var(--text-primary); }
+.navActive {
+  background: rgba(95, 133, 117, 0.1);
+  color: var(--primary) !important;
+  font-weight: 600;
+  border-right: 3px solid var(--primary);
+}
+
+.main { flex: 1; padding: 36px 40px; max-width: 900px; }
+
+.header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  margin-bottom: 28px; gap: 16px;
+}
+.title  { font-size: 1.8rem; font-weight: 700; }
+.subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
+
+/* ── Streak Card ── */
+.streakCard {
+  display: flex; align-items: center; gap: 12px;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, rgba(255,107,107,0.12), rgba(253,121,168,0.08));
+  border: 1px solid rgba(255,107,107,0.25);
+  border-radius: var(--radius-lg);
+}
+.streakFire { font-size: 2rem; }
+.streakNum { font-family: var(--font-sans), sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); }
+.streakLabel { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* ── Progress ── */
+.progressCard { padding: 20px 24px; margin-bottom: 32px; }
+.progressHeader {
+  display: flex; justify-content: space-between;
+  font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text-secondary);
+}
+.progressCount { color: var(--primary-light); }
+.progressTrack {
+  height: 8px; background: var(--bg-secondary);
+  border-radius: 4px; overflow: hidden;
+}
+.progressFill {
+  height: 100%; background: var(--gradient-primary);
+  border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Badge Grid ── */
+.badgeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+}
+.skeletonBadge { height: 200px; border-radius: var(--radius-lg); }
+
+.badgeCard {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 32px 20px; text-align: center; gap: 10px;
+  transition: all 0.3s ease;
+}
+.badgeEarned {
+  border-color: rgba(95, 133, 117, 0.3) !important;
+  background: linear-gradient(145deg, rgba(95, 133, 117, 0.08), rgba(152, 193, 170, 0.04)) !important;
+}
+.badgeLocked { opacity: 0.45; filter: grayscale(0.6); }
+.badgeLocked:hover { opacity: 0.7; }
+
+.badgeIconWrap { position: relative; }
+.badgeIcon { font-size: 3rem; display: block; }
+.earnedCheck {
+  position: absolute; bottom: -4px; right: -8px;
+  width: 20px; height: 20px;
+  background: var(--success); border-radius: 50%;
+  font-size: 0.7rem; display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 700; border: 2px solid var(--bg-card);
+}
+
+.badgeName { font-weight: 700; font-size: 0.95rem; }
+.badgeCond { color: var(--text-muted); font-size: 0.8rem; line-height: 1.4; }
+
+.awardedDate {
+  font-size: 0.75rem; padding: 4px 12px;
+  background: rgba(0,184,148,0.1); border: 1px solid rgba(0,184,148,0.2);
+  border-radius: 50px; color: var(--success);
+}
+.lockedLabel {
+  font-size: 0.75rem; color: var(--text-muted); padding: 4px 12px;
+  border: 1px solid var(--border); border-radius: 50px;
+}
+
+@media (max-width: 768px) {
+  .page { flex-direction: column; }
+  .sidebar { width: 100%; min-height: auto; flex-direction: row; overflow-x: auto; padding: 12px 16px; gap: 0; }
+  .sidebarNav { flex-direction: row; gap: 4px; flex: 1; }
+  .navItem { white-space: nowrap; padding: 8px 12px; font-size: 0.82rem; }
+  .main { padding: 24px 16px; }
+  .header { flex-direction: column; }
+  .badgeGrid { grid-template-columns: repeat(2, 1fr); }
+}

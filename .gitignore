@@ -37,7 +37,6 @@ Thumbs.db
 # Testing
 coverage/
 
-# Misc
-.vercel
-temp/
-/diagnostics.ts /test-save.ts cleanup-db.ts
+# Local Assets
+images/
+
