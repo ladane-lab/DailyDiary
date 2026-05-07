@@ -1,13 +1,40 @@
 /* ── Write Entry Page ── */
 
-.writePage {
-  min-height: 100vh;
-  padding: 40px 24px;
-  max-width: 800px;
-  margin: 0 auto;
-  animation: fadeIn 0.5s ease-out;
+.page { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px; height: 100vh;
+  background: var(--bg-secondary); border-right: 1px solid var(--border);
+  display: flex; flex-direction: column; padding: 24px 16px; gap: 32px;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+}
+.sidebarLogo {
+  display: flex; align-items: center; gap: 10px;
+  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+}
+.sidebarNav { display: flex; flex-direction: column; gap: 4px; }
+.navItem {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 14px; border-radius: var(--radius-md);
+  font-size: 0.9rem; font-weight: 500; color: var(--text-secondary); transition: all 0.2s;
+}
+.navItem:hover { background: var(--bg-card); color: var(--text-primary); }
+.navActive {
+  background: rgba(95, 133, 117, 0.1);
+  color: var(--primary) !important;
+  font-weight: 600;
+  border-right: 3px solid var(--primary);
 }
 
+.main {
+  flex: 1;
+  padding: 40px 48px;
+  max-width: 900px;
+  margin-left: 240px;
+}
 .writeHeader {
   margin-bottom: 40px;
 }

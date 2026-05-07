@@ -20,6 +20,7 @@ model User {
   userChallenges UserChallenge[]
   userBadges     UserBadge[]
   trackers       Tracker[]
+  preferredThemes Json?           // { [templateId: string]: string }
 }
 
 model Entry {

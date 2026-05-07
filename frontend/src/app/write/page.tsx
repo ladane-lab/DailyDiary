@@ -1,10 +1,25 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { Editor } from "@tiptap/react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { 
+  BookOpen, 
+  CalendarDays, 
+  LayoutDashboard, 
+  Medal, 
+  PenLine, 
+  Settings, 
+  Trophy,
+  ArrowLeft,
+  Save,
+  Image as ImageIcon,
+  Loader2,
+  CheckCircle2
+} from "lucide-react";
 import styles from "./write.module.css";
 
 const getApiBase = () => {
@@ -133,7 +148,7 @@ export default function WritePage() {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [selectedTheme, setSelectedTheme] = useState("marble");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [activeEditor, setActiveEditor] = useState<import('@tiptap/react').Editor | null>(null);
+  const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
 
   useEffect(() => {
     const unsub = initAuth();
@@ -162,6 +177,46 @@ export default function WritePage() {
     };
     fetchTemplates();
   }, []);
+
+  // Fetch user preferences for themes
+  useEffect(() => {
+    if (!user) return;
+    const fetchPrefs = async () => {
+      try {
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const token = await user.getIdToken();
+        const res = await fetch(`${API}/api/users/me`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (selectedTemplate && data.preferredThemes?.[selectedTemplate.name]) {
+            const theme = data.preferredThemes[selectedTemplate.name];
+            setSelectedTheme(theme);
+            localStorage.setItem(`diary_themes_${user.uid}`, JSON.stringify(data.preferredThemes));
+          }
+        } else {
+          // Fallback
+          const local = localStorage.getItem(`diary_themes_${user.uid}`);
+          if (local) {
+            const prefs = JSON.parse(local);
+            if (selectedTemplate && prefs[selectedTemplate.name]) {
+              setSelectedTheme(prefs[selectedTemplate.name]);
+            }
+          }
+        }
+      } catch { 
+        const local = localStorage.getItem(`diary_themes_${user.uid}`);
+        if (local) {
+          const prefs = JSON.parse(local);
+          if (selectedTemplate && prefs[selectedTemplate.name]) {
+            setSelectedTheme(prefs[selectedTemplate.name]);
+          }
+        }
+      }
+    };
+    fetchPrefs();
+  }, [user, selectedTemplate]);
 
   const handleFieldChange = (label: string, value: string) => {
     setResponses((prev) => ({ ...prev, [label]: value }));
@@ -272,12 +327,29 @@ export default function WritePage() {
   // Step 1: Template Selection
   if (!selectedTemplate) {
     return (
-      <div className={`${styles.writePage} animate-page-reveal`}>
-        <div className={styles.writeHeader}>
-          <a href="/dashboard" className={styles.backBtn}>← Back</a>
-          <h1>Choose Your Template</h1>
-          <p className={styles.writeSubtitle}>Pick a structured format for today&apos;s entry</p>
-        </div>
+      <div className={styles.page}>
+        <aside className={styles.sidebar}>
+          <a href="/" className={styles.sidebarLogo} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+            <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+          </a>
+          <nav className={styles.sidebarNav}>
+            <a href="/dashboard" className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
+            <a href="/write"     className={`${styles.navItem} ${styles.navActive}`}><PenLine size={18} /> Write Entry</a>
+            <a href="/timeline"  className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
+            <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
+            <a href="/badges"    className={styles.navItem}><Medal size={18} /> Badges</a>
+            <a href="/settings"  className={styles.navItem}><Settings size={18} /> Settings</a>
+          </nav>
+        </aside>
+
+        <main className={`${styles.main} animate-page-reveal`}>
+          <div className={styles.writeHeader}>
+            <button onClick={() => router.push("/dashboard")} className={styles.backBtn}>
+              <ArrowLeft size={16} /> Back to Dashboard
+            </button>
+            <h1 className={styles.title}>Choose Your Template</h1>
+            <p className={styles.writeSubtitle}>Pick a structured format for today&apos;s entry</p>
+          </div>
 
         <div className={styles.templateGrid}>
           {templates.map((t, i) => (
@@ -297,23 +369,48 @@ export default function WritePage() {
               <span className={styles.tplDesc}>{t.description}</span>
             </button>
           ))}
-        </div>
+          </div>
+        </main>
       </div>
     );
   }
 
-  // Step 2: Dynamic Form
+  // Step 2: Write Entry
   return (
-    <div className={`${styles.writePage} animate-page-reveal`}>
-      <div className={styles.writeHeader}>
-        <button onClick={() => setSelectedTemplate(null)} className={styles.backBtn} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <ArrowLeft size={16} /> Change Template
-        </button>
-        <h1 style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {getTemplateIcon(selectedTemplate.name, 40)} {selectedTemplate.name}
-        </h1>
-        <p className={styles.writeSubtitle}>{selectedTemplate.description}</p>
-      </div>
+    <div className={styles.page}>
+      <aside className={styles.sidebar}>
+        <a href="/" className={styles.sidebarLogo} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
+          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        </a>
+        <nav className={styles.sidebarNav}>
+          <a href="/dashboard" className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
+          <a href="/write"     className={`${styles.navItem} ${styles.navActive}`}><PenLine size={18} /> Write Entry</a>
+          <a href="/timeline"  className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
+          <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
+          <a href="/badges"    className={styles.navItem}><Medal size={18} /> Badges</a>
+          <a href="/settings"  className={styles.navItem}><Settings size={18} /> Settings</a>
+        </nav>
+      </aside>
+
+      <main className={`${styles.main} animate-page-reveal`}>
+        <div className={styles.writeHeader}>
+          <button onClick={() => setSelectedTemplate(null)} className={styles.backBtn}>
+            <ArrowLeft size={16} /> Change Template
+          </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className={styles.title} style={{ color: selectedTheme?.titleColor }}>
+                {selectedTemplate.name}
+              </h1>
+              <p className={styles.writeSubtitle}>{selectedTemplate.description}</p>
+            </div>
+            {saved && (
+              <div className={styles.saveStatus}>
+                <CheckCircle2 size={20} color="var(--success)" /> Saved successfully!
+              </div>
+            )}
+          </div>
+        </div>
 
       {saved ? (
         <div className={`glass-card ${styles.savedState}`}>
@@ -375,29 +472,7 @@ export default function WritePage() {
             />
           </div>
 
-          <div className={styles.themeSelectorSection} style={{ margin: '0 36px' }}>
-            <h3 className={styles.imageUploadTitle}>Select Diary Style</h3>
-            <div className={styles.themeGrid}>
-              {[
-                { id: "marble", name: "Marble", color: "#a8d1ff", icon: "🪨" },
-                { id: "vintage", name: "Vintage", color: "#5c4033", icon: "📜" },
-                { id: "minimal", name: "Minimal", color: "#f1f5f9", icon: "✦" },
-                { id: "cute", name: "Cute", color: "#f9c6e0", icon: "🌸" },
-                { id: "professional", name: "Pro", color: "#1e2937", icon: "📓" }
-              ].map((style) => (
-                <button
-                  key={style.id}
-                  type="button"
-                  className={`${styles.themeOption} ${selectedTheme === style.id ? styles.themeActive : ""}`}
-                  style={{ backgroundColor: style.color }}
-                  onClick={() => setSelectedTheme(style.id)}
-                  title={style.name}
-                >
-                  <span className={styles.themeIcon}>{style.icon}</span>
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           <div className={styles.formActions} style={{ margin: '36px', marginTop: 0 }}>
             {/* Public / Private Toggle */}
@@ -423,7 +498,7 @@ function renderField(
   field: TemplateField,
   value: string,
   onChange: (val: string) => void,
-  setActiveEditor?: (editor: import('@tiptap/react').Editor) => void
+  setActiveEditor?: (editor: Editor) => void
 ) {
   switch (field.type) {
     case "emoji":

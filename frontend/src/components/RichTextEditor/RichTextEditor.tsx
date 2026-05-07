@@ -1,4 +1,4 @@
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import { StarterKit } from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
 import { Color } from '@tiptap/extension-color';
@@ -19,7 +19,7 @@ interface RichTextEditorProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  onFocus?: (editor: import('@tiptap/react').Editor) => void;
+  onFocus?: (editor: Editor) => void;
 }
 
 const COLORS = [
@@ -79,7 +79,7 @@ const FontSize = Extension.create({
   },
 });
 
-export function EditorToolbar({ editor }: { editor: import('@tiptap/react').Editor | null }) {
+export function EditorToolbar({ editor }: { editor: Editor | null }) {
   const [revision, setRevision] = useState(0);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
