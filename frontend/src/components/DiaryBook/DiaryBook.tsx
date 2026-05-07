@@ -76,7 +76,14 @@ export default function DiaryBook({
           const el = document.getElementById(`measure-${entry.id}`);
           if (el) {
             const height = el.scrollHeight;
-            const pages = Math.max(1, Math.ceil(height / 504));
+            const firstPageHeight = 432; // 504 - 48 (header) - 24 (gap)
+            const otherPageHeight = 480; // 504 - 24 (gap)
+            
+            let pages = 1;
+            if (height > firstPageHeight) {
+              pages = 1 + Math.ceil((height - firstPageHeight) / otherPageHeight);
+            }
+
             if (newCounts[entry.id] !== pages) {
               newCounts[entry.id] = pages;
               changed = true;
@@ -111,6 +118,17 @@ export default function DiaryBook({
     };
   }, [entries]);
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'auto';
+    }
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
+  }, [isOpen]);
+
   const config = THEME_CONFIGS[theme] || THEME_CONFIGS.marble;
   const tplName = entries[0]?.template?.name || "Personal Journal";
 
@@ -133,9 +151,9 @@ export default function DiaryBook({
   };
 
   const bookPages = useMemo(() => {
-    const pages: any[] = [];
+    const allPhysicalPages: { content: React.ReactNode; isBack: boolean }[] = [];
     
-    entries.forEach((entry, entryIdx) => {
+    entries.forEach((entry) => {
       const dateStr = new Date(entry.createdAt).toLocaleDateString("en-US", {
         month: "short", day: "numeric", year: "numeric",
       });
@@ -143,61 +161,81 @@ export default function DiaryBook({
         hour: "2-digit", minute: "2-digit",
       });
 
-      let cleanBody = entry.body.replace(/^Write freely\.\.\.:\s*/i, '');
-      // Wrap labels that precede HTML content in their own paragraph
-      cleanBody = cleanBody.replace(/^([^<]+?):\s*(?=<)/gm, '<p><strong>$1:</strong></p>');
-      // Wrap any remaining plain text lines in paragraphs
-      cleanBody = cleanBody.replace(/^([^<]+?)(?:\r\n|\r|\n|$)/gm, '<p>$1</p>');
+      let cleanBody = entry.body.trim();
+      if (!cleanBody.startsWith('<')) {
+        cleanBody = cleanBody.replace(/^([^<]+?)(?:\r\n|\r|\n|$)/gm, '<p>$1</p>');
+      }
 
       const numPages = entryPageCounts[entry.id] || 1;
-      const totalLeaves = Math.ceil(numPages / 2);
 
-      for (let leafIdx = 0; leafIdx < totalLeaves; leafIdx++) {
-        const physicalPage1 = leafIdx * 2;
-        const physicalPage2 = leafIdx * 2 + 1;
+      // Helper to render an entry's page
+      const renderEntryPage = (pageIdx: number, isPhysicalBack: boolean) => {
+        const hasHeader = pageIdx === 0;
+        const headerHeight = 48; 
+        const safeArea = 24; 
+        const pageHeight = 504;
+        const firstPageContent = pageHeight - headerHeight - safeArea; 
+        const otherPageContent = pageHeight - safeArea; 
 
-        const renderTextPage = (pageIdx: number) => (
+        const contentOffset = hasHeader ? 0 : firstPageContent + (pageIdx - 1) * otherPageContent;
+
+        return (
           <div 
-            className={`${styles.pageCommon} ${styles.paperFront}`} 
+            className={`${styles.pageCommon} ${isPhysicalBack ? styles.paperBack : styles.paperFront}`} 
             style={{ '--page-color': config.paperColor, '--line-color': config.lineColor } as any}
           >
-            <div className={styles.pageHeader} style={{ color: config.accentColor, opacity: pageIdx === 0 ? 1 : 0 }}>
-              <span><Calendar size={12} className="inline mr-1" /> {dateStr}</span>
-              <span className="opacity-60">{timeStr}</span>
-            </div>
+            {hasHeader && (
+              <div className={styles.pageHeader} style={{ color: config.accentColor }}>
+                <span><Calendar size={12} className="inline mr-1" /> {dateStr}</span>
+                <span className="opacity-60">{timeStr}</span>
+              </div>
+            )}
             
-            <div style={{ height: '504px', overflow: 'hidden', flexShrink: 0 }}>
+            <div style={{ 
+              height: hasHeader ? `${firstPageContent}px` : `${otherPageContent}px`, 
+              marginTop: `${safeArea}px`,
+              overflow: 'hidden', 
+              flexShrink: 0 
+            }}>
               <div 
-                className={`text-[13px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
+                className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
                 style={{ 
                   color: config.textColor, 
                   fontFamily: '"Inter", sans-serif',
-                  transform: `translateY(-${pageIdx * 504}px)`
+                  transform: `translateY(-${contentOffset}px)`
                 }}
                 dangerouslySetInnerHTML={{ __html: cleanBody }} 
               />
             </div>
-
-            </div>
-        );
-
-        const renderEmptyPage = (isBack: boolean) => (
-          <div 
-            className={`${styles.pageCommon} ${isBack ? styles.paperBack : styles.paperFront}`} 
-            style={{ '--page-color': config.paperColor, '--line-color': config.lineColor } as any}
-          >
           </div>
         );
+      };
 
-        pages.push({
-          front: physicalPage1 < numPages ? renderTextPage(physicalPage1) : renderEmptyPage(false),
-          back: physicalPage2 < numPages ? renderTextPage(physicalPage2) : renderEmptyPage(true)
+      for (let p = 0; p < numPages; p++) {
+        const isBack = allPhysicalPages.length % 2 !== 0;
+        allPhysicalPages.push({
+          content: renderEntryPage(p, isBack),
+          isBack
         });
       }
     });
 
-    return pages;
-  }, [entries, config]);
+    // Chunk logical pages into leaves
+    const leaves: any[] = [];
+    for (let i = 0; i < allPhysicalPages.length; i += 2) {
+      leaves.push({
+        front: allPhysicalPages[i].content,
+        back: allPhysicalPages[i+1]?.content || (
+          <div 
+            className={`${styles.pageCommon} ${styles.paperBack}`} 
+            style={{ '--page-color': config.paperColor, '--line-color': config.lineColor } as any}
+          />
+        )
+      });
+    }
+
+    return leaves;
+  }, [entries, config, entryPageCounts]);
 
   const totalFlipPages = bookPages.length + 1; // +1 for the cover
 
@@ -301,68 +339,68 @@ export default function DiaryBook({
               </div>
             );
           })}
-
-          {/* Controls Overlay */}
-          {isOpen && (
-            <>
-              <div className={styles.sideControls} onClick={e => e.stopPropagation()}>
-                <button 
-                  className={styles.navArrow} 
-                  onClick={() => animateToPage(currentPage - 1)} 
-                  disabled={currentPage === 0 || isAutoFlipping}
-                >
-                  <ChevronLeft size={32} />
-                </button>
-                <button 
-                  className={styles.navArrow} 
-                  onClick={() => animateToPage(currentPage + 1)} 
-                  disabled={currentPage === totalFlipPages || isAutoFlipping}
-                >
-                  <ChevronRight size={32} />
-                </button>
-              </div>
-
-              <div className={styles.bottomControls} onClick={e => e.stopPropagation()}>
-                <form onSubmit={jumpToPage} className={styles.jumpForm}>
-                  <span className={styles.jumpLabel}>Page</span>
-                  <input 
-                    type="number" 
-                    value={jumpInput} 
-                    onChange={e => setJumpInput(e.target.value)} 
-                    className={styles.jumpInput}
-                    placeholder={String(currentPage)}
-                  />
-                  <button type="submit" className={styles.jumpBtn}>Go</button>
-                  <div className="w-px h-5 bg-gray-300 mx-1" />
-                  <button 
-                    type="button" 
-                    className={styles.closeBtnAlt} 
-                    onClick={() => animateToPage(0)}
-                  >
-                    Close
-                  </button>
-                </form>
-              </div>
-            </>
-          )}
         </div>
+
+        {/* Controls Overlay - Moved outside .book for better reliability */}
+        {isOpen && (
+          <>
+            <div className={styles.sideControls} onClick={e => e.stopPropagation()}>
+              <button 
+                className={styles.navArrow} 
+                onClick={() => animateToPage(currentPage - 1)} 
+                disabled={currentPage === 0 || isAutoFlipping}
+              >
+                <ChevronLeft size={32} />
+              </button>
+              <button 
+                className={styles.navArrow} 
+                onClick={() => animateToPage(currentPage + 1)} 
+                disabled={currentPage === totalFlipPages || isAutoFlipping}
+              >
+                <ChevronRight size={32} />
+              </button>
+            </div>
+
+            <div className={styles.bottomControls} onClick={e => e.stopPropagation()}>
+              <form onSubmit={jumpToPage} className={styles.jumpForm}>
+                <span className={styles.jumpLabel}>Page</span>
+                <input 
+                  type="number" 
+                  value={jumpInput} 
+                  onChange={e => setJumpInput(e.target.value)} 
+                  className={styles.jumpInput}
+                  placeholder={String(currentPage)}
+                />
+                <button type="submit" className={styles.jumpBtn}>Go</button>
+                <div className="w-px h-5 bg-gray-300 mx-1" />
+                <button 
+                  type="button" 
+                  className={styles.closeBtnAlt} 
+                  onClick={() => animateToPage(0)}
+                >
+                  Close
+                </button>
+              </form>
+            </div>
+          </>
+        )}
       </div>
       
-      {/* Hidden Measuring Container - MUST MATCH PAGE WIDTH (440 - 48 - 48 = 344px) */}
-      <div style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', top: '-9999px', width: '344px' }}>
+      {/* Hidden Measuring Container - MUST MATCH ACTUAL CONTENT WIDTH (400px - 48px - 48px - 8px padding = 296px) */}
+      <div style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', top: '-9999px', width: '296px' }}>
         {entries.map(entry => {
-          let cleanBody = entry.body.replace(/^Write freely\.\.\.:\s*/i, '');
-          cleanBody = cleanBody.replace(/^([^<]+?):\s*(?=<)/gm, '<p><strong>$1:</strong></p>');
-          cleanBody = cleanBody.replace(/^([^<]+?)(?:\r\n|\r|\n|$)/gm, '<p>$1</p>');
+          let cleanBody = entry.body.trim();
+          if (!cleanBody.startsWith('<')) {
+            cleanBody = cleanBody.replace(/^([^<]+?)(?:\r\n|\r|\n|$)/gm, '<p>$1</p>');
+          }
           return (
-            <div key={`measure-${entry.id}`} className={styles.pageCommon}>
-               <div 
-                  id={`measure-${entry.id}`}
-                  className={`text-[13px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
-                  style={{ fontFamily: '"Inter", sans-serif' }}
-                  dangerouslySetInnerHTML={{ __html: cleanBody }} 
-                />
-            </div>
+            <div 
+              id={`measure-${entry.id}`} 
+              key={`measure-${entry.id}`}
+              className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
+              style={{ fontFamily: '"Inter", sans-serif' }}
+              dangerouslySetInnerHTML={{ __html: cleanBody }} 
+            />
           );
         })}
       </div>

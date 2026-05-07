@@ -138,6 +138,9 @@ export default function DashboardPage() {
 
       {/* ── Main Content ── */}
       <main className={`${styles.main} animate-page-reveal`}>
+        <div className={styles.mobileLogo}>
+          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        </div>
         <header className={styles.header}>
           <div>
             <h1 className={styles.greeting}>
@@ -230,7 +233,8 @@ function getGreeting(): string {
   const h = new Date().getHours();
   if (h < 12) return "Good morning";
   if (h < 17) return "Good afternoon";
-  return "Good evening";
+  if (h < 21) return "Good evening";
+  return "Good night";
 }
 
 function formatDate(date: Date): string {

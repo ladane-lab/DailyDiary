@@ -68,6 +68,10 @@
   margin-left: 240px;
 }
 
+.mobileLogo {
+  display: none;
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -158,9 +162,9 @@
 .entryGrid {
   display: flex;
   flex-wrap: wrap;
-  row-gap: 40px;
-  column-gap: 5px;
-  margin-top: 10px;
+  row-gap: 15px;
+  column-gap: 2px;
+  margin-top: 1px;
   perspective: 1500px;
 }
 
@@ -337,13 +341,74 @@
     flex-direction: column;
   }
 
+  .mobileLogo {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 0 20px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: var(--primary);
+  }
+
+  .sidebarLogo {
+    display: none !important;
+  }
+
   .sidebar {
     width: 100%;
-    min-height: auto;
+    height: 70px;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    top: auto;
     flex-direction: row;
-    overflow-x: auto;
-    padding: 12px 16px;
+    padding: 0 8px;
     gap: 0;
+    z-index: 2000;
+    background: var(--bg-glass);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    border-right: none;
+    justify-content: space-around;
+    align-items: center;
+  }
+
+  .sidebarLogo {
+    display: none;
+  }
+
+  .sidebarNav {
+    flex-direction: row;
+    gap: 2px;
+    flex: 1;
+    justify-content: space-around;
+    height: 100%;
+  }
+
+  .navItem {
+    flex-direction: column;
+    gap: 4px !important;
+    padding: 8px 4px !important;
+    font-size: 0.7rem !important;
+    flex: 1;
+    height: 100%;
+    justify-content: center;
+    border-radius: 0 !important;
+    border-right: none !important;
+    color: var(--text-muted);
+  }
+
+  .navActive {
+    background: transparent !important;
+    color: var(--primary) !important;
+    border-top: 3px solid var(--primary);
+  }
+
+  .navItem svg {
+    width: 20px !important;
+    height: 20px !important;
   }
 
   .sidebarNav {
@@ -359,7 +424,14 @@
   }
 
   .main {
-    padding: 24px 16px;
+    padding: 24px 16px 100px;
+    margin-left: 0;
+    max-width: 100%;
+  }
+
+  .entryGrid {
+    justify-content: center;
+    gap: 30px 10px;
   }
 
   .header {

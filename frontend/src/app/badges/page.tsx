@@ -85,6 +85,9 @@ export default function BadgesPage() {
       </aside>
 
       <main className={`${styles.main} animate-page-reveal`}>
+        <div className={styles.mobileLogo}>
+          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        </div>
         <header className={styles.header}>
           <div>
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

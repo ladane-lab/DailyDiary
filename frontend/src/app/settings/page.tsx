@@ -90,6 +90,9 @@ export default function SettingsPage() {
 
       {/* ── Main ── */}
       <main className={`${styles.main} animate-page-reveal`}>
+        <div className={styles.mobileLogo}>
+          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        </div>
         <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={32} color="var(--primary)" strokeWidth={2.5} /> Settings
         </h1>

@@ -115,6 +115,9 @@ export default function ChallengesPage() {
       </aside>
 
       <main className={`${styles.main} animate-page-reveal`}>
+        <div className={styles.mobileLogo}>
+          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        </div>
         {/* Toast */}
         {toast && <div className={styles.toast}>{toast}</div>}
 
