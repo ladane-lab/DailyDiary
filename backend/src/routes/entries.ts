@@ -35,7 +35,7 @@ function decrypt(encryptedText: string, ivHex: string): string {
 
 // POST /api/entries - Create a new diary entry
 router.post('/', async (req: AuthRequest, res: Response) => {
-  const { templateId, body, isPublic, responses, images } = req.body;
+  const { templateId, body, isPublic, responses, images, theme } = req.body;
   const userId = req.user!.uid;
 
   if (!body || body.trim().length === 0) {
@@ -83,16 +83,27 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // Validate templateId — fallback local IDs (e.g. "personal") are not real DB UUIDs
+    let resolvedTemplateId: string | null = templateId || null;
+    if (resolvedTemplateId) {
+      const templateExists = await prisma.template.findUnique({ where: { id: resolvedTemplateId } });
+      if (!templateExists) {
+        console.warn(`[API] templateId "${resolvedTemplateId}" not found in DB — saving entry without template link.`);
+        resolvedTemplateId = null;
+      }
+    }
+
     // Encrypt the entry body
     const { encrypted, iv } = encrypt(body);
 
     const entry = await prisma.entry.create({
       data: {
         userId,
-        templateId: templateId || null,
+        templateId: resolvedTemplateId,
         body_encrypted: encrypted,
         iv,
         isPublic: isPublic || false,
+        theme: theme || 'marble',
         responses: responses
           ? {
               create: responses.map((r: { fieldLabel: string; value: string }) => ({
@@ -241,7 +252,7 @@ router.get('/public', async (_req: AuthRequest, res: Response) => {
 // GET /api/entries/:id - Single entry
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const entry = await prisma.entry.findUnique({
@@ -274,7 +285,7 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // DELETE /api/entries/:id
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
-  const { id } = req.params;
+  const id = req.params.id as string;
 
   try {
     const entry = await prisma.entry.findUnique({ where: { id } });

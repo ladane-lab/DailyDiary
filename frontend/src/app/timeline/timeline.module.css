@@ -34,7 +34,7 @@
 }
 
 /* ── Main ── */
-.main { flex: 1; padding: 36px 40px; max-width: 860px; }
+.main { flex: 1; padding: 36px 40px; max-width: 1200px; }
 
 .header {
   display: flex; align-items: center; justify-content: space-between;
@@ -72,7 +72,13 @@
   box-shadow: 0 0 10px rgba(95, 133, 117, 0.3);
 }
 
-.entryCards { display: flex; flex-direction: column; gap: 12px; margin-left: 22px; }
+.entryGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: -10px; /* Slight overlap */
+  margin-top: 40px;
+  perspective: 1500px;
+}
 
 .entryCard { padding: 20px 24px; transition: all 0.2s; cursor: default; }
 

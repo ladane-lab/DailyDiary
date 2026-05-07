@@ -17,7 +17,7 @@ router.get('/', async (_req: AuthRequest, res: Response) => {
 // POST /api/challenges/:id/join - Join a challenge
 router.post('/:id/join', async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
-  const challengeId = req.params.id;
+  const challengeId = req.params.id as string;
 
   try {
     const existing = await prisma.userChallenge.findFirst({

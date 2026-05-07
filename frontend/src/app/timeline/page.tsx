@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import styles from "./timeline.module.css";
+import DiaryBook, { DiaryTheme } from "@/components/DiaryBook/DiaryBook";
 
 interface EntryItem {
   id: string;
@@ -11,6 +12,7 @@ interface EntryItem {
   isPublic: boolean;
   createdAt: string;
   template?: { name: string };
+  theme?: string;
   responses?: { fieldLabel: string; value: string }[];
 }
 
@@ -77,7 +79,7 @@ export default function TimelinePage() {
 
   if (!initialized || !user) return null;
 
-  const groupedByDate = groupByDate(entries);
+  const groupedByTemplate = groupByTemplate(entries);
 
   return (
     <div className={styles.page}>
@@ -101,9 +103,9 @@ export default function TimelinePage() {
         <header className={styles.header}>
           <div>
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarDays size={32} color="var(--primary)" strokeWidth={2.5} /> Your Timeline
+              <CalendarDays size={32} color="var(--primary)" strokeWidth={2.5} /> Your Journals
             </h1>
-            <p className={styles.subtitle}>{total} {total === 1 ? "entry" : "entries"} recorded</p>
+            <p className={styles.subtitle}>{total} total entries across your library</p>
           </div>
           <a href="/write" className="btn btn-primary" style={{ gap: '8px' }}>
             <PenLine size={18} /> Write Today
@@ -119,65 +121,27 @@ export default function TimelinePage() {
         ) : entries.length === 0 ? (
           <div className={`glass-card ${styles.emptyState}`}>
             <BookOpen size={48} color="var(--primary)" strokeWidth={2} />
-            <h3>No entries yet</h3>
-            <p>Start journaling to see your timeline grow.</p>
+            <h3>Your library is empty</h3>
+            <p>Start journaling to create your first book.</p>
             <a href="/write" className="btn btn-primary" style={{ marginTop: 16, gap: '8px' }}>
               <PenLine size={18} /> Write First Entry
             </a>
           </div>
         ) : (
           <div className={styles.timeline}>
-            {Object.entries(groupedByDate).map(([date, dayEntries]) => (
-              <div key={date} className={styles.dayGroup}>
-                <div className={styles.dateLabel}>
-                  <span className={styles.dateDot} />
-                  {formatDayLabel(date)}
-                </div>
-                <div className={styles.entryCards}>
-                  {dayEntries.map((entry) => {
-                    const mood = getMoodFromResponses(entry.responses);
-                    const tplName = entry.template?.name || "Personal Journal";
-                    return (
-                      <div key={entry.id} className={`glass-card ${styles.entryCard}`}>
-                        <div className={styles.entryMeta}>
-                          <span className={styles.entryEmoji} style={{ display: 'flex', alignItems: 'center' }}>
-                            {getTemplateIcon(tplName)}
-                          </span>
-                          <div>
-                            <span className={styles.entryTemplate}>{tplName}</span>
-                            <span className={styles.entryTime}>
-                              {new Date(entry.createdAt).toLocaleTimeString("en-US", {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
-                            </span>
-                          </div>
-                          {mood && <span className={styles.moodBadge}>{mood}</span>}
-                          {entry.isPublic && (
-                            <span className={styles.publicBadge} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Globe size={14} /> Public
-                            </span>
-                          )}
-                        </div>
-                        <p className={styles.entryPreview}>
-                          {entry.body?.slice(0, 150)}
-                          {entry.body?.length > 150 ? "..." : ""}
-                        </p>
-                        {entry.responses && entry.responses.length > 0 && (
-                          <div className={styles.responsePills}>
-                            {entry.responses.slice(0, 3).map((r) => (
-                              <span key={r.fieldLabel} className={styles.pill}>
-                                <strong>{r.fieldLabel}:</strong> {r.value}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
+            <div className={styles.entryGrid}>
+              {Object.entries(groupedByTemplate).map(([templateName, templateEntries]) => {
+                const representativeTheme = templateEntries.slice().reverse().find(e => e.theme)?.theme;
+                const theme: DiaryTheme = (representativeTheme as DiaryTheme) || getThemeForTemplate(templateName);
+                return (
+                  <DiaryBook 
+                    key={templateName} 
+                    entries={templateEntries} 
+                    theme={theme} 
+                  />
+                );
+              })}
+            </div>
 
             {entries.length < total && (
               <button
@@ -195,13 +159,31 @@ export default function TimelinePage() {
   );
 }
 
-function groupByDate(entries: EntryItem[]): Record<string, EntryItem[]> {
-  return entries.reduce<Record<string, EntryItem[]>>((acc, entry) => {
-    const date = new Date(entry.createdAt).toDateString();
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(entry);
+function groupByTemplate(entries: EntryItem[]): Record<string, EntryItem[]> {
+  const groups = entries.reduce<Record<string, EntryItem[]>>((acc, entry) => {
+    const tpl = entry.template?.name || "Personal Journal";
+    if (!acc[tpl]) acc[tpl] = [];
+    acc[tpl].push(entry);
     return acc;
   }, {});
+
+  // Sort entries within each group by date ascending (Oldest -> Newest)
+  Object.keys(groups).forEach(key => {
+    groups[key].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  });
+
+  return groups;
+}
+
+function getThemeForTemplate(name: string): DiaryTheme {
+  const n = name.toLowerCase();
+  if (n.includes("gratitude")) return 'cute';
+  if (n.includes("productivity")) return 'marble';
+  if (n.includes("care")) return 'cute';
+  if (n.includes("finance")) return 'minimal';
+  if (n.includes("management")) return 'professional';
+  if (n.includes("yearly") || n.includes("vintage")) return 'vintage';
+  return 'marble';
 }
 
 function formatDayLabel(dateStr: string): string {

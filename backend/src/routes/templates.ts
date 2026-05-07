@@ -20,7 +20,7 @@ router.get('/', async (_req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const template = await prisma.template.findUnique({
-      where: { id: req.params.id },
+      where: { id: req.params.id as string },
     });
     if (!template) {
       res.status(404).json({ error: 'Template not found' });

@@ -7,6 +7,13 @@ import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import styles from "./write.module.css";
 
+const getApiBase = () => {
+  const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+  if (configured) return configured;
+  if (typeof window !== "undefined") return window.location.origin;
+  return "http://localhost:5000";
+};
+
 interface TemplateField {
   label: string;
   type: "text" | "textarea" | "number" | "emoji" | "rating";
@@ -104,6 +111,7 @@ import {
   Heart, Zap, Sparkles, BookHeart, ArrowLeft, BookOpen, 
   ImagePlus, Lock, Globe, CheckCircle2, ChevronRight 
 } from "lucide-react";
+import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor/RichTextEditor";
 
 const getTemplateIcon = (name: string, size = 32) => {
   if (name.includes("Gratitude")) return <Heart size={size} strokeWidth={2.5} color="var(--danger)" />;
@@ -123,7 +131,9 @@ export default function WritePage() {
   const [isPublic, setIsPublic] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [selectedTheme, setSelectedTheme] = useState("marble");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeEditor, setActiveEditor] = useState<import('@tiptap/react').Editor | null>(null);
 
   useEffect(() => {
     const unsub = initAuth();
@@ -212,10 +222,11 @@ export default function WritePage() {
         .join("\n");
 
       const token = await user.getIdToken();
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const apiBase = getApiBase();
+      const endpoint = `${apiBase}/api/entries`;
 
-      console.log("[Write] Sending entry to backend...");
-      const res = await fetch(`${API}/api/entries`, {
+      console.log("[Write] Sending entry to backend at:", endpoint);
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -230,12 +241,20 @@ export default function WritePage() {
             value,
           })),
           images: imageUrls,
+          theme: selectedTheme,
         }),
       });
 
       if (!res.ok) {
-        const errData = await res.json();
-        throw new Error(errData.error || "Failed to save entry");
+        const responseText = await res.text();
+        let errorMessage = `Failed to save entry (${res.status})`;
+        try {
+          const parsed = JSON.parse(responseText);
+          errorMessage = parsed.error || parsed.message || errorMessage;
+        } catch {
+          if (responseText) errorMessage = responseText;
+        }
+        throw new Error(errorMessage);
       }
 
       console.log("[Write] Entry saved successfully!");
@@ -303,19 +322,30 @@ export default function WritePage() {
           <p>Your entry has been securely encrypted and stored.</p>
         </div>
       ) : (
-        <div className={`glass-card ${styles.formCard}`}>
-          <div className={styles.formFields}>
+        <div className={`glass-card ${styles.formCard} relative p-0`}>
+          <div className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800" style={{ borderTopLeftRadius: 'var(--radius-lg)', borderTopRightRadius: 'var(--radius-lg)', minHeight: '48px' }}>
+             {activeEditor ? (
+               <EditorToolbar editor={activeEditor} />
+             ) : (
+               <div className="flex items-center justify-center h-full text-xs text-gray-400 p-3 italic">Click any text field to show formatting tools</div>
+             )}
+          </div>
+
+          <div className={styles.formFields} style={{ padding: '36px' }}>
             {(selectedTemplate.fields as TemplateField[]).map((field) => (
               <div key={field.label} className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>{field.label}</label>
-                {renderField(field, responses[field.label] || "", (val) =>
-                  handleFieldChange(field.label, val)
+                {renderField(
+                  field, 
+                  responses[field.label] || "", 
+                  (val) => handleFieldChange(field.label, val),
+                  setActiveEditor
                 )}
               </div>
             ))}
           </div>
 
-          <div className={styles.imageUploadSection}>
+          <div className={styles.imageUploadSection} style={{ margin: '0 36px 24px' }}>
             <h3 className={styles.imageUploadTitle}>Attach Media</h3>
             {imageUrls.length > 0 && (
               <div className={styles.imagePreviewGrid}>
@@ -345,7 +375,31 @@ export default function WritePage() {
             />
           </div>
 
-          <div className={styles.formActions}>
+          <div className={styles.themeSelectorSection} style={{ margin: '0 36px' }}>
+            <h3 className={styles.imageUploadTitle}>Select Diary Style</h3>
+            <div className={styles.themeGrid}>
+              {[
+                { id: "marble", name: "Marble", color: "#a8d1ff", icon: "🪨" },
+                { id: "vintage", name: "Vintage", color: "#5c4033", icon: "📜" },
+                { id: "minimal", name: "Minimal", color: "#f1f5f9", icon: "✦" },
+                { id: "cute", name: "Cute", color: "#f9c6e0", icon: "🌸" },
+                { id: "professional", name: "Pro", color: "#1e2937", icon: "📓" }
+              ].map((style) => (
+                <button
+                  key={style.id}
+                  type="button"
+                  className={`${styles.themeOption} ${selectedTheme === style.id ? styles.themeActive : ""}`}
+                  style={{ backgroundColor: style.color }}
+                  onClick={() => setSelectedTheme(style.id)}
+                  title={style.name}
+                >
+                  <span className={styles.themeIcon}>{style.icon}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.formActions} style={{ margin: '36px', marginTop: 0 }}>
             {/* Public / Private Toggle */}
             <button
               type="button"
@@ -368,7 +422,8 @@ export default function WritePage() {
 function renderField(
   field: TemplateField,
   value: string,
-  onChange: (val: string) => void
+  onChange: (val: string) => void,
+  setActiveEditor?: (editor: import('@tiptap/react').Editor) => void
 ) {
   switch (field.type) {
     case "emoji":
@@ -414,18 +469,16 @@ function renderField(
         />
       );
 
+    case "text":
     case "textarea":
       return (
-        <textarea
-          className="textarea-field"
-          placeholder="Write your thoughts..."
+        <RichTextEditor
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          rows={5}
+          onChange={(val) => onChange(val)}
+          onFocus={setActiveEditor}
         />
       );
 
-    case "text":
     default:
       return (
         <input
