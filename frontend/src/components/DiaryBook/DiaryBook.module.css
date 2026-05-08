@@ -1,7 +1,9 @@
 /* Spacer for the grid when book is fixed */
 .gridPlaceholder {
-  width: 264px; /* 440 * 0.6 */
-  height: 360px; /* 600 * 0.6 */
+  width: 264px;
+  /* 440 * 0.6 */
+  height: 400px;
+  /* 600 * 0.6 + buffer for shadow */
   position: relative;
   display: flex;
   justify-content: center;
@@ -9,7 +11,8 @@
 }
 
 .scene {
-  perspective: 2000px; /* Stronger perspective for closed stack */
+  perspective: 2000px;
+  /* Stronger perspective for closed stack */
   perspective-origin: 50% 50%;
   width: 100%;
   height: 100%;
@@ -21,8 +24,6 @@
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
   width: 100%;
   height: 100%;
   z-index: 2000;
@@ -30,7 +31,7 @@
   justify-content: center;
   align-items: center;
   overflow: hidden;
-  padding-left: 280px; /* Precise offset for sidebar */
+  padding-left: 240px; /* Exact sidebar width for perfect centering */
   transition: all 0.5s ease;
 }
 
@@ -48,35 +49,36 @@
 }
 
 .book {
-  width: 400px; /* Slightly smaller for better fit */
+  width: 400px;
+  /* Slightly smaller for better fit */
   height: 560px;
   position: relative;
   transform-style: preserve-3d;
   /* Scale down and add a subtle 3D lean */
-  transform: scale(0.6) rotateY(-20deg) translateX(-10px); 
+  transform: scale(0.6) rotateY(-20deg) translateX(-10px);
   transition: transform 0.9s cubic-bezier(0.645, 0.045, 0.355, 1);
   z-index: 10;
-  box-shadow: 
-    -10px 10px 30px rgba(0,0,0,0.3),
-    15px 25px 50px rgba(0,0,0,0.2);
+  box-shadow:
+    -10px 10px 30px rgba(0, 0, 0, 0.3),
+    15px 25px 50px rgba(0, 0, 0, 0.2);
   border-radius: 4px 16px 16px 4px;
 }
 
 .book.opened {
-  /* Shift left and up to clear controls and arrows */
-  transform: scale(0.8) translateX(50px) translateY(-60px) translateZ(50px);
-  box-shadow: 10px 40px 80px rgba(0,0,0,0.4);
+  /* Final balanced position with scrolling fix applied */
+  transform: scale(0.85) translateX(60px) translateY(-60px) translateZ(100px);
+  box-shadow: 0 50px 100px rgba(0, 0, 0, 0.5);
 }
 
 @media (max-height: 720px) {
   .book.opened {
-    transform: scale(0.75) translateX(200px) translateZ(50px);
+    transform: scale(0.75) translateY(-20px) translateZ(50px);
   }
 }
 
 @media (max-height: 600px) {
   .book.opened {
-    transform: scale(0.65) translateX(200px) translateZ(50px);
+    transform: scale(0.65) translateY(-10px) translateZ(50px);
   }
 }
 
@@ -85,16 +87,20 @@
     width: 260px;
     height: 400px;
   }
-  
+
   .book.opened {
     transform: scale(0.65) translateX(0) translateZ(50px);
     margin-left: 0;
   }
 
   .sceneOpen {
-    padding-left: 0; 
-    padding-top: 20px; /* Reset desktop 120px */
-    padding-bottom: 80px; /* Space for bottom nav + controls */
+    left: 0;
+    width: 100%;
+    padding-left: 0;
+    padding-top: 20px;
+    /* Reset desktop 120px */
+    padding-bottom: 80px;
+    /* Space for bottom nav + controls */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -107,6 +113,7 @@
   .book.opened {
     transform: scale(0.48) translateX(0) translateZ(50px);
   }
+
   .sceneOpen {
     padding-bottom: 0;
     align-items: center;
@@ -125,7 +132,7 @@
   border-radius: 0 4px 4px 0;
   transform: translateZ(-0.5px);
   z-index: -1;
-  box-shadow: inset -2px 0 4px rgba(0,0,0,0.15);
+  box-shadow: inset -2px 0 4px rgba(0, 0, 0, 0.15);
 }
 
 /* Stacking Pages Logic */
@@ -143,19 +150,20 @@
   z-index: 1;
 }
 
-.pageFront, .pageBack {
+.pageFront,
+.pageBack {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   border-radius: 4px 16px 16px 4px;
   overflow: hidden;
-  box-shadow: inset 1px 0 2px rgba(0,0,0,0.05);
+  box-shadow: inset 1px 0 2px rgba(0, 0, 0, 0.05);
 }
 
 .pageBack {
   transform: rotateY(180deg);
   border-radius: 16px 4px 4px 16px;
-  box-shadow: inset -1px 0 2px rgba(0,0,0,0.05);
+  box-shadow: inset -1px 0 2px rgba(0, 0, 0, 0.05);
 }
 
 .stackPage.flipped {
@@ -167,20 +175,22 @@
 /* Paper Textures with Spine Shadows */
 .paperFront {
   background-color: var(--page-color, #fff);
-  background-image: 
-    linear-gradient(to right, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.03) 4%, transparent 12%),
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.03) 4%, transparent 12%),
     linear-gradient(to bottom, transparent 23px, var(--line-color, #eee) 23px);
   background-size: 100% 100%, 100% 24px;
-  background-position: 0 0, 0 19px; /* Align lines to text baseline */
+  background-position: 0 0, 0 19px;
+  /* Align lines to text baseline */
 }
 
 .paperBack {
   background-color: var(--page-color, #fff);
-  background-image: 
-    linear-gradient(to left, rgba(0,0,0,0.15) 0%, rgba(0,0,0,0.03) 4%, transparent 12%),
+  background-image:
+    linear-gradient(to left, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.03) 4%, transparent 12%),
     linear-gradient(to bottom, transparent 23px, var(--line-color, #eee) 23px);
   background-size: 100% 100%, 100% 24px;
-  background-position: 0 0, 0 19px; /* Align lines to text baseline */
+  background-position: 0 0, 0 19px;
+  /* Align lines to text baseline */
 }
 
 /* Cover Aesthetics */
@@ -191,11 +201,11 @@
   justify-content: center;
   align-items: center;
   padding: 40px;
-  box-shadow: 
-    inset 6px 0 12px rgba(0,0,0,0.15),
-    inset -2px 0 4px rgba(255,255,255,0.2),
-    0 25px 50px -12px rgba(0,0,0,0.5);
-  border-left: 2px solid rgba(255,255,255,0.15);
+  box-shadow:
+    inset 6px 0 12px rgba(0, 0, 0, 0.15),
+    inset -2px 0 4px rgba(255, 255, 255, 0.2),
+    0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
 }
 
 .stackCoverBack {
@@ -203,7 +213,7 @@
   display: flex;
   padding: 8px;
   /* Thick look from inside */
-  box-shadow: inset -6px 0 12px rgba(0,0,0,0.15);
+  box-shadow: inset -6px 0 12px rgba(0, 0, 0, 0.15);
 }
 
 .innerCoverPaper {
@@ -211,7 +221,7 @@
   height: 100%;
   background: var(--page-color, #f9f9f9);
   border-radius: 12px 2px 2px 12px;
-  box-shadow: inset 8px 0 20px rgba(0,0,0,0.08);
+  box-shadow: inset 8px 0 20px rgba(0, 0, 0, 0.08);
 }
 
 /* Back Cover (Static Bottom) */
@@ -221,9 +231,10 @@
   background: var(--diary-cover);
   border-radius: 4px 16px 16px 4px;
   transform: translateZ(-0.5px);
-  box-shadow: inset 4px 0 12px rgba(0,0,0,0.15);
+  box-shadow: inset 4px 0 12px rgba(0, 0, 0, 0.15);
   display: flex;
-  padding: 8px; /* Thickness of cover around inner paper */
+  padding: 8px;
+  /* Thickness of cover around inner paper */
   z-index: 0;
 }
 
@@ -233,12 +244,13 @@
   border-radius: 2px 12px 12px 2px;
   position: relative;
   background-color: var(--page-color, #fff);
-  box-shadow: inset 8px 0 20px rgba(0,0,0,0.08);
-  background-image: linear-gradient(to right, rgba(0,0,0,0.15) 0%, transparent 8%);
+  box-shadow: inset 8px 0 20px rgba(0, 0, 0, 0.08);
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 0.15) 0%, transparent 8%);
 }
 
 .pageCommon {
-  padding: 0 48px 48px; /* Top 0 to use the very first row */
+  padding: 0 48px 48px;
+  /* Top 0 to use the very first row */
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -252,7 +264,7 @@
   bottom: 1%;
   width: 12px;
   background: linear-gradient(to right, #2a1b15, #5c4033, #2a1b15);
-  box-shadow: 3px 0 12px rgba(0,0,0,0.5);
+  box-shadow: 3px 0 12px rgba(0, 0, 0, 0.5);
   z-index: 150;
   border-radius: 6px;
   transform-style: preserve-3d;
@@ -263,7 +275,7 @@
   right: 14px;
   top: 45%;
   font-size: 28px;
-  filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.4));
+  filter: drop-shadow(2px 4px 6px rgba(0, 0, 0, 0.4));
 }
 
 .strap {
@@ -272,9 +284,9 @@
   top: 45%;
   width: 45px;
   height: 24px;
-  background: rgba(0,0,0,0.2);
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 4px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .entryTitle {
@@ -284,7 +296,7 @@
   font-weight: 700;
   letter-spacing: 0.05em;
   color: rgba(255, 255, 255, 0.95);
-  text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .entrySubtitle {
@@ -301,9 +313,12 @@
   justify-content: space-between;
   font-size: 11px;
   text-transform: uppercase;
-  margin: 0; /* Clear margin */
-  padding-bottom: 24px; /* Use padding for the 2nd line space */
-  height: 48px; /* Total 2 lines height */
+  margin: 0;
+  /* Clear margin */
+  padding-bottom: 24px;
+  /* Use padding for the 2nd line space */
+  height: 48px;
+  /* Total 2 lines height */
   line-height: 24px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -313,9 +328,11 @@
 
 /* Entry Page Sizing (Slightly smaller to reveal the hardcover border) */
 .entryPage {
-  top: 8px; /* inset */
+  top: 8px;
+  /* inset */
   height: calc(100% - 16px);
-  width: calc(100% - 8px); /* Flush to spine */
+  width: calc(100% - 8px);
+  /* Flush to spine */
 }
 
 /* Pagination Controls */
@@ -323,7 +340,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1100px; /* Wider spread to match target screenshot */
+  width: 1100px;
+  /* Wider spread to match target screenshot */
   transform: translate(-50%, -50%);
   display: flex;
   justify-content: space-between;
@@ -345,14 +363,14 @@
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .navArrow:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
   color: white;
   transform: scale(1.1);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
 
 .navArrow:disabled {
@@ -362,16 +380,27 @@
 
 .bottomControls {
   position: absolute;
-  bottom: 100px; /* Lower position to match target screenshot */
+  bottom: 100px;
+  /* Lower position to match target screenshot */
   left: 50%;
   transform: translateX(-50%);
   z-index: 2500;
 }
 
 @media (max-width: 768px) {
-  .sideControls { width: 95%; top: 45%; }
-  .bottomControls { bottom: 100px; }
-  .navArrow { width: 44px; height: 44px; }
+  .sideControls {
+    width: 95%;
+    top: 45%;
+  }
+
+  .bottomControls {
+    bottom: 100px;
+  }
+
+  .navArrow {
+    width: 44px;
+    height: 44px;
+  }
 }
 
 .jumpForm {
@@ -382,7 +411,7 @@
   backdrop-filter: blur(12px);
   padding: 6px 8px 6px 20px;
   border-radius: 9999px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.6);
   gap: 8px;
 }
@@ -400,6 +429,7 @@
   -webkit-appearance: none;
   margin: 0;
 }
+
 .jumpInput[type=number] {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -409,7 +439,7 @@
   width: 36px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid rgba(0,0,0,0.1);
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
   text-align: center;
   font-weight: 700;
   outline: none;
@@ -433,12 +463,12 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
 .jumpBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
   filter: brightness(1.1);
 }
 
@@ -458,7 +488,7 @@
 }
 
 .closeBtnAlt:hover {
-  background: rgba(0,0,0,0.05);
+  background: rgba(0, 0, 0, 0.05);
   color: #333;
 }
 
@@ -470,14 +500,16 @@
 .tiptapContent :global(p) {
   margin: 0;
   line-height: 24px;
-  min-height: 24px; /* Empty lines still take 1 line height */
+  min-height: 24px;
+  /* Empty lines still take 1 line height */
 }
 
 .tiptapContent :global(h1) {
   font-size: 1.8rem;
   font-weight: 800;
   margin: 0;
-  line-height: 48px; /* Exactly 2 lines */
+  line-height: 48px;
+  /* Exactly 2 lines */
   padding: 0;
 }
 
@@ -485,7 +517,7 @@
   font-size: 1.4rem;
   font-weight: 700;
   margin: 0;
-  line-height: 48px; 
+  line-height: 48px;
   padding: 0;
 }
 
@@ -493,33 +525,8 @@
   font-size: 1.1rem;
   font-weight: 700;
   margin: 0;
-  line-height: 24px; 
+  line-height: 24px;
   padding: 0;
-}
-
-.tiptapContent :global(ul), .tiptapContent :global(ol) {
-  margin: 0;
-  padding-left: 24px;
-  line-height: 24px;
-}
-
-.tiptapContent :global(li) {
-  margin: 0;
-  line-height: 24px;
-}
-
-.tiptapContent :global(h2) {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 0;
-  line-height: 24px; /* exactly 1 line */
-}
-
-.tiptapContent :global(h3) {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 0;
-  line-height: 24px; /* exactly 1 line */
 }
 
 .tiptapContent :global(ul) {

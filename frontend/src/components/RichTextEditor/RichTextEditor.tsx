@@ -5,6 +5,7 @@ import { Color } from '@tiptap/extension-color';
 import { Underline } from '@tiptap/extension-underline';
 import { TextAlign } from '@tiptap/extension-text-align';
 import { FontFamily } from '@tiptap/extension-font-family';
+import { Placeholder } from '@tiptap/extension-placeholder';
 import { Extension } from '@tiptap/core';
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
@@ -243,6 +244,9 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
           <button type="button" onClick={() => editor.chain().focus().setTextAlign('right').run()} className={`${styles.toolbarBtn} ${editor.isActive({ textAlign: 'right' }) ? styles.toolbarBtnActive : ''}`}>
             <AlignRight size={16} />
           </button>
+          <button type="button" onClick={() => editor.chain().focus().setTextAlign('justify').run()} className={`${styles.toolbarBtn} ${editor.isActive({ textAlign: 'justify' }) ? styles.toolbarBtnActive : ''}`}>
+            <AlignJustify size={16} />
+          </button>
         </div>
 
         <div className={styles.divider} />
@@ -269,6 +273,10 @@ export default function RichTextEditor({ value, onChange, placeholder, onFocus }
       FontSize,
       Underline,
       TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Click Here to type',
+        includeChildren: true,
+      }),
     ],
     content: value,
     onUpdate: ({ editor }) => {

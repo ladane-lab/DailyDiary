@@ -64,7 +64,7 @@ export default function TimelinePage() {
         setLoading(true);
         const token = await user.getIdToken();
         const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/entries?page=${page}&limit=10`, {
+        const res = await fetch(`${API}/api/entries?page=${page}&limit=50`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -287,7 +287,7 @@ export default function TimelinePage() {
 
 function groupByTemplate(entries: EntryItem[]): Record<string, EntryItem[]> {
   const groups = entries.reduce<Record<string, EntryItem[]>>((acc, entry) => {
-    const tpl = entry.template?.name || "Personal Journal";
+    const tpl = (entry.template?.name || "Personal Journal").trim();
     if (!acc[tpl]) acc[tpl] = [];
     acc[tpl].push(entry);
     return acc;

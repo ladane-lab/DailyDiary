@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import styles from "./DiaryBook.module.css";
-import { ChevronLeft, ChevronRight, Hash, Calendar, Globe, Lock as LockIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Hash, Calendar, Globe, Lock as LockIcon, X, Clock, Image as ImageIcon, ChevronDown } from "lucide-react";
 
 
 export type DiaryTheme = 'vintage' | 'minimal' | 'cute' | 'professional' | 'marble';
@@ -121,11 +122,14 @@ export default function DiaryBook({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.classList.add('journal-open');
     } else {
-      document.body.style.overflow = 'auto';
+      document.body.style.overflow = '';
+      document.body.classList.remove('journal-open');
     }
     return () => {
       document.body.style.overflow = 'auto';
+      document.body.classList.remove('journal-open');
     };
   }, [isOpen]);
 
@@ -162,6 +166,12 @@ export default function DiaryBook({
       });
 
       let cleanBody = entry.body.trim();
+      
+      // Remove "Write freely...:" label from Personal Journal in reading view
+      if (tplName === "Personal Journal") {
+        cleanBody = cleanBody.replace(/^Write freely\.\.\.:\s*/i, '');
+      }
+
       if (!cleanBody.startsWith('<')) {
         cleanBody = cleanBody.replace(/^([^<]+?)(?:\r\n|\r|\n|$)/gm, '<p>$1</p>');
       }

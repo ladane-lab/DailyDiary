@@ -40,6 +40,7 @@ const getApiBase = () => {
 interface TemplateField {
   label: string;
   type: "text" | "textarea" | "number" | "emoji" | "rating";
+  placeholder?: string;
 }
 
 interface Template {
@@ -59,7 +60,11 @@ const DEFAULT_TEMPLATES: Template[] = [
     description: "A free-form space for your thoughts.",
     fields: [
       { label: "How are you feeling?", type: "emoji" },
-      { label: "Write freely...", type: "textarea" },
+      {
+        label: "Write freely...",
+        type: "textarea",
+        placeholder: "Click Here to type"
+      },
     ],
   },
   {
@@ -68,9 +73,9 @@ const DEFAULT_TEMPLATES: Template[] = [
     description: "Focus on positivity and gratitude.",
     fields: [
       { label: "Mood", type: "emoji" },
-      { label: "I am grateful for...", type: "text" },
-      { label: "Something good that happened", type: "text" },
-      { label: "Someone I appreciate", type: "text" },
+      { label: "I am grateful for...", type: "text", placeholder: "Click Here to type" },
+      { label: "Something good that happened", type: "text", placeholder: "Click Here to type" },
+      { label: "Someone I appreciate", type: "text", placeholder: "Click Here to type" },
     ],
   },
   {
@@ -78,10 +83,10 @@ const DEFAULT_TEMPLATES: Template[] = [
     name: "Productivity Journal",
     description: "Track daily tasks, focus, and growth.",
     fields: [
-      { label: "Tasks completed today", type: "number" },
-      { label: "Focus level (1-10)", type: "rating" },
-      { label: "What did I improve today?", type: "text" },
-      { label: "Tomorrow's priority", type: "text" },
+      { label: "Tasks completed today", type: "number", placeholder: "Click Here to type" },
+      { label: "Focus level (1-10)", type: "rating", placeholder: "Click Here to type" },
+      { label: "What did I improve today?", type: "text", placeholder: "Click Here to type" },
+      { label: "Tomorrow's priority", type: "text", placeholder: "Click Here to type" },
     ],
   },
   {
@@ -90,10 +95,10 @@ const DEFAULT_TEMPLATES: Template[] = [
     description: "Monitor well-being, mood, and sleep.",
     fields: [
       { label: "Mood", type: "emoji" },
-      { label: "Sleep hours", type: "number" },
-      { label: "Stress level (1-10)", type: "rating" },
-      { label: "Self-care activity", type: "text" },
-      { label: "Notes", type: "textarea" },
+      { label: "Sleep hours", type: "number", placeholder: "Click Here to type" },
+      { label: "Stress level (1-10)", type: "rating", placeholder: "Click Here to type" },
+      { label: "Self-care activity", type: "text", placeholder: "Click Here to type" },
+      { label: "Notes", type: "textarea", placeholder: "Click Here to type" },
     ],
   },
   {
@@ -101,10 +106,10 @@ const DEFAULT_TEMPLATES: Template[] = [
     name: "Finance Journal",
     description: "Track daily finances.",
     fields: [
-      { label: "Total expenses today", type: "number" },
-      { label: "Income received", type: "number" },
-      { label: "Savings goal progress", type: "text" },
-      { label: "Notes", type: "textarea" },
+      { label: "Total expenses today", type: "number", placeholder: "Click Here to type" },
+      { label: "Income received", type: "number", placeholder: "Click Here to type" },
+      { label: "Savings goal progress", type: "text", placeholder: "Click Here to type" },
+      { label: "Notes", type: "textarea", placeholder: "Click Here to type" },
     ],
   },
   {
@@ -112,10 +117,10 @@ const DEFAULT_TEMPLATES: Template[] = [
     name: "Time Management",
     description: "Analyze daily time use.",
     fields: [
-      { label: "Most productive hour", type: "text" },
-      { label: "Hours worked", type: "number" },
-      { label: "Hours of leisure", type: "number" },
-      { label: "What consumed the most time?", type: "text" },
+      { label: "Most productive hour", type: "text", placeholder: "Click Here to type" },
+      { label: "Hours worked", type: "number", placeholder: "Click Here to type" },
+      { label: "Hours of leisure", type: "number", placeholder: "Click Here to type" },
+      { label: "What consumed the most time?", type: "text", placeholder: "Click Here to type" },
     ],
   },
   {
@@ -123,9 +128,9 @@ const DEFAULT_TEMPLATES: Template[] = [
     name: "Yearly Planner",
     description: "Set goals and track progress.",
     fields: [
-      { label: "Goal for this year", type: "text" },
-      { label: "Progress so far", type: "text" },
-      { label: "Key milestones hit", type: "textarea" },
+      { label: "Goal for this year", type: "text", placeholder: "Click Here to type" },
+      { label: "Progress so far", type: "text", placeholder: "Click Here to type" },
+      { label: "Key milestones hit", type: "textarea", placeholder: "Click Here to type" },
     ],
   },
 ];
@@ -549,7 +554,7 @@ function renderField(
         <input
           type="number"
           className="input-field"
-          placeholder="0"
+          placeholder={field.placeholder || "0"}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
@@ -562,6 +567,7 @@ function renderField(
           value={value}
           onChange={(val) => onChange(val)}
           onFocus={setActiveEditor}
+          placeholder={field.placeholder}
         />
       );
 
@@ -570,7 +576,7 @@ function renderField(
         <input
           type="text"
           className="input-field"
-          placeholder="Type here..."
+          placeholder={field.placeholder || "Type here..."}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />
