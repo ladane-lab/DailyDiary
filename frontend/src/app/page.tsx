@@ -55,20 +55,37 @@ const FEATURES = [
 export default function HomePage() {
   const { user, initialized, initAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     setMounted(true);
     const unsub = initAuth();
-    return unsub;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      // Throttle or use direct values for CSS variables
+      setMousePos({ x: e.clientX, y: e.clientY });
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      unsub();
+      window.removeEventListener("mousemove", handleMouseMove);
+    };
   }, [initAuth]);
 
   if (!mounted) return null;
 
   return (
-    <div className={styles.page}>
+    <div 
+      className={styles.page} 
+      style={{ 
+        '--mouse-x': `${mousePos.x}px`, 
+        '--mouse-y': `${mousePos.y}px` 
+      } as React.CSSProperties}
+    >
       {/* ── Navigation ── */}
       <nav className={styles.nav}>
-        <div className={`container ${styles.navInner}`}>
+        <div className={styles.navInner}>
           <a href="/" className={styles.logo}>
             <span className={styles.logoIcon}>
               <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} />

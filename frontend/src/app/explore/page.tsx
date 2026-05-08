@@ -64,30 +64,6 @@ export default function ExplorePage() {
 
   return (
     <div className={styles.page}>
-      {/* ── Sidebar ── */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarTop}>
-          <a href="/" className={styles.sidebarLogo}>
-            <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} />
-            DailyDiary
-          </a>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <a href="/dashboard"  className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
-          <a href="/write"      className={styles.navItem}><PenLine size={18} /> Write Entry</a>
-          <a href="/timeline"   className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
-          <a href="/explore"    className={`${styles.navItem} ${styles.navActive}`}><Globe size={18} /> Explore</a>
-          <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
-          <a href="/badges"     className={styles.navItem}><Medal size={18} /> Badges</a>
-          <a href="/settings"   className={styles.navItem}><Settings size={18} /> Settings</a>
-        </nav>
-        <div className={styles.sidebarBottom}>
-          <button onClick={logout} className={styles.logoutBtn}>
-            <LogOut size={18} /> Log Out
-          </button>
-        </div>
-      </aside>
-
       {/* ── Main Content ── */}
       <main className={`${styles.main} animate-page-reveal`}>
         <div className={styles.mobileLogo}>

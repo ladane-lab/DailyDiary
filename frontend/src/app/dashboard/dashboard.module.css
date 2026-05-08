@@ -273,11 +273,10 @@
 .recentGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .skeletonEntry { height: 120px; border-radius: var(--radius-lg); }
 .recentCard { padding: 20px; }
-.recentTop { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-.recentEmoji { font-size: 1.5rem; }
-.recentTemplate { font-weight: 600; font-size: 0.85rem; }
-.recentDate { font-size: 0.75rem; color: var(--text-muted); }
-.recentPreview { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.5; }
+.recentTop { display: flex; align-items: center; gap: 12px; margin-bottom: 0; }
+.recentEmoji { font-size: 1.8rem; display: flex; align-items: center; }
+.recentTemplate { font-weight: 600; font-size: 0.95rem; color: var(--text-primary); }
+.recentDate { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
 /* ── Empty State ── */
 .emptyState {

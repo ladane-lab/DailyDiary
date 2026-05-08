@@ -379,22 +379,21 @@
 }
 
 .bottomControls {
-  position: absolute;
-  bottom: 100px;
-  /* Lower position to match target screenshot */
-  left: 50%;
+  position: fixed;
+  bottom: 40px;
+  left: calc(50% + 120px);
   transform: translateX(-50%);
   z-index: 2500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
 }
 
 @media (max-width: 768px) {
-  .sideControls {
-    width: 95%;
-    top: 45%;
-  }
-
   .bottomControls {
-    bottom: 100px;
+    bottom: 40px;
+    left: 50%;
   }
 
   .navArrow {
@@ -472,19 +471,27 @@
   filter: brightness(1.1);
 }
 
-.closeBtnAlt {
-  background: transparent;
-  color: #666;
-  border: none;
+.closeBtnBelow {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
   font-weight: 700;
-  font-size: 13px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 10px 24px;
   border-radius: 9999px;
   transition: all 0.2s cubic-bezier(0.2, 0, 0.2, 1);
   display: flex;
   align-items: center;
   gap: 4px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.closeBtnBelow:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
 }
 
 .closeBtnAlt:hover {

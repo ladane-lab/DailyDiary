@@ -4,28 +4,31 @@ import { useEffect, useState, useRef } from "react";
 import { Editor } from "@tiptap/react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import Link from "next/link";
+import Sidebar from "@/components/Sidebar/Sidebar";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { 
   BookOpen, 
-  CalendarDays, 
   LayoutDashboard, 
-  Medal, 
-  PenLine, 
   Settings, 
+  ArrowLeft, 
+  Save, 
+  Trash2, 
+  CheckCircle2, 
+  AlertCircle,
+  Clock,
+  PenLine,
+  CalendarDays,
   Trophy,
-  ArrowLeft,
-  Save,
-  Image as ImageIcon,
-  Loader2,
-  CheckCircle2,
+  Medal,
+  Globe,
   Heart,
   Zap,
   Sparkles,
   BookHeart,
   ImagePlus,
   Lock,
-  Globe,
   ChevronRight
 } from "lucide-react";
 import styles from "./write.module.css";
@@ -337,20 +340,6 @@ export default function WritePage() {
   if (!selectedTemplate) {
     return (
       <div className={styles.page}>
-        <aside className={styles.sidebar}>
-          <a href="/" className={styles.sidebarLogo} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
-            <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
-          </a>
-          <nav className={styles.sidebarNav}>
-            <a href="/dashboard" className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
-            <a href="/write"     className={`${styles.navItem} ${styles.navActive}`}><PenLine size={18} /> Write Entry</a>
-            <a href="/timeline"  className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
-            <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
-            <a href="/badges"    className={styles.navItem}><Medal size={18} /> Badges</a>
-            <a href="/settings"  className={styles.navItem}><Settings size={18} /> Settings</a>
-          </nav>
-        </aside>
-
         <main className={`${styles.main} animate-page-reveal`}>
           <div className={styles.mobileLogo}>
             <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
@@ -390,20 +379,6 @@ export default function WritePage() {
   // Step 2: Write Entry
   return (
     <div className={styles.page}>
-      <aside className={styles.sidebar}>
-        <a href="/" className={styles.sidebarLogo} style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none', color: 'inherit' }}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
-        </a>
-        <nav className={styles.sidebarNav}>
-          <a href="/dashboard" className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
-          <a href="/write"     className={`${styles.navItem} ${styles.navActive}`}><PenLine size={18} /> Write Entry</a>
-          <a href="/timeline"  className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
-          <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
-          <a href="/badges"    className={styles.navItem}><Medal size={18} /> Badges</a>
-          <a href="/settings"  className={styles.navItem}><Settings size={18} /> Settings</a>
-        </nav>
-      </aside>
-
       <main className={`${styles.main} animate-page-reveal`}>
         <div className={styles.mobileLogo}>
           <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary

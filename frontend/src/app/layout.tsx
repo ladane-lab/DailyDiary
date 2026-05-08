@@ -26,6 +26,8 @@ export const metadata: Metadata = {
   ],
 };
 
+import ClientLayout from "@/components/ClientLayout";
+
 export default function RootLayout({
   children,
 }: {
@@ -33,7 +35,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${lora.variable}`}>
-      <body>{children}</body>
+      <body>
+        <ClientLayout>{children}</ClientLayout>
+      </body>
     </html>
   );
 }

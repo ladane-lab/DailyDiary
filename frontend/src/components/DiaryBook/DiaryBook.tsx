@@ -382,15 +382,14 @@ export default function DiaryBook({
                   placeholder={String(currentPage)}
                 />
                 <button type="submit" className={styles.jumpBtn}>Go</button>
-                <div className="w-px h-5 bg-gray-300 mx-1" />
-                <button 
-                  type="button" 
-                  className={styles.closeBtnAlt} 
-                  onClick={() => animateToPage(0)}
-                >
-                  Close
-                </button>
               </form>
+              <button 
+                type="button" 
+                className={styles.closeBtnBelow} 
+                onClick={() => animateToPage(0)}
+              >
+                Close Journal
+              </button>
             </div>
           </>
         )}

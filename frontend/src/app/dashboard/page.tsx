@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import Link from "next/link";
+import Sidebar from "@/components/Sidebar/Sidebar";
 import { 
-  Flame, BookOpen, Trophy, Medal, LayoutDashboard, PenLine, 
-  CalendarDays, Globe, Settings, LogOut, Heart, Zap, Sparkles, BookHeart 
+  Flame, BookOpen, Trophy, Medal, PenLine, Heart, Zap, Sparkles, BookHeart 
 } from "lucide-react";
 import styles from "./dashboard.module.css";
 
@@ -32,7 +33,7 @@ const getTemplateIcon = (name: string) => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, initialized, initAuth, logout } = useAuthStore();
+  const { user, initialized, initAuth } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<Stats>({ streak: 0, totalEntries: 0, activeChallenges: 0, badges: 0 });
   const [recent, setRecent] = useState<RecentEntry[]>([]);
@@ -58,7 +59,7 @@ export default function DashboardPage() {
 
         const [userRes, entriesRes, challengesRes] = await Promise.all([
           fetch(`${API}/api/users/me`, { headers }),
-          fetch(`${API}/api/entries?limit=3`, { headers }),
+          fetch(`${API}/api/entries?limit=20`, { headers }),
           fetch(`${API}/api/challenges/my`, { headers }),
         ]);
 
@@ -72,7 +73,18 @@ export default function DashboardPage() {
         }
         if (entriesRes.ok) {
           const e = await entriesRes.json();
-          setRecent(e.entries ?? []);
+          // Filter to show only the latest entry for each unique journal type
+          const uniqueJournals: RecentEntry[] = [];
+          const seen = new Set();
+          for (const entry of (e.entries ?? [])) {
+            const tplName = entry.template?.name || "Personal Journal";
+            if (!seen.has(tplName)) {
+              seen.add(tplName);
+              uniqueJournals.push(entry);
+            }
+            if (uniqueJournals.length >= 3) break;
+          }
+          setRecent(uniqueJournals);
           setStats((prev) => ({ ...prev, totalEntries: e.total ?? 0 }));
         }
         if (challengesRes.ok) {
@@ -112,30 +124,6 @@ export default function DashboardPage() {
 
   return (
     <div className={styles.dashPage}>
-      {/* ── Sidebar ── */}
-      <aside className={styles.sidebar}>
-        <div className={styles.sidebarTop}>
-          <a href="/" className={styles.sidebarLogo}>
-            <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} />
-            <span>DailyDiary</span>
-          </a>
-        </div>
-        <nav className={styles.sidebarNav}>
-          <a href="/dashboard"  className={`${styles.navItem} ${styles.navActive}`}><LayoutDashboard size={18} /> Dashboard</a>
-          <a href="/write"      className={styles.navItem}><PenLine size={18} /> Write Entry</a>
-          <a href="/timeline"   className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
-          <a href="/explore"    className={styles.navItem}><Globe size={18} /> Explore</a>
-          <a href="/challenges" className={styles.navItem}><Trophy size={18} /> Challenges</a>
-          <a href="/badges"     className={styles.navItem}><Medal size={18} /> Badges</a>
-          <a href="/settings"   className={styles.navItem}><Settings size={18} /> Settings</a>
-        </nav>
-        <div className={styles.sidebarBottom}>
-          <button onClick={logout} className={styles.logoutBtn} id="logout-btn">
-            <LogOut size={18} /> Log Out
-          </button>
-        </div>
-      </aside>
-
       {/* ── Main Content ── */}
       <main className={`${styles.main} animate-page-reveal`}>
         <div className={styles.mobileLogo}>
@@ -215,9 +203,6 @@ export default function DashboardPage() {
                         </div>
                       </div>
                     </div>
-                    <p className={styles.recentPreview}>
-                      {entry.body?.slice(0, 100)}{entry.body?.length > 100 ? "..." : ""}
-                    </p>
                   </div>
                 );
               })}

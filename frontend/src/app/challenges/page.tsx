@@ -100,19 +100,6 @@ export default function ChallengesPage() {
 
   return (
     <div className={styles.page}>
-      <aside className={styles.sidebar}>
-        <a href="/" className={styles.sidebarLogo} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
-        </a>
-        <nav className={styles.sidebarNav}>
-          <a href="/dashboard"  className={styles.navItem}><LayoutDashboard size={18} /> Dashboard</a>
-          <a href="/write"      className={styles.navItem}><PenLine size={18} /> Write Entry</a>
-          <a href="/timeline"   className={styles.navItem}><CalendarDays size={18} /> Timeline</a>
-          <a href="/challenges" className={`${styles.navItem} ${styles.navActive}`}><Trophy size={18} /> Challenges</a>
-          <a href="/badges"     className={styles.navItem}><Medal size={18} /> Badges</a>
-          <a href="/settings"   className={styles.navItem}><Settings size={18} /> Settings</a>
-        </nav>
-      </aside>
 
       <main className={`${styles.main} animate-page-reveal`}>
         <div className={styles.mobileLogo}>
