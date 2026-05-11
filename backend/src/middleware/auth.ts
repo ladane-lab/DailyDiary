@@ -47,3 +47,37 @@ export const authenticate = async (
     res.status(401).json({ error: 'Invalid or expired token' });
   }
 };
+
+/**
+ * Optional Auth middleware.
+ * If a token is provided, it attempts to verify it.
+ * If no token is provided, it continues without error.
+ */
+export const optionalAuthenticate = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return next();
+  }
+
+  const token = authHeader.split('Bearer ')[1];
+
+  try {
+    const decoded = jwt.decode(token) as { sub: string; email?: string } | null;
+    
+    if (decoded && decoded.sub) {
+      req.user = { uid: decoded.sub, email: decoded.email || 'user@dailydiary.in' };
+    } else if (token) {
+      // Fallback for dev tokens
+      req.user = { uid: token, email: 'dev@dailydiary.in' };
+    }
+    next();
+  } catch {
+    // Silently continue if token is invalid but it was optional
+    next();
+  }
+};

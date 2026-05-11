@@ -136,4 +136,35 @@ router.patch('/theme', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// POST /api/users/:id/follow - Toggle Follow/Subscribe
+router.post('/:id/follow', async (req: AuthRequest, res: Response) => {
+  const followerId = req.user!.uid;
+  const followingId = req.params.id;
+
+  if (followerId === followingId) {
+    return res.status(400).json({ error: "You cannot follow yourself" });
+  }
+
+  try {
+    const existing = await prisma.follow.findUnique({
+      where: { followerId_followingId: { followerId, followingId } }
+    });
+
+    if (existing) {
+      await prisma.follow.delete({
+        where: { followerId_followingId: { followerId, followingId } }
+      });
+      res.json({ followed: false });
+    } else {
+      await prisma.follow.create({
+        data: { followerId, followingId }
+      });
+      res.json({ followed: true });
+    }
+  } catch (err) {
+    console.error('Follow error:', err);
+    res.status(500).json({ error: 'Failed to toggle follow' });
+  }
+});
+
 export default router;

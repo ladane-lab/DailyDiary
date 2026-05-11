@@ -37,12 +37,17 @@ function decrypt(encryptedText: string, ivHex: string): string {
 router.post('/', async (req: AuthRequest, res: Response) => {
   const { templateId, body, isPublic, responses, images, theme } = req.body;
   const userId = req.user!.uid;
+  
+  console.log(`[API] POST /entries | body length: ${body?.length} | images count: ${images?.length ?? 0} | isPublic: ${isPublic}`);
+  if (images?.length > 0) console.log(`[API] Images to save:`, images);
 
-  if (!body || body.trim().length === 0) {
+  // Require body OR at least one image
+  if ((!body || body.trim().length === 0) && (!images || images.length === 0)) {
     console.warn(`[API] Blank entry submission attempt by user: ${userId}`);
-    res.status(400).json({ error: 'Journal content is required' });
+    res.status(400).json({ error: 'Journal content or an image is required' });
     return;
   }
+  const safeBody = body || '';
 
   console.log(`[API] Creating entry for user: ${userId} | Template: ${templateId || 'None'}`);
 
@@ -94,7 +99,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     }
 
     // Encrypt the entry body
-    const { encrypted, iv } = encrypt(body);
+    const { encrypted, iv } = encrypt(safeBody);
 
     const entry = await prisma.entry.create({
       data: {
@@ -183,7 +188,20 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     }
 
     console.log(`[POST /entries] Entry fully processed: ${entry.id}`);
-    res.status(201).json({ ...entry, body: '(encrypted)', newBadges });
+    const responseEntry = {
+      ...entry,
+      body: safeBody,
+      body_encrypted: undefined,
+      iv: undefined,
+      isLiked: false,
+      isBookmarked: false,
+      isFollowing: false,
+      likesCount: 0,
+      commentsCount: 0,
+      bookmarksCount: 0,
+      newBadges
+    };
+    res.status(201).json(responseEntry);
   } catch (error: any) {
     console.error(`[POST /entries] FATAL ERROR for user ${userId}:`, error);
     res.status(500).json({ 
@@ -204,7 +222,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' },
       skip: (parseInt(page as string) - 1) * parseInt(limit as string),
       take: parseInt(limit as string),
-      include: { template: true, responses: true },
+      include: { template: true, responses: true, images: true },
     });
 
     // Decrypt bodies for the owner
@@ -225,27 +243,163 @@ router.get('/', async (req: AuthRequest, res: Response) => {
 });
 
 // GET /api/entries/public - Public feed
-router.get('/public', async (_req: AuthRequest, res: Response) => {
+router.get('/public', async (req: AuthRequest, res: Response) => {
+  const { page = '1', limit = '10' } = req.query;
+  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const take = parseInt(limit as string);
+
   try {
     const entries = await prisma.entry.findMany({
       where: { isPublic: true },
       orderBy: { createdAt: 'desc' },
-      take: 20,
-      include: { user: { select: { name: true } }, template: true },
+      skip,
+      take,
+      include: { 
+        user: { select: { name: true } }, 
+        template: true,
+        images: true,
+        _count: {
+          select: { likes: true, comments: true, bookmarks: true }
+        },
+        likes: {
+          where: { userId: req.user?.uid || '' },
+          select: { userId: true }
+        },
+        bookmarks: {
+          where: { userId: req.user?.uid || '' },
+          select: { userId: true }
+        }
+      },
     });
 
-    // For public entries, decrypt and show
-    const publicEntries = entries.map((entry: any) => ({
+    if (entries.length === 0) {
+      return res.json({ entries: [], total: 0 });
+    }
+
+    // Shuffle only if there's more than one entry and it's the first page
+    // (Shuffling on later pages makes pagination inconsistent)
+    let result = entries;
+    if (entries.length > 1 && page === '1') {
+      result = entries.sort(() => Math.random() - 0.5);
+    }
+
+    const publicEntries = result.map((entry: any) => ({
       ...entry,
       body: decrypt(entry.body_encrypted, entry.iv),
       body_encrypted: undefined,
       iv: undefined,
+      isLiked: entry.likes.length > 0,
+      isBookmarked: entry.bookmarks.length > 0,
+      isFollowing: false, 
+      likesCount: entry._count.likes,
+      commentsCount: entry._count.comments,
+      bookmarksCount: entry._count.bookmarks,
+      likes: undefined,
+      bookmarks: undefined,
+      _count: undefined,
+      user: { name: entry.user.name }
     }));
 
-    res.json(publicEntries);
+    const total = await prisma.entry.count({ where: { isPublic: true } });
+
+    res.json({ 
+      entries: publicEntries, 
+      total, 
+      page: parseInt(page as string),
+      hasMore: total > skip + take
+    });
   } catch (error) {
     console.error('Public entries error:', error);
     res.status(500).json({ error: 'Failed to fetch public entries' });
+  }
+});
+
+// POST /api/entries/:id/like - Toggle Like
+router.post('/:id/like', async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const entryId = req.params.id;
+
+  try {
+    const existing = await prisma.like.findUnique({
+      where: { userId_entryId: { userId, entryId } }
+    });
+
+    if (existing) {
+      await prisma.like.delete({
+        where: { userId_entryId: { userId, entryId } }
+      });
+      res.json({ liked: false });
+    } else {
+      await prisma.like.create({
+        data: { userId, entryId }
+      });
+      res.json({ liked: true });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to toggle like' });
+  }
+});
+
+// POST /api/entries/:id/bookmark - Toggle Bookmark
+router.post('/:id/bookmark', async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const entryId = req.params.id;
+
+  try {
+    const existing = await prisma.bookmark.findUnique({
+      where: { userId_entryId: { userId, entryId } }
+    });
+
+    if (existing) {
+      await prisma.bookmark.delete({
+        where: { userId_entryId: { userId, entryId } }
+      });
+      res.json({ bookmarked: false });
+    } else {
+      await prisma.bookmark.create({
+        data: { userId, entryId }
+      });
+      res.json({ bookmarked: true });
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to toggle bookmark' });
+  }
+});
+
+// POST /api/entries/:id/comment - Add Comment
+router.post('/:id/comment', async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const entryId = req.params.id;
+  const { content } = req.body;
+
+  if (!content || content.trim().length === 0) {
+    return res.status(400).json({ error: 'Comment content required' });
+  }
+
+  try {
+    const comment = await prisma.comment.create({
+      data: { userId, entryId, content },
+      include: { user: { select: { name: true } } }
+    });
+    res.json(comment);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to add comment' });
+  }
+});
+
+// GET /api/entries/:id/comments - List Comments
+router.get('/:id/comments', async (req: AuthRequest, res: Response) => {
+  const entryId = req.params.id;
+
+  try {
+    const comments = await prisma.comment.findMany({
+      where: { entryId },
+      orderBy: { createdAt: 'asc' },
+      include: { user: { select: { name: true } } }
+    });
+    res.json(comments);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch comments' });
   }
 });
 
@@ -303,6 +457,55 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Delete entry error:', error);
     res.status(500).json({ error: 'Failed to delete entry' });
+  }
+});
+
+// PATCH /api/entries/:id - Update an entry
+router.patch('/:id', async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const id = req.params.id;
+  const { body, isPublic, theme, images } = req.body;
+
+  try {
+    const entry = await prisma.entry.findUnique({ 
+      where: { id },
+      include: { images: true }
+    });
+
+    if (!entry || entry.userId !== userId) {
+      return res.status(404).json({ error: 'Entry not found' });
+    }
+
+    const updateData: any = {};
+    if (body) {
+      const { encrypted, iv } = encrypt(body);
+      updateData.body_encrypted = encrypted;
+      updateData.iv = iv;
+    }
+    if (typeof isPublic === 'boolean') updateData.isPublic = isPublic;
+    if (theme) updateData.theme = theme;
+
+    // Append new images if provided
+    if (images && images.length > 0) {
+      updateData.images = {
+        create: images.map((url: string) => ({ url }))
+      };
+    }
+
+    const updated = await prisma.entry.update({
+      where: { id },
+      data: updateData,
+      include: { images: true }
+    });
+
+    res.json({ 
+      message: 'Entry updated', 
+      id: updated.id,
+      images: updated.images
+    });
+  } catch (error) {
+    console.error('Update entry error:', error);
+    res.status(500).json({ error: 'Failed to update entry' });
   }
 });
 

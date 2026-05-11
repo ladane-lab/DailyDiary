@@ -21,6 +21,11 @@ model User {
   userBadges     UserBadge[]
   trackers       Tracker[]
   preferredThemes Json?           // { [templateId: string]: string }
+  likes          Like[]
+  comments       Comment[]
+  bookmarks      Bookmark[]
+  followers      Follow[]        @relation("followers")
+  following      Follow[]        @relation("following")
 }
 
 model Entry {
@@ -36,6 +41,9 @@ model Entry {
   images         Image[]
   theme          String?         @default("marble")
   responses      EntryResponse[]
+  likes          Like[]
+  comments       Comment[]
+  bookmarks      Bookmark[]
 }
 
 model Image {
@@ -107,4 +115,44 @@ model UserBadge {
   awardedAt DateTime @default(now())
 
   @@id([userId, badgeId])
+}
+
+model Like {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([userId, entryId])
+}
+
+model Bookmark {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([userId, entryId])
+}
+
+model Follow {
+  followerId  String
+  follower    User     @relation("following", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
 }
