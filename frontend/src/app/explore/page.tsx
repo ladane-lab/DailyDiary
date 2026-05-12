@@ -344,6 +344,11 @@ export default function ExplorePage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this public entry?") || !user) return;
+    // Optimistic delete from both tabs
+    const removeFromList = (prev: ExploreEntry[]) => prev.filter(e => e.id !== id);
+    setEntries(removeFromList);
+    setUserEntries(removeFromList);
+    
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
@@ -351,42 +356,58 @@ export default function ExplorePage() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (res.ok) {
-        fetchPublicEntries();
-      }
+      if (!res.ok) throw new Error("Failed to delete");
     } catch (err) {
       console.error("Failed to delete:", err);
+      alert("Failed to delete post. Refreshing feed...");
+      fetchPublicEntries();
+      fetchUserPublicEntries();
     }
   };
 
   const handleLike = async (entryId: string) => {
     if (!user) return;
-    setEntries(prev => prev.map(e => (e.id === entryId ? { ...e, isLiked: !e.isLiked, likesCount: e.isLiked ? e.likesCount - 1 : e.likesCount + 1 } : e)));
+    const update = (prev: ExploreEntry[]) => prev.map(e => (e.id === entryId ? { ...e, isLiked: !e.isLiked, likesCount: e.isLiked ? e.likesCount - 1 : e.likesCount + 1 } : e));
+    setEntries(update);
+    setUserEntries(update);
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); }
+    } catch (err) { 
+      fetchPublicEntries(); 
+      fetchUserPublicEntries();
+    }
   };
 
   const handleBookmark = async (entryId: string) => {
     if (!user) return;
-    setEntries(prev => prev.map(e => (e.id === entryId ? { ...e, isBookmarked: !e.isBookmarked, bookmarksCount: e.isBookmarked ? e.bookmarksCount - 1 : e.bookmarksCount + 1 } : e)));
+    const update = (prev: ExploreEntry[]) => prev.map(e => (e.id === entryId ? { ...e, isBookmarked: !e.isBookmarked, bookmarksCount: e.isBookmarked ? e.bookmarksCount - 1 : e.bookmarksCount + 1 } : e));
+    setEntries(update);
+    setUserEntries(update);
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); }
+    } catch (err) { 
+      fetchPublicEntries(); 
+      fetchUserPublicEntries();
+    }
   };
 
   const handleSubscribe = async (targetUserId: string) => {
     if (!user) return;
-    setEntries(prev => prev.map(e => (e.userId === targetUserId ? { ...e, isFollowing: !e.isFollowing } : e)));
+    const update = (prev: ExploreEntry[]) => prev.map(e => (e.userId === targetUserId ? { ...e, isFollowing: !e.isFollowing } : e));
+    setEntries(update);
+    setUserEntries(update);
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); }
+    } catch (err) { 
+      fetchPublicEntries(); 
+      fetchUserPublicEntries();
+    }
   };
 
   const handleShare = (entryId: string) => {
@@ -555,7 +576,7 @@ export default function ExplorePage() {
             ) : (
               <div className={styles.feedContainer}>
                 {filteredEntries.map((entry, index) => {
-                  const isOwner = entry.userId === user.uid;
+                  const isOwner = activeTab === "personal" && entry.userId === user.uid;
                   const authorName = entry.user?.name || "Anonymous";
                   const date = new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                   const isEditing = editingId === entry.id;
@@ -563,7 +584,7 @@ export default function ExplorePage() {
                   return (
                     <div 
                       key={entry.id} 
-                      className={styles.feedItem} 
+                      className={`${styles.feedItem} ${ (showMenuId === entry.id || editingId === entry.id) ? styles.activeItem : "" }`} 
                       style={{ animationDelay: `${(index % 10) * 0.1}s` }}
                     >
                       {/* In-feed ad every 3 posts */}
