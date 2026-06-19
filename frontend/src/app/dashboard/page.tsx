@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar/Sidebar";
+import Logo from "@/components/Logo/Logo";
 import { 
   Flame, BookOpen, Trophy, Medal, PenLine, Heart, Zap, Sparkles, BookHeart 
 } from "lucide-react";
@@ -126,8 +127,8 @@ export default function DashboardPage() {
     <div className={styles.dashPage}>
       {/* ── Main Content ── */}
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
+          <Logo size={24} />
         </div>
         <header className={styles.header}>
           <div>

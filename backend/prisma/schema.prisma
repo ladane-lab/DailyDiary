@@ -13,6 +13,7 @@ model User {
   id             String          @id @default(uuid())
   name           String
   email          String          @unique
+  photoURL       String?
   createdAt      DateTime        @default(now())
   streakCount    Int             @default(0)
   lastEntryDate  DateTime?

@@ -120,7 +120,6 @@
   flex: 1;
   padding: 32px 40px;
   max-width: 960px;
-  margin-left: 260px;
 }
 
 .mobileLogo { display: none; }
@@ -387,7 +386,6 @@
 
   .main {
     padding: 24px 20px 100px;
-    margin-left: 0;
     max-width: 100%;
   }
 

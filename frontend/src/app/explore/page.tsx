@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { 
   Globe, PenLine, CalendarDays, Clock,
   Heart, Zap, Sparkles, BookHeart, MessageCircle, 
@@ -14,20 +16,7 @@ import styles from "./explore.module.css";
 import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor/RichTextEditor";
 import { Editor } from "@tiptap/react";
 
-const AdSlot = ({ type }: { type: "banner" | "feed" | "skyscraper" }) => (
-  <div className={`${styles.adSlot} ${
-    type === "banner" ? styles.adBanner : 
-    type === "skyscraper" ? styles.adSkyscraper : 
-    styles.adInFeed
-  }`}>
-    <div className={styles.adLabel}>
-      <ExternalLink size={14} /> Sponsor Space
-    </div>
-    <div className={styles.adPlaceholder}>
-      {type === "skyscraper" ? "Skyscraper Ad" : "Monetization Slot"}
-    </div>
-  </div>
-);
+
 
 interface ExploreEntry {
   id: string;
@@ -52,12 +41,22 @@ const getTemplateIcon = (name: string) => {
   return <BookHeart size={16} strokeWidth={2.5} />;
 };
 
+const getReadTime = (htmlContent: string): string => {
+  if (!htmlContent) return "1m read";
+  const text = htmlContent.replace(/<[^>]*>/g, " ");
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const minutes = Math.max(1, Math.ceil(words / 200));
+  return `${minutes}m read`;
+};
+
 export default function ExplorePage() {
   const router = useRouter();
   const { user, initialized, initAuth } = useAuthStore();
   const [entries, setEntries] = useState<ExploreEntry[]>([]);
-  const [userEntries, setUserEntries] = useState<ExploreEntry[]>([]);
+  const [userEntries, setUserEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userLoading, setUserLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
@@ -70,6 +69,7 @@ export default function ExplorePage() {
   
   // Compose & Edit state
   const [newPost, setNewPost] = useState("");
+  const [writing, setWriting] = useState(false);
   const [isPosting, setIsPosting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
@@ -92,6 +92,28 @@ export default function ExplorePage() {
 
   useEffect(() => { const unsub = initAuth(); return unsub; }, [initAuth]);
   
+  const uploadToFirebase = (file: File, userId: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.name}`;
+      const storageRef = ref(storage, `explore/${userId}/${uniqueName}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        "state_changed",
+        null,
+        (error) => reject(error),
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+            resolve(downloadURL);
+          } catch (error) {
+            reject(error);
+          }
+        }
+      );
+    });
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0] || !user) return;
     
@@ -106,25 +128,8 @@ export default function ExplorePage() {
     setIsUploading(true);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const token = await user.getIdToken();
-      
-      const formData = new FormData();
-      formData.append('image', file);
-
-      const res = await fetch(`${API}/api/upload`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Upload failed');
-      }
-
-      const data = await res.json();
-      setUploadedImages(prev => [...prev, data.url]);
+      const downloadURL = await uploadToFirebase(file, user.uid);
+      setUploadedImages(prev => [...prev, downloadURL]);
     } catch (err: any) {
       console.error("[Upload] Error:", err);
       alert(`Upload failed: ${err?.message || 'Unknown error'}`);
@@ -140,14 +145,8 @@ export default function ExplorePage() {
     if (file.size > 5 * 1024 * 1024) { alert("Image too large (max 5MB)"); return; }
     setIsEditUploading(true);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const token = await user.getIdToken();
-      const formData = new FormData();
-      formData.append('image', file);
-      const res = await fetch(`${API}/api/upload`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: formData });
-      if (!res.ok) throw new Error((await res.json()).error || 'Upload failed');
-      const data = await res.json();
-      setEditUploadedImages(prev => [...prev, data.url]);
+      const downloadURL = await uploadToFirebase(file, user.uid);
+      setEditUploadedImages(prev => [...prev, downloadURL]);
     } catch (err: any) {
       alert(`Upload failed: ${err?.message}`);
     } finally {
@@ -187,6 +186,7 @@ export default function ExplorePage() {
       }
     } catch (err) {
       console.error("Failed to load public entries:", err);
+      setError("Failed to connect to the feed. Please check your connection.");
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -344,11 +344,9 @@ export default function ExplorePage() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this public entry?") || !user) return;
-    // Optimistic delete from both tabs
-    const removeFromList = (prev: ExploreEntry[]) => prev.filter(e => e.id !== id);
-    setEntries(removeFromList);
-    setUserEntries(removeFromList);
-    
+    const update = (prev: ExploreEntry[]) => prev.filter(e => e.id !== id);
+    setEntries(update);
+    setUserEntries(update);
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
@@ -356,10 +354,9 @@ export default function ExplorePage() {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Delete failed");
     } catch (err) {
       console.error("Failed to delete:", err);
-      alert("Failed to delete post. Refreshing feed...");
       fetchPublicEntries();
       fetchUserPublicEntries();
     }
@@ -374,10 +371,7 @@ export default function ExplorePage() {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { 
-      fetchPublicEntries(); 
-      fetchUserPublicEntries();
-    }
+    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
   const handleBookmark = async (entryId: string) => {
@@ -389,10 +383,7 @@ export default function ExplorePage() {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { 
-      fetchPublicEntries(); 
-      fetchUserPublicEntries();
-    }
+    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
   const handleSubscribe = async (targetUserId: string) => {
@@ -404,10 +395,7 @@ export default function ExplorePage() {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
       await fetch(`${API}/api/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { 
-      fetchPublicEntries(); 
-      fetchUserPublicEntries();
-    }
+    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
   const handleShare = (entryId: string) => {
@@ -468,7 +456,12 @@ export default function ExplorePage() {
             {/* ── Conditional Composer (Only on My Posts) ── */}
             {activeTab === "personal" && (
               <div className={`${styles.composeSection} animate-in fade-in slide-in-from-top-4 duration-500`}>
-                <div className={styles.composeAvatar}>{user.displayName?.[0] || user.email?.[0].toUpperCase()}</div>
+                {user.photoURL ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={user.photoURL} alt="Avatar" className={styles.composeAvatarImage} />
+                ) : (
+                  <div className={styles.composeAvatar}>{user.displayName?.[0] || user.email?.[0].toUpperCase()}</div>
+                )}
                 <div className={styles.composeArea}>
                   <div className={`${styles.editorWrapper} ${activeEditor ? styles.editorActive : ""}`}>
                     {(activeEditor || (newPost && newPost !== "<p></p>")) && (
@@ -567,16 +560,23 @@ export default function ExplorePage() {
                   <div key={i} className={`skeleton ${styles.feedCard}`} style={{ height: '300px', width: '100%' }} />
                 ))}
               </div>
+            ) : error ? (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyIcon} style={{ color: 'var(--accent-red, #ff4d4d)' }}>⚠️</div>
+                <h2>Connection Error</h2>
+                <p>{error}</p>
+                <button onClick={() => { setError(null); fetchPublicEntries(1, true); }} className={styles.postBtn} style={{ marginTop: '1rem' }}>Try Again</button>
+              </div>
             ) : filteredEntries.length === 0 ? (
               <div className={styles.emptyState}>
-                <Globe size={80} className={styles.emptyIcon} />
-                <h3>{activeTab === "community" ? "The world is quiet right now" : "Your community awaits"}</h3>
+                <div className={styles.emptyIcon}>🌐</div>
+                <h2>{activeTab === "community" ? "The world is quiet right now" : "Your community awaits"}</h2>
                 <p>{activeTab === "community" ? "Be the first to share a public reflection and inspire others today." : "Share your first public reflection to start building your community presence."}</p>
               </div>
             ) : (
               <div className={styles.feedContainer}>
                 {filteredEntries.map((entry, index) => {
-                  const isOwner = activeTab === "personal" && entry.userId === user.uid;
+                  const isOwner = entry.userId === user.uid;
                   const authorName = entry.user?.name || "Anonymous";
                   const date = new Date(entry.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
                   const isEditing = editingId === entry.id;
@@ -587,12 +587,16 @@ export default function ExplorePage() {
                       className={`${styles.feedItem} ${ (showMenuId === entry.id || editingId === entry.id) ? styles.activeItem : "" }`} 
                       style={{ animationDelay: `${(index % 10) * 0.1}s` }}
                     >
-                      {/* In-feed ad every 3 posts */}
-                      {index > 0 && index % 3 === 0 && <AdSlot type="feed" />}
+
                       
                       <article className={styles.feedCard}>
                         <div className={styles.feedHeader}>
-                          <div className={styles.authorAvatar}>{authorName[0].toUpperCase()}</div>
+                          {entry.user?.photoURL ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={entry.user.photoURL} alt={authorName} className={styles.authorAvatarImage} />
+                          ) : (
+                            <div className={styles.authorAvatar}>{authorName[0].toUpperCase()}</div>
+                          )}
                           <div className={styles.authorInfo}>
                             <div className="flex items-center gap-3">
                               <div className={styles.authorName}>{authorName}</div>
@@ -608,7 +612,7 @@ export default function ExplorePage() {
                             <div className={styles.feedMeta}>
                               <div className={styles.metaItem}><CalendarDays size={14} /> {date}</div>
                               <div className="w-1 h-1 rounded-full bg-gray-300" />
-                              <div className={styles.metaItem}><Clock size={14} /> 2m read</div>
+                              <div className={styles.metaItem}><Clock size={14} /> {getReadTime(entry.body)}</div>
                             </div>
                           </div>
                           
@@ -663,7 +667,7 @@ export default function ExplorePage() {
                         )}
 
                         {entry.images && entry.images.length > 0 && (
-                          <div className={styles.feedImages}>{entry.images.map((img) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} />)}</div>
+                          <div className={styles.feedImages}>{entry.images.map((img: any) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} />)}</div>
                         )}
 
                         <div className={styles.feedActions}>
@@ -695,17 +699,30 @@ export default function ExplorePage() {
                   </div>
                 )}
 
-                {/* Bottom Ad as per drawing */}
-                <AdSlot type="banner" />
               </div>
             )}
           </div>
 
           <aside className={styles.sidebar}>
-            <AdSlot type="banner" />
-            <AdSlot type="skyscraper" />
-            <AdSlot type="feed" />
-            <AdSlot type="skyscraper" />
+            <div className={`glass-card ${styles.sidebarCard}`} style={{ padding: '24px', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                📖 Community Guidelines
+              </h3>
+              <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <li>Share mindful reflections and authentic personal thoughts.</li>
+                <li>Be respectful and supportive in comment sections.</li>
+                <li>Do not post spam, hate speech, or explicit images.</li>
+              </ul>
+            </div>
+            
+            <div className={`glass-card ${styles.sidebarCard}`} style={{ padding: '24px' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                ✨ About Community Feed
+              </h3>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
+                DailyDiary Explore is a space to read public reflections, support other writers with likes and comments, and subscribe to their volume journals.
+              </p>
+            </div>
           </aside>
         </div>
       </main>

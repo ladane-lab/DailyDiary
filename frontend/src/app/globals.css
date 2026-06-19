@@ -44,6 +44,25 @@
   --radius-lg: 28px;
 }
 
+html.dark {
+  /* Dark Mode Overrides */
+  --bg-primary: #0f172a;        /* Deep slate background */
+  --bg-secondary: #1e293b;      /* Lighter slate */
+  --bg-card: #1e293b;
+  --bg-card-hover: #334155;
+  --bg-glass: rgba(30, 41, 59, 0.85);
+  
+  --text-primary: #f8fafc;      /* Crisp white-gray */
+  --text-secondary: #cbd5e1;    /* Muted gray */
+  --text-muted: #64748b;        /* Deep muted gray */
+  
+  --border: rgba(248, 250, 252, 0.08);
+  --border-active: rgba(95, 133, 117, 0.5);
+  
+  --shadow-sm: 0 4px 20px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -277,3 +296,28 @@ body.journal-open .animate-page-reveal {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--primary-dark);
 }
+
+/* ── Layout System ── */
+.layout-root {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.content-container {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  margin-left: 260px;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 768px) {
+  .content-container {
+    margin-left: 0;
+    margin-bottom: 70px;
+  }
+}
+

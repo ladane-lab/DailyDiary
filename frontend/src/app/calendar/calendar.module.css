@@ -1,0 +1,307 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+}
+
+.main {
+  flex: 1;
+  padding: 40px 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileLogo {
+  display: none;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--text-primary);
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.calendarLayout {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.calendarCard {
+  padding: 24px;
+}
+
+.calendarHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.monthLabel {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.navBtns {
+  display: flex;
+  gap: 8px;
+}
+
+.weekDaysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
+}
+
+.daysGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.dayCell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 0.95rem;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  padding: 4px;
+}
+
+.dayCell:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary-light);
+  transform: scale(1.05);
+}
+
+.emptyDay {
+  aspect-ratio: 1;
+}
+
+.selectedDay {
+  background: var(--primary) !important;
+  color: white !important;
+  box-shadow: var(--shadow-sm);
+}
+
+.selectedDay .dayNumber {
+  color: white !important;
+}
+
+.today {
+  border: 2px solid var(--accent);
+}
+
+.indicators {
+  display: flex;
+  justify-content: center;
+  gap: 3px;
+  position: absolute;
+  bottom: 8px;
+  width: 100%;
+}
+
+.indicatorDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.detailsCard {
+  padding: 24px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.detailsTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 24px;
+}
+
+.entryList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.entryItemCard {
+  border: 1px solid var(--border);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.entryItemCard:hover {
+  border-color: var(--primary-light);
+  background: var(--bg-card);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.entryItemHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.entryItemIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entryItemTitle {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.entryItemTime {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.entryMiniResponses {
+  background-color: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  border-left: 2px solid var(--primary-light);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.entryMiniResponseRow {
+  line-clamp: 1;
+  overflow: hidden;
+}
+
+.entryMiniResponseLbl {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.entryItemBody {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.entryMiniImages {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.entryMiniImg {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* Tiptap content resets for lists/elements */
+.tiptapContent p {
+  margin-bottom: 8px;
+}
+.tiptapContent p:last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 900px) {
+  .calendarLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding: 24px 16px;
+  }
+  .mobileLogo {
+    display: flex;
+  }
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+}

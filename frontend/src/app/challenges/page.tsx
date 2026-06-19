@@ -19,10 +19,9 @@ interface UserChallenge {
   challenge: Challenge;
 }
 
-import { 
-  Zap, Flame, Trophy, BookOpen, LayoutDashboard, PenLine, 
-  CalendarDays, Medal, Settings, CheckCircle2, Star 
-} from "lucide-react";
+import { Flame, Trophy, CalendarDays, Rocket, Award, LayoutDashboard, PenLine, Settings, BookOpen, Zap, CheckCircle2, Star } from "lucide-react";
+import Sidebar from "@/components/Sidebar/Sidebar";
+import Logo from "@/components/Logo/Logo";
 
 const getChallengeIcon = (duration: number, size = 24) => {
   if (duration === 7) return <Zap size={size} strokeWidth={2.5} color="var(--primary)" />;
@@ -51,12 +50,10 @@ export default function ChallengesPage() {
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const [cRes, myRes] = await Promise.all([
-          fetch(`${API}/api/templates`).then((r) => r.json()).catch(() => []),
-          fetch(`${API}/api/challenges/my`, { headers }).then((r) => r.json()).catch(() => []),
+          fetch(`${API}/api/challenges`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${API}/api/challenges/my`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
         ]);
-        // get real challenges
-        const cFetch = await fetch(`${API}/api/challenges`, { headers }).catch(() => null);
-        if (cFetch?.ok) setChallenges(await cFetch.json());
+        if (Array.isArray(cRes)) setChallenges(cRes);
         if (Array.isArray(myRes)) setMyChallenges(myRes);
       } finally {
         setLoading(false);
@@ -102,8 +99,8 @@ export default function ChallengesPage() {
     <div className={styles.page}>
 
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
+          <Logo size={24} />
         </div>
         {/* Toast */}
         {toast && <div className={styles.toast}>{toast}</div>}
@@ -158,7 +155,7 @@ export default function ChallengesPage() {
           ) : challenges.length === 0 ? (
             <div className={`glass-card ${styles.emptyState}`}>
               <Trophy size={48} color="var(--primary)" strokeWidth={2} />
-              <p>Loading challenges from the server...</p>
+              <p>No challenges available at the moment.</p>
             </div>
           ) : (
             <div className={styles.cardGrid}>

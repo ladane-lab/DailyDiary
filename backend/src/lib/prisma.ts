@@ -1,5 +1,9 @@
 import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
+import { neonConfig } from "@neondatabase/serverless";
+import ws from "ws";
+
+neonConfig.webSocketConstructor = ws;
 
 // Prisma v7: Must use adapter pattern for database connection
 function createPrismaClient() {

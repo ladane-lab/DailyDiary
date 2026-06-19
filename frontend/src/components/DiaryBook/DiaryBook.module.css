@@ -172,6 +172,11 @@
   transform: rotateY(-180deg) translateZ(var(--tz, 0px));
 }
 
+/* Fast-close mode: shorten each page-flip transition so all pages close within 2 seconds */
+.fastClose .stackPage {
+  transition: transform 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
 /* Paper Textures with Spine Shadows */
 .paperFront {
   background-color: var(--page-color, #fff);
@@ -553,4 +558,38 @@
 .tiptapContent :global(a) {
   text-decoration: underline;
   color: inherit;
+}
+
+.pageNumberLeft {
+  position: absolute;
+  bottom: 16px;
+  left: 24px;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  opacity: 0.4;
+}
+
+.pageNumberRight {
+  position: absolute;
+  bottom: 16px;
+  right: 24px;
+  font-size: 11px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  opacity: 0.4;
+}
+
+.positionIndicator {
+  background: rgba(15, 23, 42, 0.85);
+  color: white;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }

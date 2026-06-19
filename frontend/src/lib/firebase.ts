@@ -9,6 +9,7 @@ import {
   onAuthStateChanged,
   User,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 import firebaseConfig from './firebase.config';
 import { getStorage } from 'firebase/storage';
@@ -29,6 +30,8 @@ export {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
 };
 
 export type { User };
+

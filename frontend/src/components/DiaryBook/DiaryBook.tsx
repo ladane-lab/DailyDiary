@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import styles from "./DiaryBook.module.css";
-import { ChevronLeft, ChevronRight, Hash, Calendar, Globe, Lock as LockIcon, X, Clock, Image as ImageIcon, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Hash, Calendar, Globe, Lock as LockIcon, X, Clock, Image as ImageIcon, ChevronDown, PenLine } from "lucide-react";
 
 
 export type DiaryTheme = 'vintage' | 'minimal' | 'cute' | 'professional' | 'marble';
@@ -64,8 +64,26 @@ export default function DiaryBook({
   const [currentPage, setCurrentPage] = useState(0);
   const [jumpInput, setJumpInput] = useState("");
   const [isAutoFlipping, setIsAutoFlipping] = useState(false);
+  const [isFastClosing, setIsFastClosing] = useState(false);
   const [entryPageCounts, setEntryPageCounts] = useState<Record<string, number>>({});
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+  const pageTurnAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const isBookReady = useMemo(() => {
+    if (entries.length === 0) return true;
+    return fontsLoaded && Object.keys(entryPageCounts).length === entries.length;
+  }, [fontsLoaded, entries, entryPageCounts]);
+
+  // Preload the page-turn WAV once on mount
+  useEffect(() => {
+    const audio = new Audio('/page-turn.wav');
+    audio.preload = 'auto';
+    pageTurnAudioRef.current = audio;
+    return () => {
+      audio.pause();
+      pageTurnAudioRef.current = null;
+    };
+  }, []);
 
   useEffect(() => {
     let timeout: NodeJS.Timeout;
@@ -110,7 +128,12 @@ export default function DiaryBook({
     });
 
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(calculate);
+      document.fonts.ready.then(() => {
+        calculate();
+        setFontsLoaded(true);
+      });
+    } else {
+      setFontsLoaded(true);
     }
 
     return () => {
@@ -133,26 +156,19 @@ export default function DiaryBook({
     };
   }, [isOpen]);
 
+
   const config = THEME_CONFIGS[theme] || THEME_CONFIGS.marble;
   const tplName = entries[0]?.template?.name || "Personal Journal";
 
-  const playSound = () => {
+  const playSound = useCallback(() => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
-      }
-      const audio = audioContextRef.current;
-      const osc = audio.createOscillator();
-      const gain = audio.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = 720;
-      gain.gain.value = 0.05;
-      osc.connect(gain).connect(audio.destination);
-      osc.start();
-      gain.gain.exponentialRampToValueAtTime(0.001, audio.currentTime + 0.12);
-      osc.stop(audio.currentTime + 0.15);
+      const audio = pageTurnAudioRef.current;
+      if (!audio) return;
+      // Reset to start so rapid flips each play from the beginning
+      audio.currentTime = 0;
+      audio.play().catch(() => {}); // silently ignore if autoplay is blocked
     } catch(e) {}
-  };
+  }, []);
 
   const bookPages = useMemo(() => {
     const allPhysicalPages: { content: React.ReactNode; isBack: boolean }[] = [];
@@ -179,7 +195,7 @@ export default function DiaryBook({
       const numPages = entryPageCounts[entry.id] || 1;
 
       // Helper to render an entry's page
-      const renderEntryPage = (pageIdx: number, isPhysicalBack: boolean) => {
+      const renderEntryPage = (pageIdx: number, isPhysicalBack: boolean, absolutePageIdx: number) => {
         const hasHeader = pageIdx === 0;
         const headerHeight = 48; 
         const safeArea = 24; 
@@ -197,7 +213,19 @@ export default function DiaryBook({
             {hasHeader && (
               <div className={styles.pageHeader} style={{ color: config.accentColor }}>
                 <span><Calendar size={12} className="inline mr-1" /> {dateStr}</span>
-                <span className="opacity-60">{timeStr}</span>
+                <span className="opacity-60 flex items-center gap-1">
+                  {timeStr}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      window.location.href = `/write?edit=${entry.id}`;
+                    }}
+                    style={{ background: 'none', border: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', cursor: 'pointer', padding: 0, marginLeft: '6px' }}
+                    title="Edit Entry"
+                  >
+                    <PenLine size={12} style={{ opacity: 0.8 }} />
+                  </button>
+                </span>
               </div>
             )}
             
@@ -205,7 +233,8 @@ export default function DiaryBook({
               height: hasHeader ? `${firstPageContent}px` : `${otherPageContent}px`, 
               marginTop: `${safeArea}px`,
               overflow: 'hidden', 
-              flexShrink: 0 
+              flexShrink: 0,
+              position: 'relative'
             }}>
               <div 
                 className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
@@ -217,14 +246,20 @@ export default function DiaryBook({
                 dangerouslySetInnerHTML={{ __html: cleanBody }} 
               />
             </div>
+            
+            {/* Page Number Position Indicator */}
+            <div className={isPhysicalBack ? styles.pageNumberLeft : styles.pageNumberRight}>
+              {absolutePageIdx + 1}
+            </div>
           </div>
         );
       };
 
       for (let p = 0; p < numPages; p++) {
-        const isBack = allPhysicalPages.length % 2 !== 0;
+        const absolutePageIdx = allPhysicalPages.length;
+        const isBack = absolutePageIdx % 2 !== 0;
         allPhysicalPages.push({
-          content: renderEntryPage(p, isBack),
+          content: renderEntryPage(p, isBack, absolutePageIdx),
           isBack
         });
       }
@@ -249,14 +284,41 @@ export default function DiaryBook({
 
   const totalFlipPages = bookPages.length + 1; // +1 for the cover
 
+  // Keep the book opened to the end if it was already at the end and page count changed (timing issue fix)
+  const prevTotalPagesRef = useRef(totalFlipPages);
+  useEffect(() => {
+    if (isOpen) {
+      if (currentPage === prevTotalPagesRef.current && totalFlipPages !== prevTotalPagesRef.current) {
+        setCurrentPage(totalFlipPages);
+      }
+    }
+    prevTotalPagesRef.current = totalFlipPages;
+  }, [totalFlipPages, isOpen, currentPage]);
+
+
   const animateToPage = async (target: number) => {
     if (isAutoFlipping || target === currentPage || target < 0 || target > totalFlipPages) return;
     
     setIsAutoFlipping(true);
+    const isGoingToEnd = target === totalFlipPages;
     const direction = target > currentPage ? 1 : -1;
     let current = currentPage;
 
-    while (current !== target) {
+    while (current !== (isGoingToEnd ? totalFlipPages : target)) {
+      const currentTarget = isGoingToEnd ? totalFlipPages : target;
+      if (current === currentTarget) break;
+
+      const steps = Math.abs(currentTarget - current);
+      // Cap to 2 seconds when closing (→ page 0) OR opening (→ last page) with more than 2 flips
+      const isClosing = currentTarget === 0 && direction === -1;
+      const isOpening = isGoingToEnd && direction === 1;
+      const fastFlip = (isClosing || isOpening) && steps > 2;
+      const flipDelay = fastFlip
+        ? Math.max(80, Math.floor(2000 / steps)) // distribute 2s across all flips
+        : 700;
+
+      if (fastFlip) setIsFastClosing(true);
+
       playSound();
       current += direction;
       
@@ -264,9 +326,11 @@ export default function DiaryBook({
       if (current === 0 && direction === -1) setIsOpen(false);
       
       setCurrentPage(current);
-      // Wait roughly the transition time minus a bit for overlapping smoothness
-      await new Promise(r => setTimeout(r, 700));
+      // Wait the computed flip delay before next page flip
+      await new Promise(r => setTimeout(r, flipDelay));
     }
+
+    setIsFastClosing(false);
     setIsAutoFlipping(false);
   };
 
@@ -289,7 +353,7 @@ export default function DiaryBook({
         )}
 
         <div 
-          className={`${styles.book} ${isOpen ? styles.opened : ""}`}
+          className={`${styles.book} ${isOpen ? styles.opened : ""} ${isFastClosing ? styles.fastClose : ""}`}
           style={{ '--diary-cover': config.color, '--page-color': config.paperColor } as any}
         >
           <div className={styles.binding} />
@@ -306,9 +370,12 @@ export default function DiaryBook({
 
           {/* Cover Leaf (The first flip) */}
           <div 
-            className={`${styles.stackPage} ${currentPage > 0 ? styles.flipped : ""}`} 
-            style={{ zIndex: 100, '--tz': '10px' } as any}
-            onClick={() => !isAutoFlipping && animateToPage(currentPage === 0 ? 1 : 0)}
+            className={`${styles.stackPage} ${currentPage > 0 ? styles.flipped : ""} ${!isBookReady ? styles.notReady : ""}`} 
+            style={{ zIndex: 100, '--tz': '10px', cursor: isBookReady ? 'pointer' : 'wait' } as any}
+            onClick={() => {
+              if (!isBookReady || isAutoFlipping) return;
+              animateToPage(currentPage === 0 ? totalFlipPages : 0);
+            }}
           >
             <div className={`${styles.pageFront} ${styles.stackCoverFront}`}>
               <div className="relative z-10 text-center text-white flex flex-col items-center">
@@ -317,6 +384,11 @@ export default function DiaryBook({
                 <h2 className={styles.entryTitle}>{tplName}</h2>
                 <p className={styles.entrySubtitle}>Volume {currentYear}</p>
                 <div className="w-16 h-0.5 bg-white/40 mt-10" />
+                {!isBookReady && (
+                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginTop: '16px', animation: 'pulse 1.5s infinite' }} className="animate-pulse">
+                    Preparing journal...
+                  </p>
+                )}
               </div>
               {config.hasLock && <div className={styles.lock}>🔒</div>}
               <div className={styles.strap} />
@@ -372,6 +444,9 @@ export default function DiaryBook({
             </div>
 
             <div className={styles.bottomControls} onClick={e => e.stopPropagation()}>
+              <div className={styles.positionIndicator}>
+                {currentPage === 0 ? "Cover" : currentPage === totalFlipPages ? "End of Journal" : `Sheet ${currentPage} of ${totalFlipPages - 1}`}
+              </div>
               <form onSubmit={jumpToPage} className={styles.jumpForm}>
                 <span className={styles.jumpLabel}>Page</span>
                 <input 

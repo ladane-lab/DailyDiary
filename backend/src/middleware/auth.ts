@@ -6,6 +6,8 @@ export interface AuthRequest extends Request {
   user?: {
     uid: string;
     email: string;
+    name?: string;
+    picture?: string;
   };
 }
 
@@ -30,7 +32,7 @@ export const authenticate = async (
   try {
     // In production, we'd use admin.auth().verifyIdToken(token)
     // For development, we decode the token to get the stable Firebase UID (sub claim)
-    const decoded = jwt.decode(token) as { sub: string; email?: string } | null;
+    const decoded = jwt.decode(token) as { sub: string; email?: string; name?: string; picture?: string } | null;
     
     if (!decoded || !decoded.sub) {
       // Fallback if token isn't a valid JWT (e.g. dummy dev tokens)
@@ -38,7 +40,12 @@ export const authenticate = async (
       req.user = { uid: token, email: 'dev@dailydiary.in' };
     } else {
       console.log(`[Auth] Identity verified for UID: ${decoded.sub}`);
-      req.user = { uid: decoded.sub, email: decoded.email || 'user@dailydiary.in' };
+      req.user = { 
+        uid: decoded.sub, 
+        email: decoded.email || 'user@dailydiary.in',
+        name: decoded.name,
+        picture: decoded.picture
+      };
     }
     
     next();
@@ -67,10 +74,15 @@ export const optionalAuthenticate = async (
   const token = authHeader.split('Bearer ')[1];
 
   try {
-    const decoded = jwt.decode(token) as { sub: string; email?: string } | null;
+    const decoded = jwt.decode(token) as { sub: string; email?: string; name?: string; picture?: string } | null;
     
     if (decoded && decoded.sub) {
-      req.user = { uid: decoded.sub, email: decoded.email || 'user@dailydiary.in' };
+      req.user = { 
+        uid: decoded.sub, 
+        email: decoded.email || 'user@dailydiary.in',
+        name: decoded.name,
+        picture: decoded.picture
+      };
     } else if (token) {
       // Fallback for dev tokens
       req.user = { uid: token, email: 'dev@dailydiary.in' };

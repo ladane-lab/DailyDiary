@@ -12,8 +12,25 @@ import entryRoutes from './routes/entries.js';
 import templateRoutes from './routes/templates.js';
 import challengeRoutes from './routes/challenges.js';
 import { seedTemplates, seedChallenges } from './services/seed.js';
+import prisma from './lib/prisma.js';
+import { rateLimit } from 'express-rate-limit';
+import logger from './lib/logger.js';
 
 dotenv.config();
+
+// ─── Environment Validation ──────────────────────────────────────
+const requiredEnv = ['DATABASE_URL', 'JWT_SECRET'];
+const missingEnv = requiredEnv.filter(key => !process.env[key]);
+if (missingEnv.length > 0) {
+  logger.error(`CRITICAL ERROR: Missing required environment variables: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
+
+if (!process.env.DIARY_ENCRYPTION_KEY) {
+  logger.warn(`WARNING: DIARY_ENCRYPTION_KEY is not defined. Falling back to JWT_SECRET/default key.`);
+} else if (process.env.DIARY_ENCRYPTION_KEY.length < 32) {
+  logger.warn(`WARNING: DIARY_ENCRYPTION_KEY is shorter than 32 characters. AES-256 requires 32 bytes.`);
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -43,41 +60,100 @@ const upload = multer({
 });
 
 // ─── Middleware ─────────────────────────────────────────────────
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://localhost:3002',
+].filter(Boolean) as string[];
+
 app.use(cors({
   origin: (origin, callback) => {
-    const allowed = [
-      process.env.FRONTEND_URL || 'http://localhost:3000',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://localhost:3002',
-    ];
-    if (!origin || allowed.includes(origin)) {
+    // If no origin (e.g. mobile apps, curl, or server-to-server), allow it
+    if (!origin) {
+      callback(null, true);
+      return;
+    }
+
+    const isAllowed = allowedOrigins.includes(origin) ||
+      origin.startsWith('http://localhost:') ||
+      origin.startsWith('http://127.0.0.1:') ||
+      /\.vercel\.app$/.test(new URL(origin).hostname) ||
+      /(^|\.)dailydiary\.in$/.test(new URL(origin).hostname);
+
+    if (isAllowed) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS: origin ${origin} not allowed`));
+      callback(null, false);
     }
   },
   credentials: true,
 }));
 app.use(express.json());
 
+// ─── Rate Limiting ──────────────────────────────────────────────
+const globalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 100, // Limit each IP to 100 requests per window
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 15, // Limit each IP to 15 requests per window
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many write/sync requests from this IP, please try again after 15 minutes' },
+});
+
+// Apply global rate limiter
+app.use(globalLimiter);
+
+// Apply strict limiter on sensitive endpoints
+app.use('/api/upload', strictLimiter);
+app.use('/api/users/sync', strictLimiter);
+app.use('/api/users/theme', strictLimiter);
+app.use('/api/entries', (req, res, next) => {
+  if (req.method !== 'GET') {
+    return strictLimiter(req, res, next);
+  }
+  next();
+});
+
 // ─── Serve uploaded files statically ────────────────────────────
 app.use('/uploads', express.static(uploadsDir));
 
 // ─── Public Routes ──────────────────────────────────────────────
-app.get('/health', (_req, res) => {
-  res.json({
-    status: '✅ DailyDiary API is running',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-  });
+app.get('/health', async (_req, res) => {
+  try {
+    // Verify database connection
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({
+      status: '✅ DailyDiary API is running',
+      version: '1.0.0',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (dbError) {
+    console.error('❌ Healthcheck DB Connection Error:', dbError);
+    res.status(500).json({
+      status: '❌ DailyDiary API is unhealthy',
+      version: '1.0.0',
+      database: 'disconnected',
+      error: dbError instanceof Error ? dbError.message : String(dbError),
+      timestamp: new Date().toISOString(),
+    });
+  }
 });
 
 // Templates are publicly readable
 app.use('/api/templates', templateRoutes);
 
-// Public entries feed (optional auth to show likes/saves)
-app.use('/api/entries/public', optionalAuthenticate, entryRoutes);
+// Public entries feed (optional auth handled in router)
+// Protected routes (auth handled in router)
+app.use('/api/entries', entryRoutes);
 
 // ─── Image Upload Route (authenticated) ─────────────────────────
 app.post('/api/upload', authenticate, upload.single('image'), (req: any, res) => {
@@ -91,27 +167,20 @@ app.post('/api/upload', authenticate, upload.single('image'), (req: any, res) =>
 
 // ─── Protected Routes ───────────────────────────────────────────
 app.use('/api/users', authenticate, userRoutes);
-app.use('/api/entries', authenticate, entryRoutes);
 app.use('/api/challenges', authenticate, challengeRoutes);
 
 // ─── Server Start ───────────────────────────────────────────────
 app.listen(PORT, async () => {
-  console.log('');
-  console.log('═══════════════════════════════════════════');
-  console.log(`🚀 DailyDiary API Server`);
-  console.log(`   Running on http://localhost:${PORT}`);
-  console.log('═══════════════════════════════════════════');
-  console.log('');
+  logger.info(`DailyDiary API Server starting on http://localhost:${PORT}`);
 
   // Seed default data
   try {
-    console.log('📦 Seeding default data...');
+    logger.info('Seeding default data...');
     await seedTemplates();
     await seedChallenges();
-    console.log('✅ Seeding complete!\n');
+    logger.info('Seeding complete!');
   } catch (error) {
-    console.log('⚠️  Seeding skipped (DB may not be connected yet)');
-    console.log('   Set DATABASE_URL in .env to enable\n');
+    logger.warn('Seeding skipped (DB may not be connected yet). Set DATABASE_URL in .env to enable.');
   }
 });
 

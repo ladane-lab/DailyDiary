@@ -4,10 +4,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
-import Link from "next/link";
 import styles from "./timeline.module.css";
 import DiaryBook, { DiaryTheme } from "@/components/DiaryBook/DiaryBook";
 import Sidebar from "@/components/Sidebar/Sidebar";
+import Logo from "@/components/Logo/Logo";
 
 interface EntryItem {
   id: string;
@@ -15,29 +15,14 @@ interface EntryItem {
   isPublic: boolean;
   createdAt: string;
   template?: { name: string };
+  templateId?: string | null;
   theme?: string;
   responses?: { fieldLabel: string; value: string }[];
 }
 
 import { 
-  Heart, Zap, Sparkles, BookHeart, BookOpen, 
-  PenLine, CalendarDays, Trophy, Medal, Globe 
+  Sparkles, BookOpen, PenLine, CalendarDays
 } from "lucide-react";
-
-const getTemplateIcon = (name: string, size = 18) => {
-  if (name.includes("Gratitude")) return <Heart size={size} strokeWidth={2.5} color="var(--danger)" />;
-  if (name.includes("Productivity")) return <Zap size={size} strokeWidth={2.5} color="var(--streak)" />;
-  if (name.includes("Care")) return <Sparkles size={size} strokeWidth={2.5} color="var(--primary)" />;
-  return <BookHeart size={size} strokeWidth={2.5} color="var(--primary)" />;
-};
-
-function getMoodFromResponses(responses?: { fieldLabel: string; value: string }[]) {
-  if (!responses) return null;
-  const moodField = responses.find(
-    (r) => r.fieldLabel.toLowerCase().includes("mood") || r.fieldLabel.toLowerCase().includes("feeling")
-  );
-  return moodField?.value || null;
-}
 
 export default function TimelinePage() {
   const router = useRouter();
@@ -49,6 +34,8 @@ export default function TimelinePage() {
   const [preferredThemes, setPreferredThemes] = useState<Record<string, string>>({});
   const [selectedJournal, setSelectedJournal] = useState<{ id: string, name: string } | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
     const unsub = initAuth();
@@ -59,6 +46,19 @@ export default function TimelinePage() {
     if (initialized && !user) router.push("/login");
   }, [user, initialized, router]);
 
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  // Reset page when search term changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
+
   useEffect(() => {
     if (!user) return;
     const fetchEntries = async () => {
@@ -66,7 +66,8 @@ export default function TimelinePage() {
         setLoading(true);
         const token = await user.getIdToken();
         const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/entries?page=${page}&limit=50`, {
+        const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : "";
+        const res = await fetch(`${API}/api/entries?page=${page}&limit=50${searchParam}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -81,7 +82,7 @@ export default function TimelinePage() {
       }
     };
     fetchEntries();
-  }, [user, page]);
+  }, [user, page, debouncedSearch]);
 
   // Dedicated effect for preferences to ensure they load reliably
   useEffect(() => {
@@ -121,8 +122,8 @@ export default function TimelinePage() {
     <div className={styles.page}>
       {/* ── Main ── */}
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
+          <Logo size={24} />
         </div>
         <header className={styles.header}>
           <div>
@@ -147,6 +148,18 @@ export default function TimelinePage() {
             </a>
           </div>
         </header>
+
+        {/* Timeline search bar */}
+        <div style={{ marginBottom: '24px', width: '100%' }}>
+          <input 
+            type="text" 
+            placeholder="Search entries by keyword, template, date, or field answers..." 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="input-field"
+            style={{ padding: '12px 18px', fontSize: '0.95rem' }}
+          />
+        </div>
 
         {isEditMode && (
           <div className={`${styles.fixedThemeSelector} animate-slide-down`}>
@@ -299,11 +312,3 @@ function getThemeForTemplate(name: string): DiaryTheme {
   return 'marble';
 }
 
-function formatDayLabel(dateStr: string): string {
-  const date = new Date(dateStr);
-  const today = new Date(); today.setHours(0,0,0,0);
-  const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
-  if (date.toDateString() === today.toDateString()) return "Today";
-  if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
-  return date.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
-}

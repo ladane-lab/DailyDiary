@@ -18,10 +18,9 @@ interface UserBadge {
   badge: Badge;
 }
 
-import { 
-  PenLine, Flame, Trophy, BookOpen, LayoutDashboard, 
-  CalendarDays, Medal, Settings, Award, CheckCircle2, Lock
-} from "lucide-react";
+import { Trophy, Medal, Lock, Flame, ShieldCheck, Star, CalendarDays, Rocket, Award, LayoutDashboard, PenLine, Settings, BookOpen, CheckCircle2 } from "lucide-react";
+import Logo from "@/components/Logo/Logo";
+import Sidebar from "@/components/Sidebar/Sidebar";
 
 // All possible badges (shown as locked if not earned)
 const ALL_BADGES = [
@@ -72,8 +71,8 @@ export default function BadgesPage() {
     <div className={styles.page}>
 
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
+          <Logo size={24} />
         </div>
         <header className={styles.header}>
           <div>

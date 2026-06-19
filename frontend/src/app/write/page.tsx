@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Suspense } from "react";
 import { Editor } from "@tiptap/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar/Sidebar";
@@ -31,6 +31,7 @@ import {
   Lock,
   ChevronRight
 } from "lucide-react";
+import Logo from "@/components/Logo/Logo";
 import styles from "./write.module.css";
 
 const getApiBase = () => {
@@ -147,8 +148,19 @@ const getTemplateIcon = (name: string, size = 32) => {
   return <BookHeart size={size} strokeWidth={2.5} color="var(--primary)" />;
 };
 
-export default function WritePage() {
+const THEME_ACCENT_COLORS: Record<string, string> = {
+  marble: '#5F8575',
+  vintage: '#8b4513',
+  minimal: '#333333',
+  cute: '#ec407a',
+  professional: '#1e3a8a'
+};
+
+function WritePageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
+
   const { user, initialized, initAuth } = useAuthStore();
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
@@ -172,6 +184,45 @@ export default function WritePage() {
       router.push("/login");
     }
   }, [user, initialized, router]);
+
+  // Fetch entry details if in edit mode
+  useEffect(() => {
+    if (!editId || !user) return;
+    const fetchEntry = async () => {
+      try {
+        const token = await user.getIdToken();
+        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const res = await fetch(`${API}/api/entries/${editId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          const entry = await res.json();
+          if (entry.template) {
+            setSelectedTemplate(entry.template);
+          }
+          if (entry.theme) {
+            setSelectedTheme(entry.theme);
+          }
+          setIsPublic(entry.isPublic);
+          if (entry.images) {
+            setImageUrls(entry.images.map((img: any) => img.url));
+          }
+          const resMap: Record<string, string> = {};
+          if (entry.responses && entry.responses.length > 0) {
+            entry.responses.forEach((r: any) => {
+              resMap[r.fieldLabel] = r.value;
+            });
+          } else {
+            resMap["Write freely..."] = entry.body;
+          }
+          setResponses(resMap);
+        }
+      } catch (err) {
+        console.error("Failed to fetch entry for edit mode:", err);
+      }
+    };
+    fetchEntry();
+  }, [editId, user]);
 
   // Try to fetch templates from backend
   useEffect(() => {
@@ -293,8 +344,9 @@ export default function WritePage() {
       const endpoint = `${apiBase}/api/entries`;
 
       console.log("[Write] Sending entry to backend at:", endpoint);
-      const res = await fetch(endpoint, {
-        method: "POST",
+      const url = editId ? `${apiBase}/api/entries/${editId}` : endpoint;
+      const res = await fetch(url, {
+        method: editId ? "PATCH" : "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -380,8 +432,8 @@ export default function WritePage() {
   return (
     <div className={styles.page}>
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo}>
-          <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
+        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
+          <Logo size={24} />
         </div>
         <div className={styles.writeHeader}>
           <button onClick={() => setSelectedTemplate(null)} className={styles.backBtn}>
@@ -389,7 +441,7 @@ export default function WritePage() {
           </button>
           <div className="flex items-center justify-between">
             <div>
-              <h1 className={styles.title} style={{ color: selectedTheme?.titleColor }}>
+              <h1 className={styles.title} style={{ color: THEME_ACCENT_COLORS[selectedTheme] || 'var(--primary)' }}>
                 {selectedTemplate.name}
               </h1>
               <p className={styles.writeSubtitle}>{selectedTemplate.description}</p>
@@ -557,4 +609,12 @@ function renderField(
         />
       );
   }
+}
+
+export default function WritePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen text-muted font-medium">Loading editor...</div>}>
+      <WritePageContent />
+    </Suspense>
+  );
 }

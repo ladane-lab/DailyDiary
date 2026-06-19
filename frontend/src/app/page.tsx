@@ -5,9 +5,29 @@ import { useAuthStore } from "@/store/authStore";
 import styles from "./page.module.css";
 
 import {
-  BookOpen, Heart, Zap, Sparkles, PieChart, Timer, Target, Lock, 
-  Layers, Flame, Trophy, Calendar, Globe, PenLine
+  Globe,
+  PenLine,
+  CalendarDays,
+  Clock,
+  Heart,
+  Zap,
+  Sparkles,
+  BookHeart,
+  MessageCircle,
+  Share2,
+  Bookmark,
+  ChevronDown,
+  BookOpen,
+  Timer, 
+  Target, 
+  Lock, 
+  Layers, 
+  Flame, 
+  Trophy, 
+  Calendar,
+  PieChart
 } from "lucide-react";
+import Logo from "@/components/Logo/Logo";
 
 const TEMPLATES_PREVIEW = [
   { icon: <BookOpen size={32} strokeWidth={2} />, name: "Personal Journal", color: "#6C5CE7" },
@@ -86,26 +106,22 @@ export default function HomePage() {
       {/* ── Navigation ── */}
       <nav className={styles.nav}>
         <div className={styles.navInner}>
-          <a href="/" className={styles.logo}>
-            <span className={styles.logoIcon}>
-              <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} />
-            </span>
-            <span className={styles.logoText}>DailyDiary</span>
-            <span className={styles.logoDot}>.in</span>
+          <a href="/" className={styles.logo} style={{ textDecoration: 'none' }}>
+            <Logo size={28} />
           </a>
           <div className={styles.navLinks}>
             {initialized && user ? (
               <>
-                <a href="/dashboard" className="btn btn-primary">
+                <a href="/dashboard" className={styles.navDashboardBtn}>
                   Dashboard →
                 </a>
               </>
             ) : (
               <>
-                <a href="/login" className="btn btn-secondary">
+                <a href="/login" className={styles.navLoginBtn}>
                   Log In
                 </a>
-                <a href="/register" className="btn btn-primary">
+                <a href="/register" className={styles.navRegisterBtn}>
                   Get Started Free
                 </a>
               </>
@@ -219,8 +235,7 @@ export default function HomePage() {
             Ready to <span className="text-gradient">Start Writing?</span>
           </h2>
           <p className={styles.ctaSub}>
-            Join thousands who trust DailyDiary.in to protect their most
-            personal thoughts.
+            Begin your personal writing journey today with fully encrypted private journaling.
           </p>
           <a href="/register" className="btn btn-primary" style={{ padding: "18px 48px", fontSize: "1.15rem", gap: "8px" }}>
             <PenLine size={20} strokeWidth={2.5} /> Create Free Account
@@ -231,11 +246,8 @@ export default function HomePage() {
       {/* ── Footer ── */}
       <footer className={styles.footer}>
         <div className={`container ${styles.footerInner}`}>
-          <div className={styles.footerBrand}>
-            <span className={styles.logoIcon}>
-              <BookOpen size={20} color="var(--text-muted)" strokeWidth={2.5} />
-            </span>
-            <span>DailyDiary.in</span>
+          <div className={styles.footerBrand} style={{ opacity: 0.8 }}>
+            <Logo size={24} />
           </div>
           <div className={styles.footerLinks}>
             <a href="/privacy">Privacy Policy</a>

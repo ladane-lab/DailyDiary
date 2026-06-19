@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import Logo from "@/components/Logo/Logo";
 import styles from "./auth.module.css";
 
 export default function RegisterPage() {
@@ -11,6 +12,7 @@ export default function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     const unsub = initAuth();
@@ -26,7 +28,9 @@ export default function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+    setLocalError(null);
     if (password.length < 6) {
+      setLocalError("Password must be at least 6 characters long.");
       return;
     }
     await register(name, email, password);
@@ -40,17 +44,17 @@ export default function RegisterPage() {
       </div>
 
       <div className={styles.authContainer}>
-        <a href="/" className={styles.authLogo}>
-          <span>📖</span> DailyDiary<span className={styles.logoDot}>.in</span>
+        <a href="/" className={styles.authLogo} style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center' }}>
+          <Logo size={40} />
         </a>
 
         <div className={`glass-card ${styles.authCard}`}>
           <h1 className={styles.authTitle}>Create Account</h1>
           <p className={styles.authSubtitle}>Start your journaling journey today</p>
 
-          {error && (
+          {(localError || error) && (
             <div className={styles.authError}>
-              <span>⚠️</span> {error}
+              <span>⚠️</span> {localError || error}
             </div>
           )}
 
@@ -62,7 +66,7 @@ export default function RegisterPage() {
                 className="input-field"
                 placeholder="John Doe"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => { setName(e.target.value); setLocalError(null); clearError(); }}
                 required
                 id="register-name"
               />
@@ -75,7 +79,7 @@ export default function RegisterPage() {
                 className="input-field"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setLocalError(null); clearError(); }}
                 required
                 id="register-email"
               />
@@ -88,7 +92,7 @@ export default function RegisterPage() {
                 className="input-field"
                 placeholder="Min 6 characters"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); setLocalError(null); clearError(); }}
                 required
                 minLength={6}
                 id="register-password"
