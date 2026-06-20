@@ -383,6 +383,10 @@
 }
 
 /* ── Responsive ── */
+@media (max-width: 1024px) {
+  .main { padding: 32px 24px; }
+}
+
 @media (max-width: 768px) {
   .page {
     flex-direction: column;
@@ -484,5 +488,38 @@
   .formActions {
     flex-direction: column;
     margin: 24px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .writeHeader h1 {
+    font-size: 1.3rem !important;
+  }
+  .templateSelect {
+    padding: 20px 12px !important;
+    gap: 8px !important;
+  }
+  .tplIcon {
+    font-size: 2rem !important;
+  }
+  .tplName {
+    font-size: 0.95rem !important;
+  }
+  .tplDesc {
+    font-size: 0.8rem !important;
+  }
+  .emojiBtn {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.2rem !important;
+  }
+  .ratingBtn {
+    width: 28px !important;
+    height: 28px !important;
+    font-size: 0.8rem !important;
+  }
+  .visibilityBtn {
+    font-size: 0.8rem !important;
+    padding: 8px 14px !important;
   }
 }

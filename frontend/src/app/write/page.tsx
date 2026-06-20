@@ -393,9 +393,7 @@ function WritePageContent() {
     return (
       <div className={styles.page}>
         <main className={`${styles.main} animate-page-reveal`}>
-          <div className={styles.mobileLogo}>
-            <BookOpen size={24} color="var(--primary)" strokeWidth={2.5} /> DailyDiary
-          </div>
+
           <div className={styles.writeHeader}>
             <button onClick={() => router.push("/dashboard")} className={styles.backBtn}>
               <ArrowLeft size={16} /> Back to Dashboard
@@ -432,9 +430,7 @@ function WritePageContent() {
   return (
     <div className={styles.page}>
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
-          <Logo size={24} />
-        </div>
+
         <div className={styles.writeHeader}>
           <button onClick={() => setSelectedTemplate(null)} className={styles.backBtn}>
             <ArrowLeft size={16} /> Change Template

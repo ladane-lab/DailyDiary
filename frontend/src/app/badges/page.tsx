@@ -71,9 +71,7 @@ export default function BadgesPage() {
     <div className={styles.page}>
 
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
-          <Logo size={24} />
-        </div>
+
         <header className={styles.header}>
           <div>
             <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

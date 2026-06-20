@@ -304,6 +304,7 @@
 
 /* ── Responsive ── */
 @media (max-width: 1024px) {
+  .main { padding: 24px 24px; }
   .statsGrid { grid-template-columns: repeat(2, 1fr); }
   .quickGrid { grid-template-columns: repeat(2, 1fr); }
   .recentGrid { grid-template-columns: repeat(2, 1fr); }
@@ -405,5 +406,42 @@
 
   .recentGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .greeting {
+    font-size: 1.35rem !important;
+  }
+  .statCard {
+    padding: 12px 10px !important;
+    gap: 8px !important;
+  }
+  .statIcon svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
+  .statValue {
+    font-size: 1.3rem !important;
+  }
+  .statLabel {
+    font-size: 0.7rem !important;
+  }
+  .quickCard {
+    padding: 16px 8px !important;
+    gap: 6px !important;
+  }
+  .quickEmoji svg {
+    width: 22px !important;
+    height: 22px !important;
+  }
+  .quickLabel {
+    font-size: 0.8rem !important;
+  }
+  .recentCard {
+    padding: 12px 14px !important;
+  }
+  .recentTemplate {
+    font-size: 0.85rem !important;
   }
 }

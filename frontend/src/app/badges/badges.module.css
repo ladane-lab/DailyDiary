@@ -108,6 +108,10 @@
   border: 1px solid var(--border); border-radius: 50px;
 }
 
+@media (max-width: 1024px) {
+  .main { padding: 32px 24px; }
+}
+
 @media (max-width: 768px) {
   .mobileLogo {
     display: flex !important;
@@ -171,4 +175,44 @@
   .main { padding: 24px 16px 100px; max-width: 100%; }
   .header { flex-direction: column; }
   .badgeGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem !important;
+  }
+  .streakCard {
+    padding: 12px 16px !important;
+    gap: 8px !important;
+  }
+  .streakFire {
+    font-size: 1.4rem !important;
+  }
+  .streakNum {
+    font-size: 1.4rem !important;
+  }
+  .progressCard {
+    padding: 16px !important;
+    margin-bottom: 20px !important;
+  }
+  .progressHeader {
+    font-size: 0.8rem !important;
+  }
+  .badgeCard {
+    padding: 20px 10px !important;
+    gap: 6px !important;
+  }
+  .badgeIcon {
+    font-size: 2.2rem !important;
+  }
+  .badgeName {
+    font-size: 0.85rem !important;
+  }
+  .badgeCond {
+    font-size: 0.72rem !important;
+  }
+  .awardedDate, .lockedLabel {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+  }
 }

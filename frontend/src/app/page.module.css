@@ -556,5 +556,24 @@
     flex-direction: column;
     gap: 16px;
   }
+  .navInner {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .heroTitle { font-size: 2.2rem !important; }
+  .heroSubtitle { font-size: 1rem !important; }
+  .heroCta { gap: 12px !important; }
+  .navInner { padding: 0 12px !important; }
+  .logo { font-size: 1.1rem !important; }
+  .navLoginBtn, .navRegisterBtn { font-size: 0.8rem !important; padding: 8px 16px !important; }
+  .sectionTitle { font-size: 1.8rem !important; }
+  .sectionSub { font-size: 1rem !important; margin-bottom: 32px !important; }
+  .templateCard { padding: 24px 16px !important; }
+  .featureCard { padding: 24px 20px !important; }
+  .featureIcon { width: 48px !important; height: 48px !important; font-size: 2rem !important; }
+  .featureTitle { font-size: 1.15rem !important; }
+  .footerLinks { gap: 16px !important; flex-wrap: wrap; justify-content: center; }
 }
 

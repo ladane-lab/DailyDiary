@@ -249,9 +249,7 @@ export default function SettingsPage() {
     <div className={styles.page}>
       {/* ── Main ── */}
       <main className={`${styles.main} animate-page-reveal`}>
-        <div className={styles.mobileLogo} style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '16px' }}>
-          <Logo size={24} />
-        </div>
+
         <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Settings size={32} color="var(--primary)" strokeWidth={2.5} /> Settings
         </h1>

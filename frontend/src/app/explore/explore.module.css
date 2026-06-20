@@ -607,6 +607,28 @@
   opacity: 0.3;
 }
 
+@media (max-width: 1024px) {
+  .main {
+    padding: 32px 24px;
+  }
+  .contentLayout {
+    flex-direction: column;
+    align-items: center;
+    gap: 32px;
+  }
+  .feedSection {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 750px;
+  }
+  .sidebar {
+    width: 100%;
+    max-width: 600px;
+    position: static;
+    flex: 0 0 auto;
+  }
+}
+
 @media (max-width: 768px) {
   .main {
     padding: 24px 16px;
@@ -740,4 +762,70 @@
   object-fit: cover;
   flex-shrink: 0;
   box-shadow: 0 4px 12px rgba(95, 133, 117, 0.3);
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem !important;
+  }
+  .subtitle {
+    font-size: 0.9rem !important;
+  }
+  .tabContainer {
+    padding: 4px !important;
+    border-radius: 12px !important;
+  }
+  .tabBtn {
+    padding: 8px 16px !important;
+    font-size: 0.8rem !important;
+  }
+  .composeSection {
+    padding: 16px !important;
+    gap: 10px !important;
+    margin-bottom: 24px !important;
+  }
+  .composeAvatarImage {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .composeInput {
+    font-size: 0.95rem !important;
+  }
+  .toolBtn {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  .postBtn {
+    padding: 8px 18px !important;
+    font-size: 0.85rem !important;
+  }
+  .feedCard {
+    padding: 16px !important;
+  }
+  .authorAvatarImage {
+    width: 40px !important;
+    height: 40px !important;
+  }
+  .authorName {
+    font-size: 0.95rem !important;
+  }
+  .feedMeta {
+    font-size: 0.75rem !important;
+  }
+  .tplBadge {
+    font-size: 0.75rem !important;
+    padding: 4px 10px !important;
+  }
+  .feedBody {
+    font-size: 0.9rem !important;
+    line-height: 1.6 !important;
+  }
+  .feedActions {
+    padding-top: 16px !important;
+    gap: 16px !important;
+  }
+  .actionBtn {
+    font-size: 0.8rem !important;
+    padding: 6px 10px !important;
+  }
 }

@@ -170,3 +170,25 @@
   color: var(--text-secondary);
   background: var(--bg-glass);
 }
+
+@media (max-width: 480px) {
+  .toolbar {
+    padding: 8px !important;
+    gap: 4px !important;
+  }
+  .toolbarBtn {
+    width: 28px !important;
+    height: 28px !important;
+  }
+  .toolbarBtn svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+  .divider {
+    height: 18px !important;
+    margin: 0 2px !important;
+  }
+  .editorContent {
+    padding: 12px 14px !important;
+  }
+}

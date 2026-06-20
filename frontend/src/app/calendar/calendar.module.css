@@ -286,6 +286,10 @@
   margin-bottom: 0;
 }
 
+@media (max-width: 1024px) {
+  .main { padding: 32px 24px; }
+}
+
 @media (max-width: 900px) {
   .calendarLayout {
     grid-template-columns: 1fr;
@@ -303,5 +307,40 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .title {
+    font-size: 1.3rem !important;
+  }
+  .monthLabel {
+    font-size: 1.15rem !important;
+  }
+  .calendarCard, .detailsCard {
+    padding: 12px !important;
+  }
+  .detailsTitle {
+    font-size: 0.95rem !important;
+  }
+  .entryItemTitle {
+    font-size: 0.85rem !important;
+  }
+  .entryItemBody {
+    font-size: 0.78rem !important;
+  }
+  .daysGrid, .weekDaysGrid {
+    gap: 4px;
+  }
+  .dayCell {
+    font-size: 0.8rem;
+    padding: 2px;
+  }
+  .indicators {
+    bottom: 4px;
+  }
+  .indicatorDot {
+    width: 4px;
+    height: 4px;
   }
 }
