@@ -549,31 +549,397 @@
   100% { transform: translateY(0px) translateX(0px) rotate(0deg) scale(1); }
 }
 
+/* ── Responsive: Tablet ── */
 @media (max-width: 768px) {
-  .hero { padding-top: 100px; }
-  .heroTitle { font-size: 2.8rem; }
-  .heroStats {
-    flex-direction: column;
-    gap: 16px;
+  /* Nav */
+  .nav {
+    padding: 10px 0;
   }
+
   .navInner {
     padding: 0 20px;
   }
+
+  .navLoginBtn {
+    padding: 9px 16px;
+    font-size: 0.875rem;
+  }
+
+  .navRegisterBtn {
+    padding: 9px 18px;
+    font-size: 0.875rem;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 96px 0 64px;
+    min-height: unset;
+  }
+
+  .heroContent {
+    padding: 0 20px;
+  }
+
+  .heroTag {
+    font-size: 0.8rem;
+    padding: 7px 16px;
+    margin-bottom: 20px;
+  }
+
+  .heroTitle {
+    font-size: clamp(2.4rem, 7vw, 3.4rem);
+    margin-bottom: 18px;
+    letter-spacing: -0.03em;
+  }
+
+  .heroSubtitle {
+    font-size: 1.1rem;
+    margin-bottom: 32px;
+    padding: 0 8px;
+  }
+
+  .heroCta {
+    gap: 14px;
+    margin-bottom: 56px;
+  }
+
+  /* Stats */
+  .heroStats {
+    gap: 20px;
+  }
+
+  .statNum {
+    font-size: 1.5rem;
+  }
+
+  .statLabel {
+    font-size: 0.75rem;
+  }
+
+  .statDivider {
+    display: none;
+  }
+
+  /* Sections */
+  .templates {
+    padding: 80px 0;
+  }
+
+  .features {
+    padding: 72px 0;
+  }
+
+  .sectionTitle {
+    font-size: clamp(2rem, 5.5vw, 2.8rem);
+  }
+
+  .sectionSub {
+    font-size: 1.05rem;
+    margin-bottom: 48px;
+    padding: 0 12px;
+  }
+
+  .templateGrid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 16px;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .featureCard {
+    padding: 36px 28px;
+  }
+
+  /* CTA */
+  .finalCta {
+    padding: 80px 0;
+  }
+
+  .ctaTitle {
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    padding: 0 16px;
+  }
+
+  .ctaSub {
+    font-size: 1rem;
+    padding: 0 16px;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 56px 0 36px;
+  }
+
+  .footerLinks {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
 }
 
+/* ── Responsive: Mobile ── */
 @media (max-width: 480px) {
-  .heroTitle { font-size: 2.2rem !important; }
-  .heroSubtitle { font-size: 1rem !important; }
-  .heroCta { gap: 12px !important; }
-  .navInner { padding: 0 12px !important; }
-  .logo { font-size: 1.1rem !important; }
-  .navLoginBtn, .navRegisterBtn { font-size: 0.8rem !important; padding: 8px 16px !important; }
-  .sectionTitle { font-size: 1.8rem !important; }
-  .sectionSub { font-size: 1rem !important; margin-bottom: 32px !important; }
-  .templateCard { padding: 24px 16px !important; }
-  .featureCard { padding: 24px 20px !important; }
-  .featureIcon { width: 48px !important; height: 48px !important; font-size: 2rem !important; }
-  .featureTitle { font-size: 1.15rem !important; }
-  .footerLinks { gap: 16px !important; flex-wrap: wrap; justify-content: center; }
+  /* Nav */
+  .nav {
+    padding: 8px 0;
+  }
+
+  .navInner {
+    padding: 0 16px;
+  }
+
+  .navLoginBtn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+  }
+
+  .navRegisterBtn {
+    padding: 8px 14px;
+    font-size: 0.82rem;
+    letter-spacing: 0;
+  }
+
+  /* Hero */
+  .hero {
+    padding: 90px 0 52px;
+  }
+
+  .heroContent {
+    padding: 0 16px;
+  }
+
+  .heroTag {
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    margin-bottom: 16px;
+  }
+
+  .heroTitle {
+    font-size: clamp(2rem, 9vw, 2.8rem);
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+    margin-bottom: 16px;
+  }
+
+  .heroSubtitle {
+    font-size: 1rem;
+    line-height: 1.65;
+    margin-bottom: 28px;
+    padding: 0;
+  }
+
+  .heroCta {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 44px;
+  }
+
+  .heroCta a {
+    justify-content: center;
+    padding: 14px 24px !important;
+    font-size: 1rem !important;
+    width: 100%;
+  }
+
+  /* Stats */
+  .heroStats {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    width: 100%;
+  }
+
+  .stat {
+    flex: 1 1 auto;
+    min-width: 80px;
+    padding: 0 8px;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat:last-child {
+    border-right: none;
+  }
+
+  .statNum {
+    font-size: 1.3rem;
+  }
+
+  .statLabel {
+    font-size: 0.7rem;
+    letter-spacing: 0.03em;
+  }
+
+  .statDivider {
+    display: none;
+  }
+
+  /* Sections */
+  .templates {
+    padding: 64px 0;
+  }
+
+  .features {
+    padding: 60px 0;
+  }
+
+  .sectionTitle {
+    font-size: clamp(1.7rem, 7vw, 2.2rem);
+    margin-bottom: 12px;
+    padding: 0 16px;
+  }
+
+  .sectionSub {
+    font-size: 0.95rem;
+    margin-bottom: 36px;
+    padding: 0 16px;
+  }
+
+  .templateGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 4px;
+  }
+
+  .templateCard {
+    padding: 28px 16px;
+    gap: 12px;
+  }
+
+  .templateEmoji {
+    font-size: 2rem;
+  }
+
+  .templateName {
+    font-size: 0.875rem;
+  }
+
+  .featureGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .featureCard {
+    padding: 28px 24px;
+    gap: 10px;
+  }
+
+  .featureIcon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .featureTitle {
+    font-size: 1.15rem;
+    letter-spacing: -0.01em;
+  }
+
+  .featureDesc {
+    font-size: 0.925rem;
+    line-height: 1.65;
+  }
+
+  /* CTA */
+  .finalCta {
+    padding: 64px 0;
+  }
+
+  .ctaTitle {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    padding: 0 20px;
+    margin-bottom: 12px;
+  }
+
+  .ctaSub {
+    font-size: 0.95rem;
+    padding: 0 20px;
+    margin-bottom: 32px;
+  }
+
+  .finalCta a {
+    padding: 15px 32px !important;
+    font-size: 1rem !important;
+  }
+
+  /* Footer */
+  .footer {
+    padding: 48px 0 28px;
+  }
+
+  .footerInner {
+    gap: 24px;
+    padding: 0 20px;
+  }
+
+  .footerLinks {
+    gap: 14px;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .footerLinks a {
+    font-size: 0.9rem;
+  }
+
+  .footerCopy {
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 0 16px;
+  }
+}
+
+/* ── Responsive: Very Small (360px) ── */
+@media (max-width: 360px) {
+  .navInner {
+    padding: 0 12px;
+  }
+
+  .navLoginBtn {
+    display: none; /* Hide login on very small screens, show only register */
+  }
+
+  .navRegisterBtn {
+    padding: 7px 12px;
+    font-size: 0.78rem;
+  }
+
+  .hero {
+    padding: 80px 0 44px;
+  }
+
+  .heroContent {
+    padding: 0 12px;
+  }
+
+  .heroTitle {
+    font-size: clamp(1.75rem, 9.5vw, 2.2rem);
+  }
+
+  .heroSubtitle {
+    font-size: 0.94rem;
+  }
+
+  .templateGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .templateCard {
+    padding: 20px 12px;
+  }
+
+  .featureCard {
+    padding: 22px 18px;
+  }
 }
 

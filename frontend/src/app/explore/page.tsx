@@ -24,7 +24,7 @@ interface ExploreEntry {
   body: string;
   createdAt: string;
   template?: { name: string };
-  user?: { name: string };
+  user?: { name: string; photoURL?: string | null };
   images?: { id: string; url: string }[];
   isLiked: boolean;
   isBookmarked: boolean;
@@ -193,11 +193,7 @@ export default function ExplorePage() {
     }
   };
 
-  const loadMore = () => {
-    if (!loadingMore && hasMore && activeTab === "community") {
-      fetchPublicEntries(page + 1);
-    }
-  };
+
 
   const fetchUserPublicEntries = async () => {
     if (!user) return;
@@ -205,25 +201,12 @@ export default function ExplorePage() {
     try {
       const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
       const token = await user.getIdToken();
-      // Fetch user's entries and filter for public ones
-      const res = await fetch(`${API}/api/entries`, {
+      const res = await fetch(`${API}/api/entries/my-public`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
-        const publicOnly = data.entries.filter((e: any) => e.isPublic);
-        // Map to ExploreEntry format
-        const mapped = publicOnly.map((e: any) => ({
-          ...e,
-          user: { name: user.displayName || user.email?.split('@')[0] || "You" },
-          isLiked: false, 
-          isBookmarked: false,
-          isFollowing: false,
-          likesCount: 0,
-          commentsCount: 0,
-          bookmarksCount: 0
-        }));
-        setUserEntries(mapped);
+        setUserEntries(data.entries);
       }
     } catch (err) {
       console.error("Failed to load user public entries:", err);
@@ -231,6 +214,7 @@ export default function ExplorePage() {
       setLoadingUser(false);
     }
   };
+
 
   useEffect(() => {
     if (initialized) {
@@ -406,6 +390,14 @@ export default function ExplorePage() {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  
+  // Use refs to avoid stale closures in IntersectionObserver callback
+  const loadingMoreRef = useRef(loadingMore);
+  const hasMoreRef = useRef(hasMore);
+  const pageRef = useRef(page);
+  loadingMoreRef.current = loadingMore;
+  hasMoreRef.current = hasMore;
+  pageRef.current = page;
 
   useEffect(() => {
     if (loading || !hasMore || activeTab !== "community") return;
@@ -413,8 +405,8 @@ export default function ExplorePage() {
     if (observerRef.current) observerRef.current.disconnect();
 
     observerRef.current = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting && !loadingMore && hasMore) {
-        loadMore();
+      if (entries[0].isIntersecting && !loadingMoreRef.current && hasMoreRef.current) {
+        fetchPublicEntries(pageRef.current + 1);
       }
     }, { threshold: 0.1 });
 
@@ -425,7 +417,7 @@ export default function ExplorePage() {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [loading, loadingMore, hasMore, activeTab, page]);
+  }, [loading, hasMore, activeTab]);
 
   if (!initialized || !user) return <div className={styles.loadingPage}><div className={styles.loadingSpin} /><p>Verifying session...</p></div>;
   

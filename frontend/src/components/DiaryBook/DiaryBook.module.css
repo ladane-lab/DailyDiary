@@ -89,7 +89,8 @@
   }
 
   .book.opened {
-    transform: scale(0.65) translateX(0) translateZ(50px);
+    /* Centred in the padded scene — no manual Y offset needed */
+    transform: scale(0.78) translateX(0) translateZ(50px);
     margin-left: 0;
   }
 
@@ -97,26 +98,189 @@
     left: 0;
     width: 100%;
     padding-left: 0;
-    padding-top: 20px;
-    /* Reset desktop 120px */
-    padding-bottom: 80px;
-    /* Space for bottom nav + controls */
+    padding-top: 56px;   /* solid top bar height */
+    padding-bottom: 80px; /* 64px bottom bar + 16px for controls clearance */
     display: flex;
     justify-content: center;
     align-items: center;
     box-sizing: border-box;
   }
+
+  .bottomControls {
+    /* Clear bottom tab bar (60-70px) + safe area */
+    bottom: 84px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .navArrow {
+    width: 48px;
+    height: 48px;
+  }
+
+  .sideControls {
+    /* Portrait: no sidebar, arrows flush to viewport edges */
+    left: 8px;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .gridPlaceholder {
+    width: 220px;
+    height: 340px;
+  }
 }
 
-/* Landscape Mobile Fix */
-@media (max-width: 932px) and (orientation: landscape) {
+/* ── Mobile Small (480px) ── */
+@media (max-width: 480px) {
+  .gridPlaceholder {
+    width: 200px;
+    height: 310px;
+  }
+
+  .book {
+    width: 240px;
+    height: 370px;
+  }
+
   .book.opened {
-    transform: scale(0.48) translateX(0) translateZ(50px);
+    transform: scale(0.74) translateX(0) translateZ(30px);
   }
 
   .sceneOpen {
+    padding-top: 48px;
+    /* Mobile header on 480px screens */
+    padding-bottom: 76px;
+  }
+
+  .bottomControls {
+    bottom: 76px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 10px;
+  }
+
+  .navArrow {
+    width: 44px;
+    height: 44px;
+  }
+
+  .navArrow svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .jumpForm {
+    padding: 5px 6px 5px 14px;
+    gap: 6px;
+  }
+
+  .jumpLabel {
+    font-size: 11px;
+  }
+
+  .jumpInput {
+    width: 30px;
+    font-size: 13px;
+  }
+
+  .jumpBtn {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .closeBtnBelow {
+    padding: 8px 18px;
+    font-size: 13px;
+  }
+
+  .positionIndicator {
+    font-size: 11px;
+    padding: 5px 12px;
+  }
+}
+
+/* ── Very Small (360px) ── */
+@media (max-width: 360px) {
+  .gridPlaceholder {
+    width: 180px;
+    height: 290px;
+  }
+
+  .book {
+    width: 220px;
+    height: 340px;
+  }
+
+  .book.opened {
+    transform: scale(0.68) translateX(0) translateZ(20px);
+  }
+
+  .sceneOpen {
+    padding-top: 44px;
+    padding-bottom: 72px;
+  }
+
+  .bottomControls {
+    bottom: 72px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 8px;
+  }
+
+  .navArrow {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+
+/* ── Landscape Phone Fix ── */
+/* Fires when screen is landscape AND narrow enough to be a phone (height < 500px) */
+@media (max-width: 932px) and (orientation: landscape) {
+  .book {
+    width: 300px;
+    height: 430px;
+  }
+
+  .book.opened {
+    /* Smaller scale so the book fits vertically in the short landscape viewport */
+    transform: scale(0.52) translateX(0) translateZ(40px);
+  }
+
+  .sceneOpen {
+    /* Keep sidebar offset — in landscape, sidebar is desktop-style (260px) */
+    padding-left: 260px;
+    padding-top: 0;
     padding-bottom: 0;
     align-items: center;
+  }
+
+  /* Arrows: account for sidebar on left */
+  .sideControls {
+    left: 276px;  /* 260px sidebar + 16px gap */
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* Bottom controls: center in content area (right of sidebar), float near bottom */
+  .bottomControls {
+    bottom: 12px;
+    left: calc(260px + (100vw - 260px) / 2);
+    transform: translateX(-50%);
+    gap: 10px;
+  }
+
+  .navArrow {
+    width: 48px;
+    height: 48px;
+  }
+
+  .gridPlaceholder {
+    width: 220px;
+    height: 320px;
   }
 }
 
@@ -340,16 +504,17 @@
   /* Flush to spine */
 }
 
-/* Pagination Controls */
+/* Pagination Controls — position:fixed ensures always in viewport, not relative to scene */
 .sideControls {
-  position: absolute;
+  position: fixed;
   top: 50%;
-  left: 50%;
-  width: 1100px;
-  /* Wider spread to match target screenshot */
-  transform: translate(-50%, -50%);
+  /* Desktop: span the content area excluding the 260px sidebar */
+  left: 268px;   /* 260px sidebar + 8px breathing room */
+  right: 16px;
+  transform: translateY(-50%);
   display: flex;
   justify-content: space-between;
+  align-items: center;
   pointer-events: none;
   z-index: 2500;
 }
@@ -395,17 +560,7 @@
   gap: 16px;
 }
 
-@media (max-width: 768px) {
-  .bottomControls {
-    bottom: 40px;
-    left: 50%;
-  }
-
-  .navArrow {
-    width: 44px;
-    height: 44px;
-  }
-}
+/* bottomControls 768px override lives inside the main 768px block above */
 
 .jumpForm {
   pointer-events: auto;

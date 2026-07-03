@@ -218,19 +218,29 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /api/entries/public - Public feed
+// GET /api/entries/public - Social-media-style feed with ranking algorithm
 router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
   const { page = '1', limit = '10' } = req.query;
-  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const pageNum = parseInt(page as string);
   const take = parseInt(limit as string);
 
   try {
-    logger.info(`Fetching public entries`, { page, user: req.user?.uid || 'Guest' });
+    logger.info(`Fetching public feed`, { page, user: req.user?.uid || 'Guest' });
+
+    // Fetch a larger pool to rank from (3x the page size for better shuffling)
+    const poolSize = Math.min(take * 3, 50);
+    const total = await prisma.entry.count({ where: { isPublic: true } });
+
+    // For page 1: fetch a large pool and rank. For later pages: use offset with recency order.
+    const isFirstPage = pageNum === 1;
+    const fetchSize = isFirstPage ? poolSize : take;
+    const skip = isFirstPage ? 0 : ((pageNum - 1) * take);
+
     const entries = await prisma.entry.findMany({
       where: { isPublic: true },
       orderBy: { createdAt: 'desc' },
       skip,
-      take,
+      take: fetchSize,
       include: { 
         user: {
           select: {
@@ -261,15 +271,41 @@ router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Respon
 
     if (entries.length === 0) {
       logger.info(`No public entries found`);
-      return res.json({ entries: [], total: 0 });
+      return res.json({ entries: [], total: 0, page: pageNum, hasMore: false });
     }
 
-    let result = [...entries];
-    if (entries.length > 1 && page === '1') {
-      result = entries.sort(() => Math.random() - 0.5);
-    }
+    // ── Social-media feed ranking algorithm ──
+    // Score = recencyScore * (1 + engagementBoost) + followBoost + randomFactor
+    const now = Date.now();
+    const HOUR = 3600_000;
+    const scoredEntries = entries.map((entry: any) => {
+      const ageHours = (now - new Date(entry.createdAt).getTime()) / HOUR;
+      
+      // Recency: exponential decay — entries < 6h get ~1.0, 24h gets ~0.7, 72h gets ~0.35
+      const recencyScore = Math.exp(-ageHours / 48);
+      
+      // Engagement: logarithmic boost from likes, comments, bookmarks
+      const totalEngagement = entry._count.likes + (entry._count.comments * 2) + entry._count.bookmarks;
+      const engagementBoost = Math.log2(1 + totalEngagement) * 0.15;
+      
+      // Following boost: entries from people the user follows get a bump
+      const followBoost = (entry.user.followers && entry.user.followers.length > 0) ? 0.2 : 0;
+      
+      // Small random factor to prevent identical feeds on every refresh
+      const randomFactor = Math.random() * 0.1;
+      
+      const score = recencyScore * (1 + engagementBoost) + followBoost + randomFactor;
+      
+      return { entry, score };
+    });
 
-    const publicEntries = result.map((entry: any) => {
+    // Sort by score descending, then take only the page size
+    scoredEntries.sort((a, b) => b.score - a.score);
+    const rankedEntries = isFirstPage 
+      ? scoredEntries.slice(0, take) 
+      : scoredEntries;
+
+    const publicEntries = rankedEntries.map(({ entry }: any) => {
       let decryptedBody = "[Secure Content]";
       try {
         decryptedBody = decrypt(entry.body_encrypted, entry.iv);
@@ -293,22 +329,103 @@ router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Respon
         _count: undefined,
         user: { 
           name: entry.user.name,
-          photoURL: entry.user.photoURL
+          photoURL: entry.user.photoURL || null
         }
       };
     });
 
-    const total = await prisma.entry.count({ where: { isPublic: true } });
-
     res.json({ 
       entries: publicEntries, 
       total, 
-      page: parseInt(page as string),
+      page: pageNum,
       hasMore: total > skip + take
     });
   } catch (error: any) {
     logger.error('Public entries error', error);
     res.status(500).json({ error: 'Failed to fetch public entries', details: error.message });
+  }
+});
+
+// GET /api/entries/my-public - Current user's public posts with full social data
+router.get('/my-public', authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const { page = '1', limit = '20' } = req.query;
+  const pageNum = parseInt(page as string);
+  const take = parseInt(limit as string);
+  const skip = (pageNum - 1) * take;
+
+  try {
+    logger.info(`Fetching user's public posts`, { userId });
+
+    const total = await prisma.entry.count({ where: { userId, isPublic: true } });
+
+    const entries = await prisma.entry.findMany({
+      where: { userId, isPublic: true },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            photoURL: true,
+          }
+        },
+        template: true,
+        images: true,
+        _count: {
+          select: { likes: true, comments: true, bookmarks: true }
+        },
+        likes: {
+          where: { userId },
+          select: { userId: true }
+        },
+        bookmarks: {
+          where: { userId },
+          select: { userId: true }
+        }
+      },
+    });
+
+    const publicEntries = entries.map((entry: any) => {
+      let decryptedBody = "[Secure Content]";
+      try {
+        decryptedBody = decrypt(entry.body_encrypted, entry.iv);
+      } catch (err) {
+        logger.error(`Decryption failed for entry`, err, { entryId: entry.id });
+      }
+
+      return {
+        ...entry,
+        body: decryptedBody,
+        body_encrypted: undefined,
+        iv: undefined,
+        isLiked: entry.likes.length > 0,
+        isBookmarked: entry.bookmarks.length > 0,
+        isFollowing: false, // Own posts - not applicable
+        likesCount: entry._count.likes,
+        commentsCount: entry._count.comments,
+        bookmarksCount: entry._count.bookmarks,
+        likes: undefined,
+        bookmarks: undefined,
+        _count: undefined,
+        user: {
+          name: entry.user.name,
+          photoURL: entry.user.photoURL || null
+        }
+      };
+    });
+
+    res.json({
+      entries: publicEntries,
+      total,
+      page: pageNum,
+      hasMore: total > skip + take
+    });
+  } catch (error: any) {
+    logger.error('User public entries error', error);
+    res.status(500).json({ error: 'Failed to fetch user public entries', details: error.message });
   }
 });
 

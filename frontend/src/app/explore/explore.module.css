@@ -355,27 +355,6 @@
   color: var(--text-primary);
 }
 
-.feedImages {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-top: 24px;
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.feedImage {
-  width: 100%;
-  aspect-ratio: 16/9;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 1px solid var(--border);
-  transition: transform 0.3s;
-}
-
-.feedImage:hover {
-  transform: scale(1.02);
-}
 
 /* ── Actions ── */
 .feedActions {

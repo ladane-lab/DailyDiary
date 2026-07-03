@@ -69,7 +69,10 @@ html.dark {
   box-sizing: border-box;
 }
 
-html { scroll-behavior: smooth; }
+html {
+  scroll-behavior: smooth;
+  overflow-x: hidden; /* No horizontal scroll on any page */
+}
 
 body {
   font-family: var(--font-sans), sans-serif;
@@ -78,6 +81,8 @@ body {
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.4s ease, color 0.4s ease;
+  overflow-x: hidden; /* Belt-and-suspenders: prevent horizontal scroll */
+  max-width: 100%;    /* Never exceed viewport width */
 }
 
 .container {
@@ -85,6 +90,24 @@ body {
   margin: 0 auto;
   padding: 0 32px;
   width: 100%;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 360px) {
+  .container {
+    padding: 0 12px;
+  }
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -317,22 +340,23 @@ body.journal-open .animate-page-reveal {
 @media (max-width: 768px) {
   .content-container {
     margin-left: 0;
-    margin-top: 56px;
-    margin-bottom: 70px;
+    margin-top: 56px;    /* top bar height */
+    margin-bottom: 64px; /* bottom tab bar height */
   }
 }
 
 @media (max-width: 480px) {
   html {
-    font-size: 14px;
+    font-size: 15px;
   }
   .content-container {
-    margin-top: 48px;
-    margin-bottom: 60px;
+    margin-top: 48px;    /* top bar height on small screens */
+    margin-bottom: 60px; /* bottom tab bar height on small screens */
   }
-  .btn {
-    padding: 8px 16px !important;
-    font-size: 0.85rem !important;
+  /* Scope btn size reduction only inside app content, not landing page */
+  .content-container .btn {
+    padding: 9px 18px;
+    font-size: 0.875rem;
   }
 }
 

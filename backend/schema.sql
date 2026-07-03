@@ -113,13 +113,68 @@ CREATE TABLE IF NOT EXISTS "UserBadge" (
   CONSTRAINT "UserBadge_badgeId_fkey" FOREIGN KEY ("badgeId") REFERENCES "Badge"("id") ON DELETE CASCADE
 );
 
+-- ─── SOCIAL: LIKES ───────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "Like" (
+  "userId"    TEXT          NOT NULL,
+  "entryId"   TEXT          NOT NULL,
+  "createdAt" TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Like_pkey" PRIMARY KEY ("userId", "entryId"),
+  CONSTRAINT "Like_userId_fkey"  FOREIGN KEY ("userId")  REFERENCES "User"("id")  ON DELETE CASCADE,
+  CONSTRAINT "Like_entryId_fkey" FOREIGN KEY ("entryId") REFERENCES "Entry"("id") ON DELETE CASCADE
+);
+
+-- ─── SOCIAL: BOOKMARKS ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "Bookmark" (
+  "userId"    TEXT          NOT NULL,
+  "entryId"   TEXT          NOT NULL,
+  "createdAt" TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Bookmark_pkey" PRIMARY KEY ("userId", "entryId"),
+  CONSTRAINT "Bookmark_userId_fkey"  FOREIGN KEY ("userId")  REFERENCES "User"("id")  ON DELETE CASCADE,
+  CONSTRAINT "Bookmark_entryId_fkey" FOREIGN KEY ("entryId") REFERENCES "Entry"("id") ON DELETE CASCADE
+);
+
+-- ─── SOCIAL: COMMENTS ───────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "Comment" (
+  "id"        TEXT          NOT NULL DEFAULT gen_random_uuid()::text,
+  "userId"    TEXT          NOT NULL,
+  "entryId"   TEXT          NOT NULL,
+  "content"   TEXT          NOT NULL,
+  "createdAt" TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Comment_pkey" PRIMARY KEY ("id"),
+  CONSTRAINT "Comment_userId_fkey"  FOREIGN KEY ("userId")  REFERENCES "User"("id")  ON DELETE CASCADE,
+  CONSTRAINT "Comment_entryId_fkey" FOREIGN KEY ("entryId") REFERENCES "Entry"("id") ON DELETE CASCADE
+);
+
+-- ─── SOCIAL: FOLLOWS ────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS "Follow" (
+  "followerId"  TEXT          NOT NULL,
+  "followingId" TEXT          NOT NULL,
+  "createdAt"   TIMESTAMP(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT "Follow_pkey" PRIMARY KEY ("followerId", "followingId"),
+  CONSTRAINT "Follow_followerId_fkey"  FOREIGN KEY ("followerId")  REFERENCES "User"("id") ON DELETE CASCADE,
+  CONSTRAINT "Follow_followingId_fkey" FOREIGN KEY ("followingId") REFERENCES "User"("id") ON DELETE CASCADE
+);
+
+-- ─── MISSING COLUMNS (added for social features) ────────────
+ALTER TABLE "User"  ADD COLUMN IF NOT EXISTS "photoURL"        TEXT;
+ALTER TABLE "User"  ADD COLUMN IF NOT EXISTS "preferredThemes" JSONB;
+ALTER TABLE "Entry" ADD COLUMN IF NOT EXISTS "theme"           TEXT DEFAULT 'marble';
+
 -- ─── INDEXES ─────────────────────────────────────────────────
-CREATE INDEX IF NOT EXISTS "Entry_userId_idx"      ON "Entry"("userId");
-CREATE INDEX IF NOT EXISTS "Entry_createdAt_idx"   ON "Entry"("createdAt" DESC);
-CREATE INDEX IF NOT EXISTS "Entry_isPublic_idx"    ON "Entry"("isPublic");
-CREATE INDEX IF NOT EXISTS "Tracker_userId_idx"    ON "Tracker"("userId");
+CREATE INDEX IF NOT EXISTS "Entry_userId_idx"        ON "Entry"("userId");
+CREATE INDEX IF NOT EXISTS "Entry_createdAt_idx"     ON "Entry"("createdAt" DESC);
+CREATE INDEX IF NOT EXISTS "Entry_isPublic_idx"      ON "Entry"("isPublic");
+CREATE INDEX IF NOT EXISTS "Tracker_userId_idx"      ON "Tracker"("userId");
 CREATE INDEX IF NOT EXISTS "UserChallenge_userId_idx" ON "UserChallenge"("userId");
-CREATE INDEX IF NOT EXISTS "UserBadge_userId_idx"  ON "UserBadge"("userId");
+CREATE INDEX IF NOT EXISTS "UserBadge_userId_idx"    ON "UserBadge"("userId");
+CREATE INDEX IF NOT EXISTS "Like_userId_idx"         ON "Like"("userId");
+CREATE INDEX IF NOT EXISTS "Like_entryId_idx"        ON "Like"("entryId");
+CREATE INDEX IF NOT EXISTS "Bookmark_userId_idx"     ON "Bookmark"("userId");
+CREATE INDEX IF NOT EXISTS "Bookmark_entryId_idx"    ON "Bookmark"("entryId");
+CREATE INDEX IF NOT EXISTS "Comment_entryId_idx"     ON "Comment"("entryId");
+CREATE INDEX IF NOT EXISTS "Comment_userId_idx"      ON "Comment"("userId");
+CREATE INDEX IF NOT EXISTS "Follow_followerId_idx"   ON "Follow"("followerId");
+CREATE INDEX IF NOT EXISTS "Follow_followingId_idx"  ON "Follow"("followingId");
 
 -- ─── SEED: Default Templates ──────────────────────────────────
 INSERT INTO "Template" ("id", "name", "description", "fields") VALUES

@@ -470,8 +470,8 @@ export default function DiaryBook({
         )}
       </div>
       
-      {/* Hidden Measuring Container - MUST MATCH ACTUAL CONTENT WIDTH (400px - 48px - 48px - 8px padding = 296px) */}
-      <div style={{ position: 'absolute', visibility: 'hidden', pointerEvents: 'none', top: '-9999px', width: '296px' }}>
+      {/* Hidden Measuring Container - position:fixed keeps it in viewport coords, left:-9999px hides it completely off-screen so it never contributes to page scroll area */}
+      <div style={{ position: 'fixed', visibility: 'hidden', pointerEvents: 'none', top: '-9999px', left: '-9999px', width: '296px' }}>
         {entries.map(entry => {
           let cleanBody = entry.body.trim();
           if (!cleanBody.startsWith('<')) {

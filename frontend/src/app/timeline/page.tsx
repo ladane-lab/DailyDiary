@@ -129,7 +129,7 @@ export default function TimelinePage() {
             </h1>
             <p className={styles.subtitle}>{total} total entries across your library</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className={styles.headerActions}>
             <button 
               className={`btn ${isEditMode ? 'btn-secondary' : 'btn-outline'}`} 
               onClick={() => {
@@ -147,7 +147,7 @@ export default function TimelinePage() {
         </header>
 
         {/* Timeline search bar */}
-        <div style={{ marginBottom: '24px', width: '100%' }}>
+        <div className={styles.searchWrapper}>
           <input 
             type="text" 
             placeholder="Search entries by keyword, template, date, or field answers..." 
