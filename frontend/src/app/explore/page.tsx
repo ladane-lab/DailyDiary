@@ -609,9 +609,9 @@ export default function ExplorePage() {
                           </div>
                           
                           <div className="flex items-center gap-2">
-                            <div className={styles.tplBadge}>{getTemplateIcon(entry.template?.name || "")} {entry.template?.name || "Journal"}</div>
-                            {isOwner && (
-                              <div className="relative">
+                            {/* Journal badge removed per user request */}
+                            {activeTab === "personal" && isOwner && (
+                              <div style={{ position: 'relative' }}>
                                 <button className={styles.toolBtn} onClick={() => setShowMenuId(showMenuId === entry.id ? null : entry.id)}><MoreHorizontal size={20} /></button>
                                 {showMenuId === entry.id && (
                                   <div className={styles.menuPopover}>

@@ -12,16 +12,19 @@
 .contentLayout {
   display: flex;
   gap: 40px;
-  justify-content: center; /* Center the whole block */
+  justify-content: center;
+  /* Center the whole block */
 }
 
 .feedSection {
-  flex: 0 1 750px; /* Constrain the post area as per drawing */
+  flex: 0 1 750px;
+  /* Constrain the post area as per drawing */
   min-width: 0;
 }
 
 .sidebar {
-  flex: 0 0 320px; /* Fixed width for ad column */
+  flex: 0 0 320px;
+  /* Fixed width for ad column */
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -42,8 +45,10 @@
   border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 24px;
   padding: 24px;
-  margin: 0 auto 40px auto; /* Centered with bottom margin */
-  max-width: 600px; /* Match the empty state width */
+  margin: 0 auto 40px auto;
+  /* Centered with bottom margin */
+  max-width: 600px;
+  /* Match the empty state width */
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.04);
   display: flex;
   gap: 16px;
@@ -232,8 +237,9 @@
   padding: 32px;
   margin: 0 auto;
   width: 100%;
-  max-width: 600px; /* Match the editor and empty state width */
-  box-shadow: 
+  max-width: 600px;
+  /* Match the editor and empty state width */
+  box-shadow:
     0 4px 6px rgba(0, 0, 0, 0.02),
     0 10px 15px rgba(0, 0, 0, 0.03);
   transition: all 0.4s cubic-bezier(0.2, 0, 0.2, 1);
@@ -242,7 +248,7 @@
 
 .feedCard:hover {
   transform: translateY(-4px);
-  box-shadow: 
+  box-shadow:
     0 10px 20px rgba(0, 0, 0, 0.05),
     0 20px 40px rgba(0, 0, 0, 0.05);
   background: rgba(255, 255, 255, 0.85);
@@ -349,7 +355,9 @@
   margin-bottom: 1rem;
 }
 
-.tiptapContent :global(h1), .tiptapContent :global(h2), .tiptapContent :global(h3) {
+.tiptapContent :global(h1),
+.tiptapContent :global(h2),
+.tiptapContent :global(h3) {
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
   color: var(--text-primary);
@@ -403,7 +411,8 @@
   justify-content: center;
   gap: 16px;
   margin: 40px auto;
-  max-width: 600px; /* Center and constrain the empty state box */
+  max-width: 600px;
+  /* Center and constrain the empty state box */
 }
 
 .emptyState h3 {
@@ -426,8 +435,15 @@
 }
 
 @keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
 /* ── Staggered Loading Animation ── */
@@ -443,8 +459,15 @@
 }
 
 @keyframes staggeredFadeIn {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .loadingPage {
@@ -465,7 +488,11 @@
   animation: spin 1s linear infinite;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
 
 .editorWrapper {
   background: white;
@@ -498,8 +525,15 @@
 }
 
 @keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .menuItem {
@@ -559,9 +593,11 @@
 
 .adBanner {
   width: 100%;
-  max-width: 600px; /* Align with post cards */
+  max-width: 600px;
+  /* Align with post cards */
   height: 120px;
-  margin: 0 auto 32px auto; /* Centered with bottom margin */
+  margin: 0 auto 32px auto;
+  /* Centered with bottom margin */
 }
 
 .adInFeed {
@@ -569,7 +605,7 @@
   max-width: 600px;
   height: 250px;
   margin: 0 auto 32px auto;
-  background: linear-gradient(135deg, rgba(0,0,0,0.01) 0%, rgba(0,0,0,0.03) 100%);
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.01) 0%, rgba(0, 0, 0, 0.03) 100%);
 }
 
 .adLabel {
@@ -590,16 +626,19 @@
   .main {
     padding: 32px 24px;
   }
+
   .contentLayout {
     flex-direction: column;
     align-items: center;
     gap: 32px;
   }
+
   .feedSection {
     flex: 1 1 100%;
     width: 100%;
     max-width: 750px;
   }
+
   .sidebar {
     width: 100%;
     max-width: 600px;
@@ -612,20 +651,20 @@
   .main {
     padding: 24px 16px;
   }
-  
+
   .title {
     font-size: 1.8rem;
   }
-  
+
   .feedCard {
     padding: 20px;
   }
-  
+
   .feedHeader {
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-start;
   }
-  
+
   .tplBadge {
     align-self: flex-start;
   }
@@ -699,7 +738,8 @@
   border-radius: 16px;
   padding: 12px;
   display: grid;
-  grid-template-columns: repeat(6, 1fr); /* More columns for more emojis */
+  grid-template-columns: repeat(6, 1fr);
+  /* More columns for more emojis */
   gap: 8px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
   margin-top: 12px;
@@ -747,62 +787,78 @@
   .title {
     font-size: 1.3rem !important;
   }
+
   .subtitle {
     font-size: 0.9rem !important;
   }
+
   .tabContainer {
     padding: 4px !important;
     border-radius: 12px !important;
   }
+
   .tabBtn {
     padding: 8px 16px !important;
     font-size: 0.8rem !important;
   }
+
   .composeSection {
     padding: 16px !important;
     gap: 10px !important;
     margin-bottom: 24px !important;
   }
+
   .composeAvatarImage {
     width: 36px !important;
     height: 36px !important;
   }
+
   .composeInput {
     font-size: 0.95rem !important;
   }
+
   .toolBtn {
     width: 32px !important;
     height: 32px !important;
   }
+
   .postBtn {
     padding: 8px 18px !important;
     font-size: 0.85rem !important;
   }
+
   .feedCard {
     padding: 16px !important;
   }
+
   .authorAvatarImage {
     width: 40px !important;
     height: 40px !important;
   }
+
   .authorName {
     font-size: 0.95rem !important;
   }
+
   .feedMeta {
     font-size: 0.75rem !important;
   }
+
   .tplBadge {
     font-size: 0.75rem !important;
     padding: 4px 10px !important;
   }
+
   .feedBody {
     font-size: 0.9rem !important;
     line-height: 1.6 !important;
   }
+
   .feedActions {
     padding-top: 16px !important;
     gap: 16px !important;
   }
+
   .actionBtn {
     font-size: 0.8rem !important;
     padding: 6px 10px !important;
