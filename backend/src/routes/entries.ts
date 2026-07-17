@@ -555,6 +555,65 @@ router.get('/:id/comments', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// GET /api/entries/saved - List bookmarked entries
+router.get('/saved', authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
+  const { page = '1', limit = '10' } = req.query;
+  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
+  const take = parseInt(limit as string);
+
+  try {
+    const bookmarks = await prisma.bookmark.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take,
+      include: {
+        entry: {
+          include: {
+            user: { select: { id: true, name: true, photoURL: true } },
+            template: true,
+            images: true,
+            _count: { select: { likes: true, comments: true, bookmarks: true } },
+            likes: { where: { userId }, select: { userId: true } },
+            bookmarks: { where: { userId }, select: { userId: true } }
+          }
+        }
+      }
+    });
+
+    const total = await prisma.bookmark.count({ where: { userId } });
+
+    const savedEntries = bookmarks.map((b: any) => {
+      const entry = b.entry;
+      let decryptedBody = "[Secure Content]";
+      try {
+        decryptedBody = decrypt(entry.body_encrypted, entry.iv);
+      } catch (err) {}
+
+      return {
+        ...entry,
+        body: decryptedBody,
+        body_encrypted: undefined,
+        iv: undefined,
+        isLiked: entry.likes.length > 0,
+        isBookmarked: entry.bookmarks.length > 0,
+        likesCount: entry._count.likes,
+        commentsCount: entry._count.comments,
+        bookmarksCount: entry._count.bookmarks,
+        likes: undefined,
+        bookmarks: undefined,
+        _count: undefined,
+      };
+    });
+
+    res.json({ entries: savedEntries, total, page: parseInt(page as string), hasMore: total > skip + take });
+  } catch (error: any) {
+    logger.error('Failed to get saved entries', error);
+    res.status(500).json({ error: 'Failed to get saved entries' });
+  }
+});
+
 // GET /api/entries/:id - Single entry
 router.get('/:id', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
   const userId = req.user?.uid;

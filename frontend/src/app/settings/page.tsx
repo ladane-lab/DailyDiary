@@ -7,7 +7,7 @@ import { updateProfile } from "firebase/auth";
 import { 
   Settings, LayoutDashboard, PenLine, CalendarDays, 
   Trophy, Medal, LogOut, Flame, BookOpen, CheckCircle2,
-  Trash2, Download, Printer
+  Trash2, Download, Printer, Bookmark
 } from "lucide-react";
 import Logo from "@/components/Logo/Logo";
 import styles from "./settings.module.css";
@@ -387,11 +387,14 @@ export default function SettingsPage() {
 
         {/* Data Portability */}
         <div className={`glass-card ${styles.section}`}>
-          <h2 className={styles.sectionTitle}>Data Portability</h2>
+          <h2 className={styles.sectionTitle}>Data & Activity</h2>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
-            Download a copy of your journal reflections or print them as a keepsake book.
+            View your saved posts, download a copy of your journal reflections or print them as a keepsake book.
           </p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button onClick={() => router.push("/saved")} className="btn btn-primary" style={{ gap: '8px' }}>
+              <Bookmark size={18} /> View Saved Posts
+            </button>
             <button onClick={handleExportJSON} className="btn btn-secondary" style={{ gap: '8px' }}>
               <Download size={18} /> Export JSON Data
             </button>

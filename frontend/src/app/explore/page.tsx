@@ -61,8 +61,6 @@ export default function ExplorePage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [loadingUser, setLoadingUser] = useState(false);
-  const [activeComments, setActiveComments] = useState<Record<string, boolean>>({});
-  const [commentText, setCommentText] = useState<Record<string, string>>({});
   
   // Tabs & Views
   const [activeTab, setActiveTab] = useState<"community" | "personal">("community");
@@ -427,24 +425,25 @@ export default function ExplorePage() {
   return (
     <div className={styles.page}>
       <main className={`${styles.main} animate-page-reveal`}>
-        {/* ... Tab Switcher ... */}
-        <div className={styles.tabContainer} style={{ marginTop: '20px' }}>
-          <button 
-            className={`${styles.tabBtn} ${activeTab === "community" ? styles.activeTab : ""}`}
-            onClick={() => setActiveTab("community")}
-          >
-            <Globe size={18} /> Community Feed
-          </button>
-          <button 
-            className={`${styles.tabBtn} ${activeTab === "personal" ? styles.activeTab : ""}`}
-            onClick={() => setActiveTab("personal")}
-          >
-            <UserIcon size={18} /> My Public Posts
-          </button>
-        </div>
-
         <div className={styles.contentLayout}>
           <div className={styles.feedSection}>
+            {/* ... Tab Switcher ... */}
+            <div className={styles.tabStickyHeader}>
+              <div className={styles.tabContainer}>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === "community" ? styles.activeTab : ""}`}
+                  onClick={() => setActiveTab("community")}
+                >
+                  <Globe size={18} /> Community Feed
+                </button>
+                <button 
+                  className={`${styles.tabBtn} ${activeTab === "personal" ? styles.activeTab : ""}`}
+                  onClick={() => setActiveTab("personal")}
+                >
+                  <UserIcon size={18} /> My Public Posts
+                </button>
+              </div>
+            </div>
             {/* ── Conditional Composer (Only on My Posts) ── */}
             {activeTab === "personal" && (
               <div className={`${styles.composeSection} animate-in fade-in slide-in-from-top-4 duration-500`}>
@@ -666,9 +665,6 @@ export default function ExplorePage() {
                           <button className={`${styles.actionBtn} ${entry.isLiked ? styles.active : ""}`} onClick={() => handleLike(entry.id)}>
                             <Heart size={20} fill={entry.isLiked ? "currentColor" : "none"} /> <span>{entry.likesCount || ""} Like</span>
                           </button>
-                          <button className={styles.actionBtn} onClick={() => setActiveComments(prev => ({ ...prev, [entry.id]: !prev[entry.id] }))}>
-                            <MessageCircle size={20} /> <span>{entry.commentsCount || ""} Comment</span>
-                          </button>
                           <button className={`${styles.actionBtn} ${entry.isBookmarked ? styles.active : ""}`} onClick={() => handleBookmark(entry.id)}>
                             <Bookmark size={20} fill={entry.isBookmarked ? "currentColor" : "none"} /> <span>{entry.bookmarksCount || ""} Save</span>
                           </button>
@@ -702,7 +698,7 @@ export default function ExplorePage() {
               </h3>
               <ul style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', listStyleType: 'disc', paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <li>Share mindful reflections and authentic personal thoughts.</li>
-                <li>Be respectful and supportive in comment sections.</li>
+                <li>Be respectful and supportive to others.</li>
                 <li>Do not post spam, hate speech, or explicit images.</li>
               </ul>
             </div>
@@ -712,7 +708,7 @@ export default function ExplorePage() {
                 ✨ About Community Feed
               </h3>
               <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', lineHeight: '1.5' }}>
-                DailyDiary Explore is a space to read public reflections, support other writers with likes and comments, and subscribe to their volume journals.
+                DailyDiary Explore is a space to read public reflections, support other writers with likes, and subscribe to their volume journals.
               </p>
             </div>
           </aside>

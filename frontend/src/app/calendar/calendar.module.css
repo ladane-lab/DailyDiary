@@ -32,46 +32,87 @@
 }
 
 .title {
-  font-family: 'Outfit', sans-serif;
-  font-size: 2rem;
-  font-weight: 800;
+  font-size: 1.8rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 6px;
 }
 
 .subtitle {
-  font-size: 0.95rem;
-  color: var(--text-secondary);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.writeBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .calendarLayout {
   display: grid;
-  grid-template-columns: 1.5fr 1fr;
+  grid-template-columns: 360px 1fr;
   gap: 32px;
   align-items: start;
 }
 
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
 .calendarCard {
-  padding: 24px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
 }
 
 .calendarHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
-.monthLabel {
+.monthYearSelectors {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.selectorDropdown {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.3rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  outline: none;
+  max-width: 100%;
+}
+
+.selectorDropdown option {
+  font-size: 0.95rem;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.selectorDropdown:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+}
+
+.selectorDropdown:focus {
+  border-color: var(--primary);
 }
 
 .navBtns {
   display: flex;
-  gap: 8px;
+  gap: 4px;
 }
 
 .weekDaysGrid {
@@ -79,17 +120,17 @@
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: 12px;
+  padding-bottom: 8px;
 }
 
 .daysGrid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 8px;
+  gap: 4px;
 }
 
 .dayCell {
@@ -98,16 +139,16 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid transparent;
   background: var(--bg-secondary);
   color: var(--text-primary);
   font-weight: 500;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   position: relative;
   transition: all 0.2s ease;
-  padding: 4px;
+  padding: 2px;
 }
 
 .dayCell:hover {
@@ -137,17 +178,61 @@
 .indicators {
   display: flex;
   justify-content: center;
-  gap: 3px;
+  gap: 2px;
   position: absolute;
-  bottom: 8px;
+  bottom: 4px;
   width: 100%;
 }
 
 .indicatorDot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
   display: inline-block;
+}
+
+.statsCard {
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+}
+
+.statsTitle {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'Outfit', sans-serif;
 }
 
 .detailsCard {
@@ -155,16 +240,22 @@
   min-height: 400px;
   display: flex;
   flex-direction: column;
+  border-radius: var(--radius-lg);
 }
 
 .detailsTitle {
   font-family: 'Outfit', sans-serif;
-  font-size: 1.15rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 16px;
+}
+
+.detailsSubtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
   margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
 }
 
 .emptyState {
@@ -182,112 +273,128 @@
 .entryList {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  max-height: 500px;
+  gap: 24px;
+  max-height: 600px;
   overflow-y: auto;
-  padding-right: 4px;
+  padding-right: 8px;
 }
 
 .entryItemCard {
   border: 1px solid var(--border);
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
-  padding: 16px;
-  cursor: pointer;
+  padding: 20px;
   transition: all 0.2s ease;
 }
 
 .entryItemCard:hover {
   border-color: var(--primary-light);
   background: var(--bg-card);
-  transform: translateY(-2px);
   box-shadow: var(--shadow-sm);
 }
 
 .entryItemHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
+  gap: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 12px;
 }
 
 .entryItemIcon {
   display: flex;
   align-items: center;
   justify-content: center;
+  background: var(--bg-primary);
+  padding: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .entryItemTitle {
   font-family: 'Outfit', sans-serif;
-  font-weight: 600;
-  font-size: 0.95rem;
+  font-weight: 700;
+  font-size: 1.1rem;
   color: var(--text-primary);
   flex: 1;
 }
 
 .entryItemTime {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.entryMiniResponses {
-  background-color: var(--bg-card);
+  background: var(--bg-primary);
+  padding: 4px 8px;
   border-radius: var(--radius-sm);
-  padding: 8px 12px;
-  font-size: 0.8rem;
-  color: var(--text-secondary);
-  margin-bottom: 10px;
-  border-left: 2px solid var(--primary-light);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
 }
 
-.entryMiniResponseRow {
-  line-clamp: 1;
-  overflow: hidden;
+.reflectionSection {
+  margin-bottom: 16px;
 }
 
-.entryMiniResponseLbl {
-  font-weight: 600;
-  color: var(--text-primary);
+.reflectionSection:last-child {
+  margin-bottom: 0;
 }
 
-.entryItemBody {
+.reflectionLabel {
   font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.reflectionContent {
+  font-size: 0.95rem;
   color: var(--text-secondary);
-  line-height: 1.5;
+  line-height: 1.6;
+}
+
+.reflectionContent ul {
+  padding-left: 20px;
+  margin-top: 4px;
+}
+
+.reflectionContent li {
+  margin-bottom: 4px;
 }
 
 .entryMiniImages {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 12px;
+  margin-top: 16px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  padding-bottom: 8px;
 }
 
 .entryMiniImg {
-  width: 50px;
-  height: 50px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   border: 1px solid var(--border);
 }
 
-/* Tiptap content resets for lists/elements */
 .tiptapContent p {
   margin-bottom: 8px;
 }
+
 .tiptapContent p:last-child {
   margin-bottom: 0;
 }
 
 @media (max-width: 1024px) {
-  .main { padding: 32px 24px; }
+  .main {
+    padding: 32px 24px;
+  }
+
+  .calendarLayout {
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
 }
 
 @media (max-width: 900px) {
@@ -300,47 +407,137 @@
   .main {
     padding: 24px 16px;
   }
+
   .mobileLogo {
     display: flex;
   }
+
   .header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
+
+  .title {
+    font-size: 1.7rem;
+  }
+
+  .selectorDropdown {
+    font-size: 0.95rem;
+  }
+
+  .selectorDropdown option {
+    font-size: 0.9rem;
+  }
+
+  .dayCell {
+    font-size: 0.85rem;
+  }
+
+  .statValue {
+    font-size: 1rem;
+  }
 }
 
 @media (max-width: 480px) {
+  .main {
+    padding: 12px 8px;
+  }
+
+  .header {
+    margin-bottom: 16px;
+    gap: 12px;
+  }
+
   .title {
-    font-size: 1.3rem !important;
+    font-size: 1.35rem !important;
   }
-  .monthLabel {
-    font-size: 1.15rem !important;
+
+  .writeBtn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    gap: 6px;
   }
-  .calendarCard, .detailsCard {
-    padding: 12px !important;
+
+  .btnIcon {
+    width: 14px;
+    height: 14px;
   }
-  .detailsTitle {
-    font-size: 0.95rem !important;
+
+  .calendarLayout {
+    gap: 16px;
   }
-  .entryItemTitle {
-    font-size: 0.85rem !important;
+
+  .leftColumn {
+    gap: 16px;
   }
-  .entryItemBody {
-    font-size: 0.78rem !important;
+
+  .calendarCard,
+  .statsCard,
+  .detailsCard {
+    padding: 12px;
   }
-  .daysGrid, .weekDaysGrid {
-    gap: 4px;
-  }
-  .dayCell {
+
+  .selectorDropdown {
     font-size: 0.8rem;
     padding: 2px;
   }
-  .indicators {
-    bottom: 4px;
+
+  .selectorDropdown option {
+    font-size: 0.75rem;
   }
-  .indicatorDot {
-    width: 4px;
-    height: 4px;
+
+  .monthYearSelectors {
+    gap: 2px;
+  }
+
+  .navBtns button {
+    padding: 2px 4px !important;
+  }
+
+  .navBtns svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .dayCell {
+    font-size: 0.75rem;
+    padding: 2px;
+  }
+
+  .statsGrid {
+    gap: 8px 4px;
+  }
+
+  .statValue {
+    font-size: 0.85rem;
+  }
+
+  .statLabel {
+    font-size: 0.6rem;
+  }
+
+  .detailsTitle {
+    font-size: 0.95rem;
+  }
+
+  .entryItemCard {
+    padding: 10px;
+  }
+
+  .entryItemTitle {
+    font-size: 0.9rem;
+  }
+
+  .entryItemTime {
+    font-size: 0.7rem;
+  }
+
+  .reflectionLabel {
+    font-size: 0.7rem;
+  }
+
+  .reflectionContent {
+    font-size: 0.8rem;
   }
 }

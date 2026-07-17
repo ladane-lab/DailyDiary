@@ -158,6 +158,26 @@ export default function CalendarPage() {
       })
     : [];
 
+  // Monthly stats
+  const entriesInMonth = entries.filter(entry => {
+    const eDate = new Date(entry.createdAt);
+    return eDate.getMonth() === month && eDate.getFullYear() === year;
+  });
+
+  const entriesWritten = entriesInMonth.length;
+  
+  let longestEntry = 0;
+  const wordsWritten = entriesInMonth.reduce((acc, e) => {
+    const text = e.body.replace(/<[^>]+>/g, ' ');
+    const wordCount = text.match(/\b\w+\b/g)?.length || 0;
+    if (wordCount > longestEntry) longestEntry = wordCount;
+    return acc + wordCount;
+  }, 0);
+
+  const avgMood = entriesWritten > 0 ? "😊 Happy" : "-";
+  const writingStreak = user?.streakCount || 0;
+  const journalDays = new Set(entriesInMonth.map(e => new Date(e.createdAt).getDate())).size;
+
   return (
     <div className={styles.page}>
       <main className={`${styles.main} animate-page-reveal`}>
@@ -165,47 +185,102 @@ export default function CalendarPage() {
         
         <header className={styles.header}>
           <div>
-            <h1 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <CalendarIcon size={32} color="var(--primary)" strokeWidth={2.5} /> Calendar View
+            <h1 className={styles.title}>
+              Calendar View
             </h1>
             <p className={styles.subtitle}>Browse your journal collections by date</p>
           </div>
-          <a href="/write" className="btn btn-primary" style={{ gap: '8px' }}>
-            <PenLine size={18} /> Write Today
+          <a href="/write" className={`btn btn-primary ${styles.writeBtn}`}>
+            <PenLine size={16} className={styles.btnIcon} /> Write Today
           </a>
         </header>
 
         <div className={styles.calendarLayout}>
-          {/* Calendar Card */}
-          <div className={`glass-card ${styles.calendarCard}`}>
-            <div className={styles.calendarHeader}>
-              <h2 className={styles.monthLabel}>{monthNames[month]} {year}</h2>
-              <div className={styles.navBtns}>
-                <button onClick={prevMonth} className="btn btn-secondary" style={{ padding: '8px 12px' }}><ChevronLeft size={16} /></button>
-                <button onClick={nextMonth} className="btn btn-secondary" style={{ padding: '8px 12px' }}><ChevronRight size={16} /></button>
+          <div className={styles.leftColumn}>
+            {/* Calendar Card */}
+            <div className={`glass-card ${styles.calendarCard}`}>
+              <div className={styles.calendarHeader}>
+                <div className={styles.monthYearSelectors}>
+                  <select 
+                    value={month} 
+                    onChange={(e) => setCurrentDate(new Date(year, parseInt(e.target.value), 1))}
+                    className={styles.selectorDropdown}
+                  >
+                    {monthNames.map((m, idx) => (
+                      <option key={m} value={idx}>{m}</option>
+                    ))}
+                  </select>
+                  <select 
+                    value={year} 
+                    onChange={(e) => setCurrentDate(new Date(parseInt(e.target.value), month, 1))}
+                    className={styles.selectorDropdown}
+                  >
+                    {Array.from({ length: 151 }, (_, i) => 1950 + i).map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className={styles.navBtns}>
+                  <button onClick={prevMonth} className="btn btn-secondary" style={{ padding: '4px 8px' }}><ChevronLeft size={16} /></button>
+                  <button onClick={nextMonth} className="btn btn-secondary" style={{ padding: '4px 8px' }}><ChevronRight size={16} /></button>
+                </div>
+              </div>
+
+              <div className={styles.weekDaysGrid}>
+                <span>Sun</span>
+                <span>Mon</span>
+                <span>Tue</span>
+                <span>Wed</span>
+                <span>Thu</span>
+                <span>Fri</span>
+                <span>Sat</span>
+              </div>
+
+              <div className={styles.daysGrid}>
+                {calendarCells}
               </div>
             </div>
 
-            <div className={styles.weekDaysGrid}>
-              <span>Sun</span>
-              <span>Mon</span>
-              <span>Tue</span>
-              <span>Wed</span>
-              <span>Thu</span>
-              <span>Fri</span>
-              <span>Sat</span>
-            </div>
-
-            <div className={styles.daysGrid}>
-              {calendarCells}
+            {/* Monthly Statistics Card */}
+            <div className={styles.statsCard}>
+              <h2 className={styles.statsTitle}>{monthNames[month]} Summary</h2>
+              <div className={styles.statsGrid}>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Entries</span>
+                  <span className={styles.statValue}>{entriesWritten}</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Words</span>
+                  <span className={styles.statValue}>{wordsWritten.toLocaleString()}</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Avg Mood</span>
+                  <span className={styles.statValue}>{avgMood}</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Longest</span>
+                  <span className={styles.statValue}>{longestEntry} words</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Streak</span>
+                  <span className={styles.statValue}>{writingStreak} Days</span>
+                </div>
+                <div className={styles.statItem}>
+                  <span className={styles.statLabel}>Journal Days</span>
+                  <span className={styles.statValue}>{journalDays}/{daysInMonth}</span>
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Reflections List Card */}
           <div className={`glass-card ${styles.detailsCard}`}>
             <h2 className={styles.detailsTitle}>
-              Reflections for {selectedDate ? selectedDate.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "Selected Date"}
+              {selectedDate ? selectedDate.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }) : "Selected Date"}
             </h2>
+            <p className={styles.detailsSubtitle}>
+              {selectedEntries.length === 0 ? "No Entry" : `${selectedEntries.length} Journal Entr${selectedEntries.length > 1 ? 'ies' : 'y'}`}
+            </p>
             
             {loading ? (
               <div className={styles.emptyState}>Loading reflections...</div>
@@ -230,28 +305,59 @@ export default function CalendarPage() {
                     hour: "2-digit", minute: "2-digit"
                   });
 
+                  // Categorize responses
+                  const moodResponses = entry.responses?.filter(r => r.fieldLabel.toLowerCase().includes('mood')) || [];
+                  const gratitudeResponses = entry.responses?.filter(r => r.fieldLabel.toLowerCase().includes('gratitude') || r.fieldLabel.toLowerCase().includes('thankful')) || [];
+                  const achievementResponses = entry.responses?.filter(r => r.fieldLabel.toLowerCase().includes('achieve') || r.fieldLabel.toLowerCase().includes('goal') || r.fieldLabel.toLowerCase().includes('win')) || [];
+
                   return (
-                    <div key={entry.id} className={styles.entryItemCard} onClick={() => router.push(`/timeline`)}>
+                    <div key={entry.id} className={styles.entryItemCard} onClick={() => router.push(`/timeline`)} style={{ cursor: 'pointer' }}>
                       <div className={styles.entryItemHeader}>
                         <span className={styles.entryItemIcon}>{getTemplateIcon(entry.template?.name || "")}</span>
-                        <div className={styles.entryItemTitle}>{entry.template?.name || "Personal Journal"}</div>
+                        <div className={styles.entryItemTitle}>{entry.template?.name || "Morning Journal"}</div>
                         <div className={styles.entryItemTime}><Clock size={12} /> {timeStr}</div>
                       </div>
                       
-                      {entry.responses && entry.responses.length > 0 && (
-                        <div className={styles.entryMiniResponses}>
-                          {entry.responses.slice(0, 2).map((r, i) => (
-                            <div key={i} className={styles.entryMiniResponseRow}>
-                              <span className={styles.entryMiniResponseLbl}>{r.fieldLabel}:</span> {r.value}
-                            </div>
-                          ))}
+                      {moodResponses.length > 0 && (
+                        <div className={styles.reflectionSection}>
+                          <div className={styles.reflectionLabel}>Today's Mood</div>
+                          <div className={styles.reflectionContent}>{moodResponses.map(m => m.value).join(', ')}</div>
                         </div>
                       )}
 
-                      <div 
-                        className={`text-sm line-clamp-3 ${styles.entryItemBody} ${styles.tiptapContent}`}
-                        dangerouslySetInnerHTML={{ __html: cleanBody }}
-                      />
+                      {gratitudeResponses.length > 0 && (
+                        <div className={styles.reflectionSection}>
+                          <div className={styles.reflectionLabel}>Gratitude</div>
+                          <div className={styles.reflectionContent}>
+                            <ul>
+                              {gratitudeResponses.map((r, i) => (
+                                <li key={i}>{r.value}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      {achievementResponses.length > 0 && (
+                        <div className={styles.reflectionSection}>
+                          <div className={styles.reflectionLabel}>Achievements</div>
+                          <div className={styles.reflectionContent}>
+                            <ul>
+                              {achievementResponses.map((r, i) => (
+                                <li key={i}>{r.value}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className={styles.reflectionSection}>
+                        <div className={styles.reflectionLabel}>Reflection</div>
+                        <div 
+                          className={`text-sm line-clamp-4 ${styles.reflectionContent} ${styles.tiptapContent}`}
+                          dangerouslySetInnerHTML={{ __html: cleanBody }}
+                        />
+                      </div>
 
                       {entry.images && entry.images.length > 0 && (
                         <div className={styles.entryMiniImages}>
