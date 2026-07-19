@@ -13,6 +13,7 @@ import userRoutes from './routes/users.js';
 import entryRoutes from './routes/entries.js';
 import templateRoutes from './routes/templates.js';
 import challengeRoutes from './routes/challenges.js';
+import dashboardRoutes from './routes/dashboard.js';
 import { seedTemplates, seedChallenges } from './services/seed.js';
 import prisma from './lib/prisma.js';
 import { rateLimit } from 'express-rate-limit';
@@ -38,6 +39,16 @@ if (!process.env.DIARY_ENCRYPTION_KEY) {
 }
 
 const app = express();
+
+app.use((req, res, next) => {
+  const start = performance.now();
+  res.on('finish', () => {
+    const duration = performance.now() - start;
+    console.log(`[EXPRESS REQUEST] ${req.method} ${req.originalUrl} | Status: ${res.statusCode} | Time: ${duration.toFixed(2)}ms`);
+  });
+  next();
+});
+
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
@@ -103,7 +114,7 @@ app.use(express.json());
 // ─── Rate Limiting ──────────────────────────────────────────────
 const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // Limit each IP to 100 requests per window
+  limit: process.env.NODE_ENV === 'production' ? 100 : 10000,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
@@ -111,7 +122,7 @@ const globalLimiter = rateLimit({
 
 const strictLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 15, // Limit each IP to 15 requests per window
+  limit: process.env.NODE_ENV === 'production' ? 15 : 1500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Too many write/sync requests from this IP, please try again after 15 minutes' },
@@ -119,7 +130,7 @@ const strictLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  limit: 5,
+  limit: process.env.NODE_ENV === 'production' ? 5 : 500,
   standardHeaders: 'draft-7',
   legacyHeaders: false,
   message: { error: 'Too many auth requests from this IP, please try again after 1 minute' },
@@ -190,6 +201,7 @@ app.post('/api/upload', authenticate, upload.single('image'), (req: any, res) =>
 // ─── Protected Routes ───────────────────────────────────────────
 app.use('/api/users', authenticate, userRoutes);
 app.use('/api/challenges', authenticate, challengeRoutes);
+app.use('/api/dashboard', authenticate, dashboardRoutes);
 
 // ─── Server Start ───────────────────────────────────────────────
 app.listen(PORT, async () => {
@@ -201,6 +213,22 @@ app.listen(PORT, async () => {
     await seedTemplates();
     await seedChallenges();
     logger.info('Seeding complete!');
+    
+    // ── Cache Warming ──
+    logger.info('Warming cache for frequently accessed resources...');
+    setTimeout(async () => {
+      try {
+        await Promise.all([
+          fetch(`http://localhost:${PORT}/api/entries/public`),
+          fetch(`http://localhost:${PORT}/api/templates`),
+          fetch(`http://localhost:${PORT}/api/challenges`) // Assuming challenges might be cached in the future
+        ]);
+        logger.info('Cache warmed successfully!');
+      } catch (warmErr) {
+        logger.warn('Failed to warm cache:', warmErr);
+      }
+    }, 1000); // Small delay to let the server fully bind
+
   } catch (error) {
     logger.warn('Seeding skipped (DB may not be connected yet). Set DATABASE_URL in .env to enable.');
   }

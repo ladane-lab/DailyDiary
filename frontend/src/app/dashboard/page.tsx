@@ -1,7 +1,8 @@
 "use client";
 import { API_URL } from "@/lib/api";
+import { useDashboardData } from "@/hooks/useDiaryData";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
@@ -37,10 +38,8 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, initialized } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-  const [stats, setStats] = useState<Stats>({ streak: 0, totalEntries: 0, activeChallenges: 0, badges: 0 });
-  const [recent, setRecent] = useState<RecentEntry[]>([]);
-  const [statsError, setStatsError] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(true);
+
+  const { data: dashboardData, isError: statsError, isLoading: swrLoading } = useDashboardData();
 
   useEffect(() => {
     setMounted(true);
@@ -49,61 +48,32 @@ export default function DashboardPage() {
   useEffect(() => {
     if (initialized && !user) router.push("/login");
   }, [user, initialized, router]);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchStats = async () => {
-      try {
-        const API = API_URL;
-        const token = await user.getIdToken();
-        const headers = { Authorization: `Bearer ${token}` };
-
-        const [userRes, entriesRes, challengesRes] = await Promise.all([
-          fetch(`${API}/users/me`, { headers }),
-          fetch(`${API}/entries?limit=20`, { headers }),
-          fetch(`${API}/challenges/my`, { headers }),
-        ]);
-
-        if (userRes.ok) {
-          const u = await userRes.json();
-          setStats((prev) => ({
-            ...prev,
-            streak: u.streakCount ?? 0,
-            badges: (u.userBadges ?? []).length,
-          }));
-        }
-        if (entriesRes.ok) {
-          const e = await entriesRes.json();
-          // Filter to show only the latest entry for each unique journal type
-          const uniqueJournals: RecentEntry[] = [];
-          const seen = new Set();
-          for (const entry of (e.entries ?? [])) {
-            const tplName = entry.template?.name || "Personal Journal";
-            if (!seen.has(tplName)) {
-              seen.add(tplName);
-              uniqueJournals.push(entry);
-            }
-            if (uniqueJournals.length >= 3) break;
-          }
-          setRecent(uniqueJournals);
-          setStats((prev) => ({ ...prev, totalEntries: e.total ?? 0 }));
-        }
-        if (challengesRes.ok) {
-          const c = await challengesRes.json();
-          setStats((prev) => ({
-            ...prev,
-            activeChallenges: Array.isArray(c) ? c.filter((uc: { completed: boolean }) => !uc.completed).length : 0,
-          }));
-        }
-      } catch (err) {
-        console.error("Failed to load stats:", err);
-        setStatsError(true);
-      } finally {
-        setStatsLoading(false);
-      }
+  const stats = React.useMemo(() => {
+    if (!dashboardData) return { streak: 0, totalEntries: 0, activeChallenges: 0, badges: 0 };
+    return {
+      streak: dashboardData.user?.streakCount ?? 0,
+      badges: dashboardData.stats?.badgesEarned ?? 0,
+      totalEntries: dashboardData.stats?.totalEntries ?? 0,
+      activeChallenges: dashboardData.stats?.activeChallengesCount ?? 0,
     };
-    fetchStats();
-  }, [user]);
+  }, [dashboardData]);
+
+  const recent = React.useMemo(() => {
+    if (!dashboardData) return [];
+    const uniqueJournals: RecentEntry[] = [];
+    const seen = new Set();
+    for (const entry of (dashboardData.recentEntries ?? [])) {
+      const tplName = entry.template?.name || "Personal Journal";
+      if (!seen.has(tplName)) {
+        seen.add(tplName);
+        uniqueJournals.push(entry);
+      }
+      if (uniqueJournals.length >= 3) break;
+    }
+    return uniqueJournals;
+  }, [dashboardData]);
+
+  const statsLoading = swrLoading || !dashboardData;
 
   if (!mounted || !initialized || !user) {
     return (
