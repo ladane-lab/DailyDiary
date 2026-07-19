@@ -4,9 +4,11 @@ import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import Sidebar from "./Sidebar/Sidebar";
 import ErrorBoundary from "./ErrorBoundary";
+import { useAuthStore } from "@/store/authStore";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const initAuth = useAuthStore((state) => state.initAuth);
 
   const applyCurrentTheme = () => {
     const savedTheme = localStorage.getItem("theme");
@@ -26,6 +28,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   };
 
   useEffect(() => {
+    const unsubscribe = initAuth();
     applyCurrentTheme();
 
     const handleThemeChange = () => {
@@ -34,9 +37,10 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
 
     window.addEventListener("theme-changed", handleThemeChange);
     return () => {
+      if (unsubscribe) unsubscribe();
       window.removeEventListener("theme-changed", handleThemeChange);
     };
-  }, []);
+  }, [initAuth]);
   
   // List of paths that should NOT have a sidebar (landing page, auth pages, legal pages)
   const noSidebarPaths = ["/", "/login", "/signup", "/register", "/privacy", "/terms", "/contact"];

@@ -73,36 +73,27 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [mounted, setMounted] = useState(false);
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     setMounted(true);
-    const unsub = initAuth();
     
     const handleMouseMove = (e: MouseEvent) => {
-      // Throttle or use direct values for CSS variables
-      setMousePos({ x: e.clientX, y: e.clientY });
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
     };
 
     window.addEventListener("mousemove", handleMouseMove);
     return () => {
-      unsub();
       window.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [initAuth]);
+  }, []);
 
   if (!mounted) return null;
 
   return (
-    <div 
-      className={styles.page} 
-      style={{ 
-        '--mouse-x': `${mousePos.x}px`, 
-        '--mouse-y': `${mousePos.y}px` 
-      } as React.CSSProperties}
-    >
+    <div className={styles.page}>
       {/* ── Navigation ── */}
       <nav className={styles.nav}>
         <div className={styles.navInner}>

@@ -1,4 +1,7 @@
 "use client";
+import toast from "react-hot-toast";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -36,7 +39,7 @@ const getReadTime = (htmlContent: string): string => {
 
 export default function SavedPostsPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [entries, setEntries] = useState<ExploreEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,16 +47,15 @@ export default function SavedPostsPage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   
-  useEffect(() => { const unsub = initAuth(); return unsub; }, [initAuth]);
-
+  
   const fetchSavedEntries = async (pageNum = 1, isInitial = false) => {
     if (isInitial) setLoading(true);
     else setLoadingMore(true);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user?.getIdToken();
-      const res = await fetch(`${API}/api/entries/saved?page=${pageNum}&limit=10`, {
+      const res = await fetch(`${API}/entries/saved?page=${pageNum}&limit=10`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (res.ok) {
@@ -86,9 +88,9 @@ export default function SavedPostsPage() {
     const update = (prev: ExploreEntry[]) => prev.map(e => (e.id === entryId ? { ...e, isLiked: !e.isLiked, likesCount: e.isLiked ? e.likesCount - 1 : e.likesCount + 1 } : e));
     setEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchSavedEntries(1, true); }
   };
 
@@ -97,9 +99,9 @@ export default function SavedPostsPage() {
     const update = (prev: ExploreEntry[]) => prev.filter(e => e.id !== entryId);
     setEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchSavedEntries(1, true); }
   };
 
@@ -108,16 +110,16 @@ export default function SavedPostsPage() {
     const update = (prev: ExploreEntry[]) => prev.map(e => (e.userId === targetUserId ? { ...e, isFollowing: !e.isFollowing } : e));
     setEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchSavedEntries(1, true); }
   };
 
   const handleShare = (entryId: string) => {
     const url = `${window.location.origin}/explore/${entryId}`;
     if (navigator.share) navigator.share({ title: 'DailyDiary Entry', text: 'Check out this reflection on DailyDiary!', url }).catch(() => {});
-    else { navigator.clipboard.writeText(url); alert("Link copied to clipboard!"); }
+    else { navigator.clipboard.writeText(url); toast.success("Link copied to clipboard!"); }
   };
 
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -228,7 +230,7 @@ export default function SavedPostsPage() {
                           </div>
                         </div>
 
-                        <div className={`${styles.feedBody} ${styles.tiptapContent}`} dangerouslySetInnerHTML={{ __html: entry.body }} />
+                        <div className={`${styles.feedBody} ${styles.tiptapContent}`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.body) }} />
 
                         {entry.images && entry.images.length > 0 && (
                           <div className={styles.feedImages}>{entry.images.map((img: any) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} />)}</div>
@@ -277,3 +279,4 @@ export default function SavedPostsPage() {
     </div>
   );
 }
+

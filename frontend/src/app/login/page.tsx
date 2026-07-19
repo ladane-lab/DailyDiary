@@ -8,17 +8,13 @@ import styles from "./auth.module.css";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { user, loading, error, login, loginWithGoogle, sendPasswordReset, clearError, initAuth, initialized } = useAuthStore();
+  const { user, loading, error, login, loginWithGoogle, sendPasswordReset, clearError, initialized } = useAuthStore();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
-
+  
   useEffect(() => {
     if (initialized && user) {
       router.push("/dashboard");

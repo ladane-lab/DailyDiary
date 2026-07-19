@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/api";
 // Persistent Diary Styling System
 
 import { useEffect, useState } from "react";
@@ -26,7 +27,7 @@ import {
 
 export default function TimelinePage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [entries, setEntries] = useState<EntryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -37,11 +38,7 @@ export default function TimelinePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
-  useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
-
+  
   useEffect(() => {
     if (initialized && !user) router.push("/login");
   }, [user, initialized, router]);
@@ -65,9 +62,9 @@ export default function TimelinePage() {
       try {
         setLoading(true);
         const token = await user.getIdToken();
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API = API_URL;
         const searchParam = debouncedSearch ? `&search=${encodeURIComponent(debouncedSearch)}` : "";
-        const res = await fetch(`${API}/api/entries?page=${page}&limit=50${searchParam}`, {
+        const res = await fetch(`${API}/entries?page=${page}&limit=50${searchParam}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -90,8 +87,8 @@ export default function TimelinePage() {
     const fetchPrefs = async () => {
       try {
         const token = await user.getIdToken();
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/users/me`, {
+        const API = API_URL;
+        const res = await fetch(`${API}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -184,8 +181,8 @@ export default function TimelinePage() {
                         
                         try {
                           const token = await user.getIdToken();
-                          const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-                          await fetch(`${API}/api/users/theme`, {
+                          const API = API_URL;
+                          await fetch(`${API}/users/theme`, {
                             method: 'PATCH',
                             headers: { 
                               'Content-Type': 'application/json',
@@ -308,4 +305,5 @@ function getThemeForTemplate(name: string): DiaryTheme {
   if (n.includes("yearly") || n.includes("vintage")) return 'vintage';
   return 'marble';
 }
+
 

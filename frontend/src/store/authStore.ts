@@ -1,3 +1,4 @@
+import { API_URL } from "@/lib/api";
 import { create } from 'zustand';
 import {
   auth,
@@ -28,12 +29,12 @@ interface AuthState {
   initAuth: () => () => void;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 
 async function syncUserToBackend(user: User) {
   try {
     const token = await user.getIdToken();
-    await fetch(`${API_URL}/api/users/sync`, {
+    await fetch(`${API_URL}/users/sync`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -66,7 +67,7 @@ function getFriendlyErrorMessage(err: any): string {
     case 'auth/email-already-in-use':
       return 'An account with this email address already exists.';
     case 'auth/weak-password':
-      return 'Password should be at least 6 characters long.';
+      return 'Password should be at least 8 characters long.';
     case 'auth/user-disabled':
       return 'This account has been disabled.';
     case 'auth/too-many-requests':

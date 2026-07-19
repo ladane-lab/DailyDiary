@@ -1,4 +1,6 @@
 "use client";
+import toast from "react-hot-toast";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -9,12 +11,13 @@ import {
   Trophy, Medal, LogOut, Flame, BookOpen, CheckCircle2,
   Trash2, Download, Printer, Bookmark
 } from "lucide-react";
+import Image from "next/image";
 import Logo from "@/components/Logo/Logo";
 import styles from "./settings.module.css";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, initialized, initAuth, logout } = useAuthStore();
+  const { user, initialized, logout } = useAuthStore();
   const [displayName, setDisplayName] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -38,7 +41,7 @@ export default function SettingsPage() {
     if (!file || !user) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image is too large. Please select a photo smaller than 2MB.");
+      toast.error("Image is too large. Please select a photo smaller than 2MB.");
       return;
     }
 
@@ -60,8 +63,8 @@ export default function SettingsPage() {
 
       // Sync to backend DB
       const token = await user.getIdToken();
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      await fetch(`${API}/api/users/sync`, {
+      const API = API_URL;
+      await fetch(`${API}/users/sync`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,16 +78,17 @@ export default function SettingsPage() {
         }),
       });
       
-      window.location.reload();
+      const { auth } = await import("@/lib/firebase");
+      await auth.currentUser?.reload();
     } catch (err: any) {
       console.error("Avatar upload failed:", err);
-      alert("Failed to upload avatar: " + (err.message || "Unknown error"));
+      toast.error("Failed to upload avatar: " + (err.message || "Unknown error"));
     } finally {
       setAvatarUploading(false);
     }
   };
 
-  useEffect(() => { const u = initAuth(); return u; }, [initAuth]);
+  useEffect(() => { }, []);
   useEffect(() => { if (initialized && !user) router.push("/login"); }, [user, initialized, router]);
 
   useEffect(() => {
@@ -92,9 +96,9 @@ export default function SettingsPage() {
     setDisplayName(user.displayName || "");
     const fetchStats = async () => {
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API = API_URL;
         const token = await user.getIdToken();
-        const res = await fetch(`${API}/api/users/me`, {
+        const res = await fetch(`${API}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -131,8 +135,8 @@ export default function SettingsPage() {
     setPasswordSaved(false);
 
     if (!user) return;
-    if (newPassword.length < 6) {
-      setPasswordError("Password must be at least 6 characters long.");
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters long.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -164,8 +168,8 @@ export default function SettingsPage() {
     if (!user) return;
     try {
       const token = await user.getIdToken();
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-      const res = await fetch(`${API}/api/entries?limit=1000`, {
+      const API = API_URL;
+      const res = await fetch(`${API}/entries?limit=1000`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -187,11 +191,11 @@ export default function SettingsPage() {
         a.click();
         URL.revokeObjectURL(url);
       } else {
-        alert("Failed to export entries.");
+        toast.error("Failed to export entries.");
       }
     } catch (err) {
       console.error("Export JSON failed:", err);
-      alert("An error occurred during export.");
+      toast.error("An error occurred during export.");
     }
   };
 
@@ -203,10 +207,10 @@ export default function SettingsPage() {
     setDeleting(true);
     try {
       const token = await user.getIdToken();
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       
       // 1. Delete data from backend DB
-      const res = await fetch(`${API}/api/users`, {
+      const res = await fetch(`${API}/users`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -224,9 +228,9 @@ export default function SettingsPage() {
     } catch (err: any) {
       console.error("Delete account failed:", err);
       if (err.code === 'auth/requires-recent-login') {
-        alert("For security reasons, this action requires a recent sign-in. Please sign out, sign in again, and try deleting your account.");
+        toast.error("For security reasons, this action requires a recent sign-in. Please sign out, sign in again, and try deleting your account.");
       } else {
-        alert("Failed to delete account. Please try again later or contact support.");
+        toast.error("Failed to delete account. Please try again later or contact support.");
       }
     } finally {
       setDeleting(false);
@@ -258,8 +262,7 @@ export default function SettingsPage() {
         <div className={`glass-card ${styles.profileCard}`}>
           <div style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0 }}>
             {user.photoURL ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.photoURL} alt="Avatar" className={styles.avatarImage} />
+              <Image src={user.photoURL} alt="Avatar" className={styles.avatarImage} width={64} height={64} style={{ objectFit: 'cover' }} />
             ) : (
               <div className={styles.avatar}>{avatarLetter}</div>
             )}
@@ -360,7 +363,7 @@ export default function SettingsPage() {
                 className="input-field"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
                 required
               />
             </div>
@@ -426,3 +429,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

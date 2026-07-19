@@ -1,16 +1,17 @@
 import { Router, Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { AuthRequest } from '../middleware/auth.js';
+import { AuthRequest, authenticate } from '../middleware/auth.js';
 import logger from '../lib/logger.js';
 
 const router = Router();
 
 // POST /api/users/sync - Create or update user after Firebase login
-router.post('/sync', async (req: AuthRequest, res: Response) => {
-  const { email, name, firebaseId, photoURL } = req.body;
+router.post('/sync', authenticate, async (req: AuthRequest, res: Response) => {
+  const { email, name, photoURL } = req.body;
+  const firebaseId = req.user!.uid;
 
-  if (!email || !name || !firebaseId) {
-    res.status(400).json({ error: 'email, name, and firebaseId are required' });
+  if (!email || !name) {
+    res.status(400).json({ error: 'email and name are required' });
     return;
   }
 
@@ -41,21 +42,7 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
     const existingUserByEmail = await prisma.user.findUnique({ where: { email: currentEmail } });
 
     if (existingUserByEmail && existingUserByEmail.id !== userId) {
-      logger.info(`Identity mismatch detected for ${currentEmail}. Starting full migration...`);
-      try {
-        await prisma.$transaction([
-          prisma.entryResponse.deleteMany({ where: { entry: { userId: existingUserByEmail.id } } }),
-          prisma.image.deleteMany({ where: { entry: { userId: existingUserByEmail.id } } }),
-          prisma.tracker.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.entry.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.userBadge.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.userChallenge.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.user.delete({ where: { id: existingUserByEmail.id } }),
-        ]);
-        logger.info(`Identity migration successful for ${currentEmail}`);
-      } catch (err) {
-        logger.error(`Migration failed during transaction`, err, { email: currentEmail });
-      }
+      logger.warn(`Identity mismatch detected for ${currentEmail}. Manual review needed.`, { existingUserId: existingUserByEmail.id, newUserId: userId });
     }
 
     const user = await prisma.user.upsert({

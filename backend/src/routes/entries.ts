@@ -8,7 +8,7 @@ import logger from '../lib/logger.js';
 const router = Router();
 
 // Encryption helpers using AES-256-GCM
-const ENCRYPTION_KEY = process.env.DIARY_ENCRYPTION_KEY || process.env.JWT_SECRET || 'default-key-change-me-32chars!!';
+const ENCRYPTION_KEY = process.env.DIARY_ENCRYPTION_KEY || process.env.JWT_SECRET as string;
 
 function encrypt(text: string): { encrypted: string; iv: string } {
   const iv = crypto.randomBytes(16);
@@ -89,20 +89,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     const existingUserByEmail = await prisma.user.findUnique({ where: { email: currentEmail } });
 
     if (existingUserByEmail && existingUserByEmail.id !== userId) {
-      logger.info(`Identity mismatch detected for ${currentEmail}. Starting migration...`);
-      try {
-        await prisma.$transaction([
-          prisma.entryResponse.deleteMany({ where: { entry: { userId: existingUserByEmail.id } } }),
-          prisma.image.deleteMany({ where: { entry: { userId: existingUserByEmail.id } } }),
-          prisma.tracker.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.entry.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.userBadge.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.userChallenge.deleteMany({ where: { userId: existingUserByEmail.id } }),
-          prisma.user.delete({ where: { id: existingUserByEmail.id } }),
-        ]);
-      } catch (err) {
-        logger.error(`Migration failed`, err, { email: currentEmail });
-      }
+      logger.warn(`Identity mismatch detected for ${currentEmail}. Manual review needed.`, { existingUserId: existingUserByEmail.id, newUserId: userId });
     }
 
     await prisma.user.upsert({
@@ -151,13 +138,16 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     try {
       const user = await prisma.user.findUnique({ where: { id: userId } });
       if (user) {
+        const timezoneOffset = req.body.timezoneOffset ? parseInt(req.body.timezoneOffset, 10) : 0;
         const today = new Date();
-        today.setHours(0, 0, 0, 0);
+        today.setMinutes(today.getMinutes() - timezoneOffset);
+        today.setUTCHours(0, 0, 0, 0);
         let newStreak = 1;
         let isNewDay = true;
         if (user.lastEntryDate) {
           const lastDate = new Date(user.lastEntryDate);
-          lastDate.setHours(0, 0, 0, 0);
+          lastDate.setMinutes(lastDate.getMinutes() - timezoneOffset);
+          lastDate.setUTCHours(0, 0, 0, 0);
           const diffDays = Math.floor((today.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
           if (diffDays === 1) {
             newStreak = user.streakCount + 1;
@@ -433,8 +423,9 @@ router.get('/my-public', authenticate, async (req: AuthRequest, res: Response) =
 router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const { page = '1', limit = '10', search } = req.query;
-  const skip = (parseInt(page as string) - 1) * parseInt(limit as string);
-  const take = parseInt(limit as string);
+  const MAX_LIMIT = 500;
+  const take = Math.min(parseInt(limit as string), MAX_LIMIT);
+  const skip = (parseInt(page as string) - 1) * take;
 
   try {
     const whereClause: any = { userId };
@@ -460,13 +451,16 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       ];
     }
 
-    const entries = await prisma.entry.findMany({
-      where: whereClause,
-      orderBy: { createdAt: 'desc' },
-      skip,
-      take,
-      include: { template: true, responses: true, images: true },
-    });
+    const [entries, total] = await prisma.$transaction([
+      prisma.entry.findMany({
+        where: whereClause,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take,
+        include: { template: true, responses: true, images: true },
+      }),
+      prisma.entry.count({ where: whereClause })
+    ]);
 
     const decryptedEntries = entries.map((entry: any) => {
       let body = "[Secure Content]";
@@ -481,7 +475,6 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
       };
     });
 
-    const total = await prisma.entry.count({ where: whereClause });
     res.json({ entries: decryptedEntries, total, page: parseInt(page as string) });
   } catch (error) {
     res.status(500).json({ error: 'Failed to list entries' });
@@ -493,6 +486,10 @@ router.post('/:id/like', authenticate, async (req: AuthRequest, res: Response) =
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   try {
+    const entry = await prisma.entry.findUnique({ where: { id: entryId } });
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    if (!entry.isPublic && entry.userId !== userId) return res.status(403).json({ error: 'Access denied' });
+
     const existing = await prisma.like.findUnique({ where: { userId_entryId: { userId, entryId } } });
     if (existing) {
       await prisma.like.delete({ where: { userId_entryId: { userId, entryId } } });
@@ -511,6 +508,10 @@ router.post('/:id/bookmark', authenticate, async (req: AuthRequest, res: Respons
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   try {
+    const entry = await prisma.entry.findUnique({ where: { id: entryId } });
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    if (!entry.isPublic && entry.userId !== userId) return res.status(403).json({ error: 'Access denied' });
+
     const existing = await prisma.bookmark.findUnique({ where: { userId_entryId: { userId, entryId } } });
     if (existing) {
       await prisma.bookmark.delete({ where: { userId_entryId: { userId, entryId } } });
@@ -542,8 +543,14 @@ router.post('/:id/comment', authenticate, async (req: AuthRequest, res: Response
 });
 
 // GET /api/entries/:id/comments - List Comments
-router.get('/:id/comments', async (req: AuthRequest, res: Response) => {
+router.get('/:id/comments', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
   try {
+    const entry = await prisma.entry.findUnique({ where: { id: req.params.id as string } });
+    if (!entry) return res.status(404).json({ error: 'Entry not found' });
+    if (!entry.isPublic && entry.userId !== req.user?.uid) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const comments = await prisma.comment.findMany({
       where: { entryId: req.params.id as string },
       orderBy: { createdAt: 'asc' },

@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
+    "@next/bundle-analyzer": "^16.2.10",
+    "@prisma/adapter-neon": "^7.8.0",
+    "@prisma/client": "^7.8.0",
     "@tiptap/extension-color": "^3.22.5",
     "@tiptap/extension-font-family": "^3.22.5",
     "@tiptap/extension-placeholder": "^3.22.5",
@@ -17,20 +21,28 @@
     "@tiptap/extension-underline": "^3.22.5",
     "@tiptap/react": "^3.22.5",
     "@tiptap/starter-kit": "^3.22.5",
+    "dompurify": "^3.4.12",
     "firebase": "^12.12.0",
+    "firebase-admin": "^13.8.0",
     "lucide-react": "^1.14.0",
     "next": "16.2.3",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-hot-toast": "^2.6.0",
+    "ws": "^8.21.1",
+    "zod": "^4.4.3",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/ws": "^8.18.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.3",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

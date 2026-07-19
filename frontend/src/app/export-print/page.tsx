@@ -1,4 +1,6 @@
 "use client";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -27,15 +29,11 @@ interface EntryItem {
 
 export default function ExportPrintPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [entries, setEntries] = useState<EntryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
-
+  
   useEffect(() => {
     if (initialized && !user) {
       router.push("/login");
@@ -47,8 +45,8 @@ export default function ExportPrintPage() {
     const fetchEntries = async () => {
       try {
         const token = await user.getIdToken();
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/entries?limit=1000`, {
+        const API = API_URL;
+        const res = await fetch(`${API}/entries?limit=1000`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -357,7 +355,7 @@ export default function ExportPrintPage() {
               {cleanBody && (
                 <div 
                   className="body-text"
-                  dangerouslySetInnerHTML={{ __html: cleanBody }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }}
                 />
               )}
 
@@ -377,3 +375,4 @@ export default function ExportPrintPage() {
     </>
   );
 }
+

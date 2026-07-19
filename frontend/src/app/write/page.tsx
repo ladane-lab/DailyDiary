@@ -1,4 +1,6 @@
 "use client";
+import toast from "react-hot-toast";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState, useRef, Suspense } from "react";
 import { Editor } from "@tiptap/react";
@@ -8,6 +10,7 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar/Sidebar";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import Image from "next/image";
 import { 
   BookOpen, 
   LayoutDashboard, 
@@ -34,12 +37,6 @@ import {
 import Logo from "@/components/Logo/Logo";
 import styles from "./write.module.css";
 
-const getApiBase = () => {
-  const configured = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
-  if (configured) return configured;
-  if (typeof window !== "undefined") return window.location.origin;
-  return "http://localhost:5000";
-};
 
 interface TemplateField {
   label: string;
@@ -139,7 +136,7 @@ const DEFAULT_TEMPLATES: Template[] = [
   },
 ];
 
-import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor/RichTextEditor";
+import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor";
 
 const getTemplateIcon = (name: string, size = 32) => {
   if (name.includes("Gratitude")) return <Heart size={size} strokeWidth={2.5} color="var(--danger)" />;
@@ -161,7 +158,7 @@ function WritePageContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
 
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [responses, setResponses] = useState<Record<string, string>>({});
@@ -175,9 +172,7 @@ function WritePageContent() {
   const [activeEditor, setActiveEditor] = useState<Editor | null>(null);
 
   useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
+  }, []);
 
   useEffect(() => {
     if (initialized && !user) {
@@ -191,8 +186,8 @@ function WritePageContent() {
     const fetchEntry = async () => {
       try {
         const token = await user.getIdToken();
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/entries/${editId}`, {
+        const API = API_URL;
+        const res = await fetch(`${API}/entries/${editId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -228,8 +223,8 @@ function WritePageContent() {
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/templates`);
+        const API = API_URL;
+        const res = await fetch(`${API}/templates`);
         if (res.ok) {
           const data = await res.json();
           if (data.length > 0) setTemplates(data);
@@ -246,9 +241,9 @@ function WritePageContent() {
     if (!user) return;
     const fetchPrefs = async () => {
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API = API_URL;
         const token = await user.getIdToken();
-        const res = await fetch(`${API}/api/users/me`, {
+        const res = await fetch(`${API}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -291,7 +286,7 @@ function WritePageContent() {
 
     // Validate file size (e.g., 5MB limit)
     if (file.size > 5 * 1024 * 1024) {
-      alert("Image is too large. Please select a photo smaller than 5MB.");
+      toast.error("Image is too large. Please select a photo smaller than 5MB.");
       return;
     }
 
@@ -301,21 +296,25 @@ function WritePageContent() {
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
       const imageRef = ref(storage, `entries/${user.uid}/${fileName}`);
       
-      console.log("[Write] Uploading image to Firebase Storage...");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[Write] Uploading image to Firebase Storage...");
+      }
       const snapshot = await uploadBytes(imageRef, file);
       const url = await getDownloadURL(snapshot.ref);
       
       setImageUrls((prev) => [...prev, url]);
-      console.log("[Write] Image uploaded successfully!");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[Write] Image uploaded successfully!");
+      }
     } catch (err: any) {
       console.error("Image upload failed:", err);
       // Provide user-friendly feedback based on common Firebase errors
       if (err.code === 'storage/unauthorized') {
-        alert("Upload failed: Permission denied. Please ensure you are logged in correctly.");
+        toast.error("Upload failed: Permission denied. Please ensure you are logged in correctly.");
       } else if (err.code === 'storage/canceled') {
-        alert("Upload canceled.");
+        toast.error("Upload canceled.");
       } else {
-        alert(`Image upload failed: ${err.message || "Unknown error"}. Check your internet connection or Firebase configuration.`);
+        toast.error(`Image upload failed: ${err.message || "Unknown error"}. Check your internet connection or Firebase configuration.`);
       }
     } finally {
       setUploadingImage(false);
@@ -328,7 +327,7 @@ function WritePageContent() {
 
     // Validation: Check if at least one response was provided
     if (Object.keys(responses).length === 0 || Object.values(responses).every(v => v.trim() === '')) {
-      alert("Please fill in at least one field before saving your entry.");
+      toast.error("Please fill in at least one field before saving your entry.");
       return;
     }
 
@@ -340,10 +339,12 @@ function WritePageContent() {
         .join("\n");
 
       const token = await user.getIdToken();
-      const apiBase = getApiBase();
+      const apiBase = API_URL;
       const endpoint = `${apiBase}/api/entries`;
 
-      console.log("[Write] Sending entry to backend at:", endpoint);
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[Write] Sending entry to backend at:", endpoint);
+      }
       const url = editId ? `${apiBase}/api/entries/${editId}` : endpoint;
       const res = await fetch(url, {
         method: editId ? "PATCH" : "POST",
@@ -376,12 +377,16 @@ function WritePageContent() {
         throw new Error(errorMessage);
       }
 
-      console.log("[Write] Entry saved successfully!");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[Write] Entry saved successfully!");
+      }
       setSaved(true);
       setTimeout(() => router.push("/timeline"), 1800);
     } catch (err: any) {
-      console.error("[Write] Save failed:", err);
-      alert(err.message || "Something went wrong while saving your entry. Please try again.");
+      if (process.env.NODE_ENV === 'development') {
+        console.error("[Write] Save failed:", err);
+      }
+      toast.error(err.message || "Something went wrong while saving your entry. Please try again.");
       setSaving(false);
     }
   };
@@ -486,8 +491,10 @@ function WritePageContent() {
               <div className={styles.imagePreviewGrid}>
                 {imageUrls.map((url, idx) => (
                   <div key={idx} className={styles.imagePreviewWrapper}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt={`Upload ${idx + 1}`} className={styles.imagePreview} />
+                    <Image src={url} alt={`Upload ${idx + 1}`} className={styles.imagePreview} width={400} height={300} style={{ objectFit: 'cover' }} unoptimized={url.includes('localhost') || url.includes('127.0.0.1')} />
+                    <button type="button" className={styles.removeImageBtn} onClick={() => removeImage(idx)}>
+                      <X size={16} />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -614,3 +621,4 @@ export default function WritePage() {
     </Suspense>
   );
 }
+

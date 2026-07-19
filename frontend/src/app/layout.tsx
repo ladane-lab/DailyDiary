@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 };
 
 import ClientLayout from "@/components/ClientLayout";
+import { Toaster } from "react-hot-toast";
 
 export default function RootLayout({
   children,
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${jakarta.variable} ${lora.variable}`}>
       <body>
+        <Toaster position="top-right" />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

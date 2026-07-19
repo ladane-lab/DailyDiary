@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -34,17 +35,16 @@ const getTemplateIcon = (name: string) => {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [stats, setStats] = useState<Stats>({ streak: 0, totalEntries: 0, activeChallenges: 0, badges: 0 });
   const [recent, setRecent] = useState<RecentEntry[]>([]);
+  const [statsError, setStatsError] = useState(false);
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
+  }, []);
 
   useEffect(() => {
     if (initialized && !user) router.push("/login");
@@ -54,14 +54,14 @@ export default function DashboardPage() {
     if (!user) return;
     const fetchStats = async () => {
       try {
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+        const API = API_URL;
         const token = await user.getIdToken();
         const headers = { Authorization: `Bearer ${token}` };
 
         const [userRes, entriesRes, challengesRes] = await Promise.all([
-          fetch(`${API}/api/users/me`, { headers }),
-          fetch(`${API}/api/entries?limit=20`, { headers }),
-          fetch(`${API}/api/challenges/my`, { headers }),
+          fetch(`${API}/users/me`, { headers }),
+          fetch(`${API}/entries?limit=20`, { headers }),
+          fetch(`${API}/challenges/my`, { headers }),
         ]);
 
         if (userRes.ok) {
@@ -97,6 +97,7 @@ export default function DashboardPage() {
         }
       } catch (err) {
         console.error("Failed to load stats:", err);
+        setStatsError(true);
       } finally {
         setStatsLoading(false);
       }
@@ -139,6 +140,12 @@ export default function DashboardPage() {
             <PenLine size={18} /> Write Today
           </a>
         </header>
+
+        {statsError && (
+          <div className="glass-card" style={{ marginBottom: '24px', padding: '16px', borderLeft: '4px solid var(--danger)', backgroundColor: 'rgba(255, 0, 0, 0.05)' }}>
+            <p style={{ margin: 0, color: 'var(--danger)' }}>Failed to load your stats. The server might be offline.</p>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className={styles.statsGrid}>
@@ -224,3 +231,4 @@ function getGreeting(): string {
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-US", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
 }
+

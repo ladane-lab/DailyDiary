@@ -1,4 +1,6 @@
 "use client";
+import { sanitizeHtml } from "@/lib/sanitize";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -36,17 +38,13 @@ const getTemplateIcon = (name: string, size = 16) => {
 
 export default function CalendarPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [entries, setEntries] = useState<EntryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
-  useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
-
+  
   useEffect(() => {
     if (initialized && !user) {
       router.push("/login");
@@ -58,8 +56,8 @@ export default function CalendarPage() {
     const fetchEntries = async () => {
       try {
         const token = await user.getIdToken();
-        const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
-        const res = await fetch(`${API}/api/entries?limit=1000`, {
+        const API = API_URL;
+        const res = await fetch(`${API}/entries?limit=1000`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
@@ -175,7 +173,7 @@ export default function CalendarPage() {
   }, 0);
 
   const avgMood = entriesWritten > 0 ? "😊 Happy" : "-";
-  const writingStreak = user?.streakCount || 0;
+  const writingStreak = (user as any)?.streakCount || 0;
   const journalDays = new Set(entriesInMonth.map(e => new Date(e.createdAt).getDate())).size;
 
   return (
@@ -355,7 +353,7 @@ export default function CalendarPage() {
                         <div className={styles.reflectionLabel}>Reflection</div>
                         <div 
                           className={`text-sm line-clamp-4 ${styles.reflectionContent} ${styles.tiptapContent}`}
-                          dangerouslySetInnerHTML={{ __html: cleanBody }}
+                          dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }}
                         />
                       </div>
 
@@ -377,3 +375,4 @@ export default function CalendarPage() {
     </div>
   );
 }
+

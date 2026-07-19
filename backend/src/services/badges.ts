@@ -62,33 +62,42 @@ const badgeDefinitions: BadgeDefinition[] = [
  * Call this after entry creation or challenge completion.
  */
 export async function checkAndAwardBadges(userId: string): Promise<string[]> {
-  const awarded: string[] = [];
+  const [allBadges, userBadges] = await Promise.all([
+    prisma.badge.findMany(),
+    prisma.userBadge.findMany({ where: { userId } })
+  ]);
 
-  for (const def of badgeDefinitions) {
-    // Find or create badge definition in DB
-    let badge = await prisma.badge.findFirst({ where: { name: def.name } });
-    if (!badge) {
-      badge = await prisma.badge.create({
-        data: { name: def.name, icon: def.icon, condition: def.condition },
-      });
-    }
-
-    // Check if already awarded
-    const existing = await prisma.userBadge.findUnique({
-      where: { userId_badgeId: { userId, badgeId: badge.id } },
+  let currentBadges = allBadges;
+  const missingBadges = badgeDefinitions.filter(def => !currentBadges.find(b => b.name === def.name));
+  if (missingBadges.length > 0) {
+    await prisma.badge.createMany({
+      data: missingBadges.map(def => ({ name: def.name, icon: def.icon, condition: def.condition }))
     });
-
-    if (existing) continue;
-
-    // Check condition
-    const earned = await def.check(userId);
-    if (earned) {
-      await prisma.userBadge.create({
-        data: { userId, badgeId: badge.id },
-      });
-      awarded.push(def.name);
-    }
+    currentBadges = await prisma.badge.findMany();
   }
 
-  return awarded;
+  const earnedBadgeIds = new Set(userBadges.map(ub => ub.badgeId));
+
+  const checkPromises = badgeDefinitions.map(async (def) => {
+    const badge = currentBadges.find(b => b.name === def.name)!;
+    if (earnedBadgeIds.has(badge.id)) return null;
+
+    const earned = await def.check(userId);
+    if (earned) {
+      return { badgeId: badge.id, name: def.name };
+    }
+    return null;
+  });
+
+  const results = await Promise.all(checkPromises);
+  const newlyEarned = results.filter((r): r is {badgeId: string, name: string} => r !== null);
+
+  if (newlyEarned.length > 0) {
+    await prisma.userBadge.createMany({
+      data: newlyEarned.map(r => ({ userId, badgeId: r.badgeId }))
+    });
+    return newlyEarned.map(r => r.name);
+  }
+
+  return [];
 }

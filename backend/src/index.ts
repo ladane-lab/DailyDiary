@@ -6,6 +6,8 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
+import helmet from 'helmet';
+import compression from 'compression';
 import { authenticate, optionalAuthenticate } from './middleware/auth.js';
 import userRoutes from './routes/users.js';
 import entryRoutes from './routes/entries.js';
@@ -20,6 +22,9 @@ dotenv.config();
 
 // ─── Environment Validation ──────────────────────────────────────
 const requiredEnv = ['DATABASE_URL', 'JWT_SECRET'];
+if (process.env.NODE_ENV === 'production') {
+  requiredEnv.push('BACKEND_URL');
+}
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
 if (missingEnv.length > 0) {
   logger.error(`CRITICAL ERROR: Missing required environment variables: ${missingEnv.join(', ')}`);
@@ -34,6 +39,9 @@ if (!process.env.DIARY_ENCRYPTION_KEY) {
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(helmet());
+app.use(compression());
 
 // ─── Ensure uploads directory exists ────────────────────────────
 const __filename = fileURLToPath(import.meta.url);
@@ -54,7 +62,8 @@ const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
   fileFilter: (_req, file, cb) => {
-    if (file.mimetype.startsWith('image/')) cb(null, true);
+    const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Only image files are allowed'));
   },
 });
@@ -108,12 +117,20 @@ const strictLimiter = rateLimit({
   message: { error: 'Too many write/sync requests from this IP, please try again after 15 minutes' },
 });
 
+const authLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  limit: 5,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: 'Too many auth requests from this IP, please try again after 1 minute' },
+});
+
 // Apply global rate limiter
 app.use(globalLimiter);
 
 // Apply strict limiter on sensitive endpoints
 app.use('/api/upload', strictLimiter);
-app.use('/api/users/sync', strictLimiter);
+app.use('/api/users/sync', authLimiter);
 app.use('/api/users/theme', strictLimiter);
 app.use('/api/entries', (req, res, next) => {
   if (req.method !== 'GET') {
@@ -123,7 +140,12 @@ app.use('/api/entries', (req, res, next) => {
 });
 
 // ─── Serve uploaded files statically ────────────────────────────
-app.use('/uploads', express.static(uploadsDir));
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Content-Security-Policy', "default-src 'none'");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(uploadsDir));
 
 // ─── Public Routes ──────────────────────────────────────────────
 app.get('/health', async (_req, res) => {

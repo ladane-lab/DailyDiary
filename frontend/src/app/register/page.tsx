@@ -8,17 +8,13 @@ import styles from "./auth.module.css";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { user, loading, error, register, loginWithGoogle, clearError, initAuth, initialized } = useAuthStore();
+  const { user, loading, error, register, loginWithGoogle, clearError, initialized } = useAuthStore();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [localError, setLocalError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const unsub = initAuth();
-    return unsub;
-  }, [initAuth]);
-
+  
   useEffect(() => {
     if (initialized && user) {
       router.push("/dashboard");
@@ -29,8 +25,8 @@ export default function RegisterPage() {
     e.preventDefault();
     clearError();
     setLocalError(null);
-    if (password.length < 6) {
-      setLocalError("Password must be at least 6 characters long.");
+    if (password.length < 8) {
+      setLocalError("Password must be at least 8 characters long.");
       return;
     }
     await register(name, email, password);
@@ -90,11 +86,11 @@ export default function RegisterPage() {
               <input
                 type="password"
                 className="input-field"
-                placeholder="Min 6 characters"
+                placeholder="Min 8 characters"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setLocalError(null); clearError(); }}
                 required
-                minLength={6}
+                minLength={8}
                 id="register-password"
               />
             </div>

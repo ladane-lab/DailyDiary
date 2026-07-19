@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -33,21 +34,20 @@ const ALL_BADGES = [
 
 export default function BadgesPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
   const [streak, setStreak] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { const u = initAuth(); return u; }, [initAuth]);
-  useEffect(() => { if (initialized && !user) router.push("/login"); }, [user, initialized, router]);
+    useEffect(() => { if (initialized && !user) router.push("/login"); }, [user, initialized, router]);
 
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
       try {
-        const res = await fetch(`${API}/api/users/me`, {
+        const res = await fetch(`${API}/users/me`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -140,3 +140,4 @@ export default function BadgesPage() {
     </div>
   );
 }
+

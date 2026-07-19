@@ -1,4 +1,5 @@
 "use client";
+import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -32,26 +33,25 @@ const getChallengeIcon = (duration: number, size = 24) => {
 
 export default function ChallengesPage() {
   const router = useRouter();
-  const { user, initialized, initAuth } = useAuthStore();
+  const { user, initialized } = useAuthStore();
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [myChallenges, setMyChallenges] = useState<UserChallenge[]>([]);
   const [loading, setLoading] = useState(true);
   const [joining, setJoining] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
-  useEffect(() => { const u = initAuth(); return u; }, [initAuth]);
-  useEffect(() => { if (initialized && !user) router.push("/login"); }, [user, initialized, router]);
+    useEffect(() => { if (initialized && !user) router.push("/login"); }, [user, initialized, router]);
 
   useEffect(() => {
     if (!user) return;
     const fetchAll = async () => {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
       const headers = { Authorization: `Bearer ${token}` };
       try {
         const [cRes, myRes] = await Promise.all([
-          fetch(`${API}/api/challenges`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
-          fetch(`${API}/api/challenges/my`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${API}/challenges`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
+          fetch(`${API}/challenges/my`, { headers }).then((r) => r.ok ? r.json() : []).catch(() => []),
         ]);
         if (Array.isArray(cRes)) setChallenges(cRes);
         if (Array.isArray(myRes)) setMyChallenges(myRes);
@@ -68,9 +68,9 @@ export default function ChallengesPage() {
     if (!user) return;
     setJoining(challengeId);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      const res = await fetch(`${API}/api/challenges/${challengeId}/join`, {
+      const res = await fetch(`${API}/challenges/${challengeId}/join`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -188,3 +188,4 @@ export default function ChallengesPage() {
     </div>
   );
 }
+

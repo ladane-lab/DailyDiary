@@ -1,0 +1,162 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id             String          @id @default(uuid())
+  name           String
+  email          String          @unique
+  photoURL       String?
+  createdAt      DateTime        @default(now())
+  streakCount    Int             @default(0)
+  lastEntryDate  DateTime?
+  entries        Entry[]
+  userChallenges UserChallenge[]
+  userBadges     UserBadge[]
+  trackers       Tracker[]
+  preferredThemes Json?           // { [templateId: string]: string }
+  likes          Like[]
+  comments       Comment[]
+  bookmarks      Bookmark[]
+  followers      Follow[]        @relation("followers")
+  following      Follow[]        @relation("following")
+}
+
+model Entry {
+  id             String          @id @default(uuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id])
+  templateId     String?
+  template       Template?       @relation(fields: [templateId], references: [id])
+  body_encrypted String
+  iv             String
+  isPublic       Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  images         Image[]
+  theme          String?         @default("marble")
+  responses      EntryResponse[]
+  likes          Like[]
+  comments       Comment[]
+  bookmarks      Bookmark[]
+
+  @@index([isPublic, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+model Image {
+  id        String   @id @default(uuid())
+  url       String
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+model Tracker {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  name      String
+  value     String
+  createdAt DateTime @default(now())
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  fields      Json
+  createdAt   DateTime @default(now())
+  entries     Entry[]
+}
+
+model EntryResponse {
+  id         String @id @default(uuid())
+  entryId    String
+  entry      Entry  @relation(fields: [entryId], references: [id])
+  fieldLabel String
+  value      String
+}
+
+model Challenge {
+  id             String          @id @default(uuid())
+  name           String
+  duration       Int
+  description    String?
+  userChallenges UserChallenge[]
+}
+
+model UserChallenge {
+  id          String    @id @default(uuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  challengeId String
+  challenge   Challenge @relation(fields: [challengeId], references: [id])
+  currentDay  Int       @default(0)
+  completed   Boolean   @default(false)
+}
+
+model Badge {
+  id         String      @id @default(uuid())
+  name       String
+  icon       String
+  condition  String
+  userBadges UserBadge[]
+}
+
+model UserBadge {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  badgeId   String
+  badge     Badge    @relation(fields: [badgeId], references: [id])
+  awardedAt DateTime @default(now())
+
+  @@id([userId, badgeId])
+}
+
+model Like {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([userId, entryId])
+}
+
+model Bookmark {
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([userId, entryId])
+}
+
+model Follow {
+  followerId  String
+  follower    User     @relation("following", fields: [followerId], references: [id])
+  followingId String
+  following   User     @relation("followers", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  entryId   String
+  entry     Entry    @relation(fields: [entryId], references: [id])
+  content   String
+  createdAt DateTime @default(now())
+}

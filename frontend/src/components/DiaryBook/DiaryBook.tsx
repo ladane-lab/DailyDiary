@@ -1,4 +1,5 @@
 "use client";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { createPortal } from 'react-dom';
@@ -243,7 +244,7 @@ export default function DiaryBook({
                   fontFamily: '"Inter", sans-serif',
                   transform: `translateY(-${contentOffset}px)`
                 }}
-                dangerouslySetInnerHTML={{ __html: cleanBody }} 
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} 
               />
             </div>
             
@@ -483,7 +484,7 @@ export default function DiaryBook({
               key={`measure-${entry.id}`}
               className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
               style={{ fontFamily: '"Inter", sans-serif' }}
-              dangerouslySetInnerHTML={{ __html: cleanBody }} 
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} 
             />
           );
         })}

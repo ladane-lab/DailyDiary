@@ -1,32 +1,23 @@
-import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
-import { neonConfig } from "@neondatabase/serverless";
-import ws from "ws";
 
-neonConfig.webSocketConstructor = ws;
-
-// Prisma v7: Must use adapter pattern for database connection
 function createPrismaClient() {
   const connectionString = process.env.DATABASE_URL;
-
   if (!connectionString) {
     throw new Error("DATABASE_URL environment variable is not set. See backend/.env");
   }
 
-  const adapter = new PrismaNeon({ connectionString });
-  return new PrismaClient({ adapter });
+  return new PrismaClient({ log: ['error', 'warn'] });
 }
 
-// Singleton pattern to prevent multiple connections in development
 declare global {
   // eslint-disable-next-line no-var
-  var __prisma: PrismaClient | undefined;
+  var __prisma4: PrismaClient | undefined;
 }
 
-const prisma = globalThis.__prisma ?? createPrismaClient();
+const prisma = globalThis.__prisma4 ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") {
-  globalThis.__prisma = prisma;
+  globalThis.__prisma4 = prisma;
 }
 
 export default prisma;

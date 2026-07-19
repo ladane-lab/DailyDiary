@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import { API_URL } from "@/lib/api";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { 
@@ -13,8 +15,9 @@ import {
   ExternalLink, ImagePlus
 } from "lucide-react";
 import styles from "./explore.module.css";
-import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor/RichTextEditor";
+import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor";
 import { Editor } from "@tiptap/react";
+import { FeedCard } from "./FeedCard";
 
 
 
@@ -167,9 +170,9 @@ export default function ExplorePage() {
     else setLoadingMore(true);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user?.getIdToken();
-      const res = await fetch(`${API}/api/entries/public?page=${pageNum}&limit=10`, {
+      const res = await fetch(`${API}/entries/public?page=${pageNum}&limit=10`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (res.ok) {
@@ -197,9 +200,9 @@ export default function ExplorePage() {
     if (!user) return;
     setLoadingUser(true);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      const res = await fetch(`${API}/api/entries/my-public`, {
+      const res = await fetch(`${API}/entries/my-public`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -254,9 +257,9 @@ export default function ExplorePage() {
     setActiveEditor(null);
 
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      const res = await fetch(`${API}/api/entries`, {
+      const res = await fetch(`${API}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ 
@@ -298,9 +301,9 @@ export default function ExplorePage() {
   const handleUpdate = async (id: string) => {
     if (!editBody.trim() || !user || editBody === "<p></p>") return;
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      const res = await fetch(`${API}/api/entries/${id}`, {
+      const res = await fetch(`${API}/entries/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ body: editBody, images: editUploadedImages })
@@ -330,9 +333,9 @@ export default function ExplorePage() {
     setEntries(update);
     setUserEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      const res = await fetch(`${API}/api/entries/${id}`, {
+      const res = await fetch(`${API}/entries/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -350,9 +353,9 @@ export default function ExplorePage() {
     setEntries(update);
     setUserEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
@@ -362,9 +365,9 @@ export default function ExplorePage() {
     setEntries(update);
     setUserEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
@@ -374,9 +377,9 @@ export default function ExplorePage() {
     setEntries(update);
     setUserEntries(update);
     try {
-      const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+      const API = API_URL;
       const token = await user.getIdToken();
-      await fetch(`${API}/api/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      await fetch(`${API}/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
     } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
   };
 
@@ -385,6 +388,19 @@ export default function ExplorePage() {
     if (navigator.share) navigator.share({ title: 'DailyDiary Entry', text: 'Check out this reflection on DailyDiary!', url }).catch(() => {});
     else { navigator.clipboard.writeText(url); alert("Link copied to clipboard!"); }
   };
+
+    const handleToggleMenu = useCallback((id: string | null) => {
+    setShowMenuId(id);
+  }, []);
+
+  const handleSetEditing = useCallback((id: string | null, body?: string) => {
+    setEditingId(id);
+    if (body) setEditBody(body);
+  }, []);
+
+  const handleRemoveEditImage = useCallback((idx: number) => {
+    setEditUploadedImages(prev => prev.filter((_, i) => i !== idx));
+  }, []);
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -448,8 +464,7 @@ export default function ExplorePage() {
             {activeTab === "personal" && (
               <div className={`${styles.composeSection} animate-in fade-in slide-in-from-top-4 duration-500`}>
                 {user.photoURL ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.photoURL} alt="Avatar" className={styles.composeAvatarImage} />
+                  <Image src={user.photoURL} alt="Avatar" className={styles.composeAvatarImage} width={48} height={48} style={{ objectFit: "cover" }} />
                 ) : (
                   <div className={styles.composeAvatar}>{user.displayName?.[0] || user.email?.[0].toUpperCase()}</div>
                 )}
@@ -472,7 +487,7 @@ export default function ExplorePage() {
                       <div className={styles.composePreviews}>
                         {uploadedImages.map((url, i) => (
                           <div key={i} className={styles.previewItem}>
-                            <img src={url} alt="Upload" />
+                            <Image src={url} alt="Upload" width={80} height={80} style={{ objectFit: "cover" }} />
                             <button onClick={() => setUploadedImages(prev => prev.filter((_, idx) => idx !== i))}><X size={14} /></button>
                           </div>
                         ))}
@@ -580,98 +595,33 @@ export default function ExplorePage() {
                     >
 
                       
-                      <article className={styles.feedCard}>
-                        <div className={styles.feedHeader}>
-                          {entry.user?.photoURL ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={entry.user.photoURL} alt={authorName} className={styles.authorAvatarImage} />
-                          ) : (
-                            <div className={styles.authorAvatar}>{authorName[0].toUpperCase()}</div>
-                          )}
-                          <div className={styles.authorInfo}>
-                            <div className="flex items-center gap-3">
-                              <div className={styles.authorName}>{authorName}</div>
-                              {!isOwner && (
-                                <button 
-                                  className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${entry.isFollowing ? 'bg-gray-100 text-gray-500' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
-                                  onClick={() => handleSubscribe(entry.userId)}
-                                >
-                                  {entry.isFollowing ? "Subscribed" : "+ Subscribe"}
-                                </button>
-                              )}
-                            </div>
-                            <div className={styles.feedMeta}>
-                              <div className={styles.metaItem}><CalendarDays size={14} /> {date}</div>
-                              <div className="w-1 h-1 rounded-full bg-gray-300" />
-                              <div className={styles.metaItem}><Clock size={14} /> {getReadTime(entry.body)}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            {/* Journal badge removed per user request */}
-                            {activeTab === "personal" && isOwner && (
-                              <div style={{ position: 'relative' }}>
-                                <button className={styles.toolBtn} onClick={() => setShowMenuId(showMenuId === entry.id ? null : entry.id)}><MoreHorizontal size={20} /></button>
-                                {showMenuId === entry.id && (
-                                  <div className={styles.menuPopover}>
-                                    <button onClick={() => { setEditingId(entry.id); setEditBody(entry.body); setShowMenuId(null); }} className={styles.menuItem}><Edit3 size={16} /> Edit Post</button>
-                                    <button onClick={() => { handleDelete(entry.id); setShowMenuId(null); }} className={`${styles.menuItem} ${styles.menuDanger}`}><Trash2 size={16} /> Delete</button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {isEditing ? (
-                          <div className={styles.editArea}>
-                            <div className={`${styles.editorWrapper} ${styles.editorActive}`}>
-                               <EditorToolbar editor={editEditor} />
-                               <RichTextEditor value={editBody} onChange={setEditBody} onFocus={(editor) => setEditEditor(editor)} />
-                            </div>
-                            {/* Edit image previews */}
-                            {editUploadedImages.length > 0 && (
-                              <div className={styles.composePreviews}>
-                                {editUploadedImages.map((url, i) => (
-                                  <div key={i} className={styles.previewItem}>
-                                    <img src={url} alt="Upload" />
-                                    <button onClick={() => setEditUploadedImages(prev => prev.filter((_, idx) => idx !== i))}><X size={14} /></button>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            <div className="flex justify-between items-center gap-3 mt-4">
-                              <div className="flex gap-2">
-                                <input type="file" ref={editFileInputRef} style={{ display: 'none' }} accept="image/*" onChange={handleEditImageUpload} />
-                                <button className={styles.toolBtn} title="Add Image" onClick={() => editFileInputRef.current?.click()} disabled={isEditUploading}>
-                                  {isEditUploading ? <div className={styles.loadingSpinSmall} /> : <ImageIcon size={18} />}
-                                </button>
-                              </div>
-                              <div className="flex gap-3">
-                                <button onClick={() => { setEditingId(null); setEditEditor(null); setEditUploadedImages([]); }} className={styles.actionBtn}><X size={18} /> Cancel</button>
-                                <button onClick={() => handleUpdate(entry.id)} className={styles.postBtn}><Check size={18} /> Save Changes</button>
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className={`${styles.feedBody} ${styles.tiptapContent}`} dangerouslySetInnerHTML={{ __html: entry.body }} />
-                        )}
-
-                        {entry.images && entry.images.length > 0 && (
-                          <div className={styles.feedImages}>{entry.images.map((img: any) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} />)}</div>
-                        )}
-
-                        <div className={styles.feedActions}>
-                          <button className={`${styles.actionBtn} ${entry.isLiked ? styles.active : ""}`} onClick={() => handleLike(entry.id)}>
-                            <Heart size={20} fill={entry.isLiked ? "currentColor" : "none"} /> <span>{entry.likesCount || ""} Like</span>
-                          </button>
-                          <button className={`${styles.actionBtn} ${entry.isBookmarked ? styles.active : ""}`} onClick={() => handleBookmark(entry.id)}>
-                            <Bookmark size={20} fill={entry.isBookmarked ? "currentColor" : "none"} /> <span>{entry.bookmarksCount || ""} Save</span>
-                          </button>
-                          <div className="flex-1" />
-                          <button className={styles.actionBtn} onClick={() => handleShare(entry.id)}><Share2 size={20} /></button>
-                        </div>
-                      </article>
+                                            <FeedCard
+                        entry={entry}
+                        user={user}
+                        activeTab={activeTab}
+                        isOwner={isOwner}
+                        authorName={authorName}
+                        date={date}
+                        isEditing={isEditing}
+                        showMenu={showMenuId === entry.id}
+                        editBody={editBody}
+                        editUploadedImages={editUploadedImages}
+                        editEditor={editEditor}
+                        isEditUploading={isEditUploading}
+                        editFileInputRef={editFileInputRef}
+                        onSubscribe={handleSubscribe}
+                        onToggleMenu={handleToggleMenu}
+                        onSetEditing={handleSetEditing}
+                        onDelete={handleDelete}
+                        onSetEditBody={setEditBody}
+                        onSetEditEditor={setEditEditor}
+                        onRemoveEditImage={handleRemoveEditImage}
+                        onEditImageUpload={handleEditImageUpload}
+                        onUpdate={handleUpdate}
+                        onLike={handleLike}
+                        onBookmark={handleBookmark}
+                        onShare={handleShare}
+                      />
                     </div>
                   );
                 })}
@@ -717,3 +667,7 @@ export default function ExplorePage() {
     </div>
   );
 }
+
+
+
+
