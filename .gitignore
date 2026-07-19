@@ -40,3 +40,8 @@ coverage/
 # Local Assets
 images/
 
+# Debug / one-off test scripts (may contain hardcoded tokens or IDs)
+backend/check_*.ts
+backend/test_*.ts
+frontend/src/app/test-*/
+uploads/
