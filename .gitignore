@@ -45,3 +45,11 @@ backend/check_*.ts
 backend/test_*.ts
 frontend/src/app/test-*/
 uploads/
+
+# Performance and Diagnostic Results
+performance/results/
+summary.json
+summary.html
+k6-result.json
+*.heapsnapshot
+lighthouse.report.html
