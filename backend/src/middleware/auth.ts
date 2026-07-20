@@ -45,7 +45,7 @@ export const authenticate = async (
     if (!decoded || !decoded.sub) {
       // Fallback if token isn't a valid JWT (e.g. dummy dev tokens)
       logger.info(`[Auth] Using raw token as UID (Fallback case)`);
-      req.user = { uid: token, email: 'dev@dailydiary.in' };
+      req.user = { uid: token, email: `${token}@dailydiary.in` };
     } else {
       logger.info(`[Auth] Identity verified for UID: ${decoded.sub}`);
       req.user = { 
@@ -103,7 +103,7 @@ export const optionalAuthenticate = async (
       };
     } else if (token) {
       // Fallback for dev tokens
-      req.user = { uid: token, email: 'dev@dailydiary.in' };
+      req.user = { uid: token, email: `${token}@dailydiary.in` };
     }
     next();
   } catch {

@@ -55,14 +55,14 @@ class CacheService {
   }
 
   delete(key: string): void {
-    this.cache.delete(key);
+    this.cache.del(key);
   }
 
   invalidatePrefix(prefix: string): void {
     let count = 0;
     for (const key of this.cache.keys()) {
       if (key.startsWith(prefix)) {
-        this.cache.delete(key);
+        this.cache.del(key);
         count++;
       }
     }

@@ -1,0 +1,148 @@
+{
+    "metrics": {
+        "checks": {
+            "passes": 216,
+            "fails": 0,
+            "value": 1
+        },
+        "vus": {
+            "value": 1,
+            "min": 1,
+            "max": 25
+        },
+        "http_req_sending": {
+            "avg": 0.028278703703703705,
+            "min": 0,
+            "med": 0,
+            "max": 1.5358,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_req_waiting": {
+            "min": 296.0386,
+            "med": 469.74395000000004,
+            "max": 2474.9243,
+            "p(90)": 1437.0320000000002,
+            "p(95)": 1951.4394750000001,
+            "avg": 708.0211912037039
+        },
+        "http_req_duration{expected_response:true}": {
+            "avg": 708.2098847222223,
+            "min": 296.0386,
+            "med": 470.0019,
+            "max": 2474.9243,
+            "p(90)": 1437.3197,
+            "p(95)": 1951.4394750000001
+        },
+        "vus_max": {
+            "max": 25,
+            "value": 25,
+            "min": 25
+        },
+        "http_req_duration": {
+            "max": 2474.9243,
+            "p(90)": 1437.3197,
+            "p(95)": 1951.4394750000001,
+            "avg": 708.2098847222223,
+            "min": 296.0386,
+            "med": 470.0019
+        },
+        "http_req_receiving": {
+            "med": 0,
+            "max": 1.8017,
+            "p(90)": 0.5801499999999999,
+            "p(95)": 0.62715,
+            "avg": 0.16041481481481484,
+            "min": 0
+        },
+        "http_req_failed": {
+            "passes": 0,
+            "fails": 216,
+            "value": 0
+        },
+        "http_req_blocked": {
+            "p(95)": 11.6157,
+            "avg": 1.3256976851851852,
+            "min": 0,
+            "med": 0,
+            "max": 13.1515,
+            "p(90)": 11.0358
+        },
+        "http_req_connecting": {
+            "p(95)": 1.0715,
+            "avg": 0.1315578703703704,
+            "min": 0,
+            "med": 0,
+            "max": 1.5776,
+            "p(90)": 0.5061
+        },
+        "data_sent": {
+            "count": 37716,
+            "rate": 1240.5976359714055
+        },
+        "http_req_tls_handshaking": {
+            "avg": 0,
+            "min": 0,
+            "med": 0,
+            "max": 0,
+            "p(90)": 0,
+            "p(95)": 0
+        },
+        "http_reqs": {
+            "count": 216,
+            "rate": 7.104918055197358
+        },
+        "data_received": {
+            "rate": 26613.34548467294,
+            "count": 809085
+        },
+        "iteration_duration": {
+            "min": 7796.9034,
+            "med": 11283.67195,
+            "max": 15861.7949,
+            "p(90)": 13414.18534,
+            "p(95)": 14623.805095,
+            "avg": 11379.908637037035
+        },
+        "iterations": {
+            "count": 54,
+            "rate": 1.7762295137993396
+        }
+    },
+    "root_group": {
+        "checks": {
+            "Sync User Load status is 200 or 201": {
+                "name": "Sync User Load status is 200 or 201",
+                "path": "::Sync User Load status is 200 or 201",
+                "id": "4aa0aa5c2056a0953890c102ee63cefa",
+                "passes": 54,
+                "fails": 0
+            },
+            "Dashboard Load status is 200 or 201": {
+                "name": "Dashboard Load status is 200 or 201",
+                "path": "::Dashboard Load status is 200 or 201",
+                "id": "d6cd85e9e6709bf865a361a037ded7fc",
+                "passes": 54,
+                "fails": 0
+            },
+            "Timeline Load status is 200 or 201": {
+                "fails": 0,
+                "name": "Timeline Load status is 200 or 201",
+                "path": "::Timeline Load status is 200 or 201",
+                "id": "2ed964f6c64cf8a44cda7d8873f39146",
+                "passes": 54
+            },
+            "Public Feed Load status is 200 or 201": {
+                "name": "Public Feed Load status is 200 or 201",
+                "path": "::Public Feed Load status is 200 or 201",
+                "id": "941ad1b6cfcc2032c1300efd16c35871",
+                "passes": 54,
+                "fails": 0
+            }
+        },
+        "name": "",
+        "path": "",
+        "id": "d41d8cd98f00b204e9800998ecf8427e",
+        "groups": {}
+    }
+}

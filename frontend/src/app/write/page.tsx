@@ -32,7 +32,8 @@ import {
   BookHeart,
   ImagePlus,
   Lock,
-  ChevronRight
+  ChevronRight,
+  X
 } from "lucide-react";
 import Logo from "@/components/Logo/Logo";
 import styles from "./write.module.css";
@@ -320,6 +321,10 @@ function WritePageContent() {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
+  };
+
+  const removeImage = (indexToRemove: number) => {
+    setImageUrls((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSave = async () => {
