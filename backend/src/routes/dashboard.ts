@@ -30,6 +30,7 @@ function attemptDecrypt(encrypted: string, authTag: string, iv: Buffer, key: Buf
 }
 
 function decrypt(encryptedText: string, ivHex: string): string {
+  if (!ivHex) return encryptedText;
   const [encrypted, authTag] = encryptedText.split(':');
   if (!encrypted || !authTag) throw new Error('Invalid encrypted text format');
   const iv = Buffer.from(ivHex, 'hex');

@@ -43,6 +43,7 @@ images/
 # Debug / one-off test scripts (may contain hardcoded tokens or IDs)
 backend/check_*.ts
 backend/test_*.ts
+backend/test-save.ts
 frontend/src/app/test-*/
 uploads/
 

@@ -49,6 +49,7 @@ function attemptDecrypt(encrypted: string, authTag: string, iv: Buffer, key: Buf
 }
 
 function decrypt(encryptedText: string, ivHex: string): string {
+  if (!ivHex) return encryptedText;
   const [encrypted, authTag] = encryptedText.split(':');
   if (!encrypted || !authTag) throw new Error('Invalid encrypted text format');
   const iv = Buffer.from(ivHex, 'hex');
@@ -118,14 +119,21 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
       if (!templateExists) resolvedTemplateId = null;
     }
 
-    const { encrypted, iv } = encrypt(safeBody);
+    let encryptedBody = safeBody;
+    let usedIv = '';
+
+    if (resolvedTemplateId === 'personal') {
+      const { encrypted, iv } = encrypt(safeBody);
+      encryptedBody = encrypted;
+      usedIv = iv;
+    }
 
     const entry = await prisma.entry.create({
       data: {
         userId,
         templateId: resolvedTemplateId,
-        body_encrypted: encrypted,
-        iv,
+        body_encrypted: encryptedBody,
+        iv: usedIv,
         isPublic: isPublic || false,
         theme: theme || 'marble',
         responses: responses
@@ -742,9 +750,14 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     
     const updateData: any = {};
     if (body !== undefined) {
-      const { encrypted, iv } = encrypt(body);
-      updateData.body_encrypted = encrypted;
-      updateData.iv = iv;
+      if (entry.templateId === 'personal') {
+        const { encrypted, iv } = encrypt(body);
+        updateData.body_encrypted = encrypted;
+        updateData.iv = iv;
+      } else {
+        updateData.body_encrypted = body;
+        updateData.iv = '';
+      }
     }
     if (typeof isPublic === 'boolean') updateData.isPublic = isPublic;
     if (theme) updateData.theme = theme;

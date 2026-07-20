@@ -83,14 +83,6 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({
         <div className={styles.authorInfo}>
           <div className="flex items-center gap-3">
             <div className={styles.authorName}>{authorName}</div>
-            {!isOwner && (
-              <button 
-                className={`text-xs font-bold px-3 py-1 rounded-full transition-all ${entry.isFollowing ? 'bg-gray-100 text-gray-500' : 'bg-primary/10 text-primary hover:bg-primary hover:text-white'}`}
-                onClick={() => onSubscribe(entry.userId)}
-              >
-                {entry.isFollowing ? "Subscribed" : "+ Subscribe"}
-              </button>
-            )}
           </div>
           <div className={styles.feedMeta}>
             <div className={styles.metaItem}><CalendarDays size={14} /> {date}</div>

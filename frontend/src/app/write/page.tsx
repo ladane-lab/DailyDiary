@@ -345,12 +345,12 @@ function WritePageContent() {
 
       const token = await user.getIdToken();
       const apiBase = API_URL;
-      const endpoint = `${apiBase}/api/entries`;
+      const endpoint = `${apiBase}/entries`;
 
       if (process.env.NODE_ENV === 'development') {
         console.log("[Write] Sending entry to backend at:", endpoint);
       }
-      const url = editId ? `${apiBase}/api/entries/${editId}` : endpoint;
+      const url = editId ? `${apiBase}/entries/${editId}` : endpoint;
       const res = await fetch(url, {
         method: editId ? "PATCH" : "POST",
         headers: {
