@@ -215,16 +215,21 @@ export default function ExplorePage() {
       setLoadingUser(false);
     }
   };
-
+  const fetchedPublicRef = useRef(false);
+  const fetchedUserRef = useRef(false);
 
   useEffect(() => {
-    if (initialized) {
+    if (initialized && !fetchedPublicRef.current) {
+      fetchedPublicRef.current = true;
       fetchPublicEntries(1, true);
-      if (user) fetchUserPublicEntries();
+    }
+    if (initialized && user && !fetchedUserRef.current) {
+      fetchedUserRef.current = true;
+      fetchUserPublicEntries();
     }
   }, [initialized, user]);
 
-  const handlePost = async () => {
+  const handlePost = useCallback(async () => {
     const hasText = newPost.trim() && newPost !== "<p></p>";
     const hasImages = uploadedImages.length > 0;
     if (!hasText && !hasImages) return;
@@ -272,7 +277,6 @@ export default function ExplorePage() {
       
       if (res.ok) {
         const realEntry: ExploreEntry = await res.json();
-        // Replace the optimistic entry with the real server entry (preserving images)
         const replaceOptimistic = (prev: ExploreEntry[]) =>
           prev.map(e => e.id === optimisticEntry.id ? {
             ...realEntry,
@@ -296,9 +300,9 @@ export default function ExplorePage() {
     } finally {
       setIsPosting(false);
     }
-  };
+  }, [newPost, uploadedImages, user]);
 
-  const handleUpdate = async (id: string) => {
+  const handleUpdate = useCallback(async (id: string) => {
     if (!editBody.trim() || !user || editBody === "<p></p>") return;
     try {
       const API = API_URL;
@@ -310,7 +314,6 @@ export default function ExplorePage() {
       });
       if (res.ok) {
         const data = await res.json();
-        // Update the entry in-place with new body and images
         const updateEntry = (prev: ExploreEntry[]) => prev.map(e =>
           e.id === id 
             ? { ...e, body: editBody, images: [...(e.images || []), ...(data.images?.filter((ni: any) => !(e.images || []).some((ei) => ei.id === ni.id)) || [])] }
@@ -325,9 +328,9 @@ export default function ExplorePage() {
     } catch (err) {
       console.error("Failed to update:", err);
     }
-  };
+  }, [editBody, editUploadedImages, user]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = useCallback(async (id: string) => {
     if (!confirm("Are you sure you want to delete this public entry?") || !user) return;
     const update = (prev: ExploreEntry[]) => prev.filter(e => e.id !== id);
     setEntries(update);
@@ -342,12 +345,12 @@ export default function ExplorePage() {
       if (!res.ok) throw new Error("Delete failed");
     } catch (err) {
       console.error("Failed to delete:", err);
-      fetchPublicEntries();
+      fetchPublicEntries(1, false);
       fetchUserPublicEntries();
     }
-  };
+  }, [user]);
 
-  const handleLike = async (entryId: string) => {
+  const handleLike = useCallback(async (entryId: string) => {
     if (!user) return;
     const update = (prev: ExploreEntry[]) => prev.map(e => (e.id === entryId ? { ...e, isLiked: !e.isLiked, likesCount: e.isLiked ? e.likesCount - 1 : e.likesCount + 1 } : e));
     setEntries(update);
@@ -356,10 +359,10 @@ export default function ExplorePage() {
       const API = API_URL;
       const token = await user.getIdToken();
       await fetch(`${API}/entries/${entryId}/like`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
-  };
+    } catch (err) { fetchPublicEntries(1, false); fetchUserPublicEntries(); }
+  }, [user]);
 
-  const handleBookmark = async (entryId: string) => {
+  const handleBookmark = useCallback(async (entryId: string) => {
     if (!user) return;
     const update = (prev: ExploreEntry[]) => prev.map(e => (e.id === entryId ? { ...e, isBookmarked: !e.isBookmarked, bookmarksCount: e.isBookmarked ? e.bookmarksCount - 1 : e.bookmarksCount + 1 } : e));
     setEntries(update);
@@ -368,10 +371,10 @@ export default function ExplorePage() {
       const API = API_URL;
       const token = await user.getIdToken();
       await fetch(`${API}/entries/${entryId}/bookmark`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
-  };
+    } catch (err) { fetchPublicEntries(1, false); fetchUserPublicEntries(); }
+  }, [user]);
 
-  const handleSubscribe = async (targetUserId: string) => {
+  const handleSubscribe = useCallback(async (targetUserId: string) => {
     if (!user) return;
     const update = (prev: ExploreEntry[]) => prev.map(e => (e.userId === targetUserId ? { ...e, isFollowing: !e.isFollowing } : e));
     setEntries(update);
@@ -380,14 +383,14 @@ export default function ExplorePage() {
       const API = API_URL;
       const token = await user.getIdToken();
       await fetch(`${API}/users/${targetUserId}/follow`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
-    } catch (err) { fetchPublicEntries(); fetchUserPublicEntries(); }
-  };
+    } catch (err) { fetchPublicEntries(1, false); fetchUserPublicEntries(); }
+  }, [user]);
 
-  const handleShare = (entryId: string) => {
+  const handleShare = useCallback((entryId: string) => {
     const url = `${window.location.origin}/explore/${entryId}`;
     if (navigator.share) navigator.share({ title: 'DailyDiary Entry', text: 'Check out this reflection on DailyDiary!', url }).catch(() => {});
     else { navigator.clipboard.writeText(url); alert("Link copied to clipboard!"); }
-  };
+  }, []);
 
     const handleToggleMenu = useCallback((id: string | null) => {
     setShowMenuId(id);

@@ -11,7 +11,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, 
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Palette, Undo, Redo, Heading1, Heading2, Heading3,
-  Type, ArrowUpDown
+  Type, ArrowUpDown, Smile
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import styles from './RichTextEditor.module.css';
@@ -85,9 +85,11 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [showFontPicker, setShowFontPicker] = useState(false);
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const fontPickerRef = useRef<HTMLDivElement>(null);
   const sizePickerRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!editor) return;
@@ -99,6 +101,7 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
       if (colorPickerRef.current && !colorPickerRef.current.contains(event.target as Node)) setShowColorPicker(false);
       if (fontPickerRef.current && !fontPickerRef.current.contains(event.target as Node)) setShowFontPicker(false);
       if (sizePickerRef.current && !sizePickerRef.current.contains(event.target as Node)) setShowSizePicker(false);
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) setShowEmojiPicker(false);
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => {
@@ -227,6 +230,39 @@ export function EditorToolbar({ editor }: { editor: Editor | null }) {
                   </button>
                 ))}
                 <button type="button" onClick={() => { editor.chain().focus().unsetFontSize().run(); setShowSizePicker(false); }} className="text-xs text-red-500 font-medium mt-1">Reset</button>
+              </div>
+            )}
+          </div>
+
+          <div className={styles.colorPickerContainer} ref={emojiPickerRef}>
+            <button type="button" onClick={() => setShowEmojiPicker(!showEmojiPicker)} className={styles.toolbarBtn}>
+              <Smile size={16} />
+            </button>
+            {showEmojiPicker && (
+              <div className={styles.colorPickerPopover} style={{ padding: '8px', width: '260px', maxHeight: '200px', overflowY: 'auto' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2px' }}>
+                  {[
+                    "❤️", "✨", "😊", "🌱", "🦋", "🌈", "🌊", "🌙", "☁️", "🔥", "🙌", "🙏",
+                    "😂", "😍", "🤔", "😎", "🥳", "🤩", "🥰", "🥺", "🤯", "😴", "😇", "🤫",
+                    "🌸", "🌻", "🍀", "🍃", "🍂", "🍄", "🌎", "🌍", "🌏", "🌟", "⭐", "💫",
+                    "🍎", "🍓", "🍕", "☕", "🍦", "🍭", "🎨", "🎭", "🎮", "🎸", "📚", "🕯️",
+                    "🧸", "🎈", "💎", "🔋", "💡", "📱", "💻", "⌨️", "🖱️", "🎥", "📸", "📼",
+                    "✅", "❌", "⚠️", "⛔", "🚫", "💯", "💢", "💥", "🌀", "💦", "💨", "💤"
+                  ].map(emoji => (
+                    <button
+                      key={emoji}
+                      type="button"
+                      className="hover:bg-gray-100 dark:hover:bg-gray-800"
+                      style={{ padding: '4px', fontSize: '18px', borderRadius: '4px', border: 'none', background: 'none', cursor: 'pointer' }}
+                      onClick={() => {
+                        editor.chain().focus().insertContent(emoji).run();
+                        setShowEmojiPicker(false);
+                      }}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>

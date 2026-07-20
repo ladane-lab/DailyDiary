@@ -1,5 +1,6 @@
 import { Router, Response } from 'express';
 import prisma from '../lib/prisma.js';
+import { appCache } from '../lib/cache.js';
 import { AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -7,7 +8,9 @@ const router = Router();
 // GET /api/challenges - List all challenges
 router.get('/', async (_req: AuthRequest, res: Response) => {
   try {
-    const challenges = await prisma.challenge.findMany();
+    const challenges = await appCache.getOrFetch('challenges-all', async () => {
+      return await prisma.challenge.findMany();
+    }, 60 * 60 * 1000); // 1 hour TTL
     res.json(challenges);
   } catch (error) {
     res.status(500).json({ error: 'Failed to list challenges' });

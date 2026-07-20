@@ -33,17 +33,19 @@ export const authenticate = async (
 
   try {
     let decoded;
+    const startAuth = performance.now();
     if (process.env.NODE_ENV === 'production') {
       const decodedToken = await admin.auth().verifyIdToken(token);
       decoded = { sub: decodedToken.uid, email: decodedToken.email, name: decodedToken.name, picture: decodedToken.picture };
     } else {
       decoded = jwt.decode(token) as { sub: string; email?: string; name?: string; picture?: string } | null;
     }
+    console.log(`[AUTH MIDDLEWARE] Verification time: ${(performance.now() - startAuth).toFixed(2)}ms`);
     
     if (!decoded || !decoded.sub) {
       // Fallback if token isn't a valid JWT (e.g. dummy dev tokens)
       logger.info(`[Auth] Using raw token as UID (Fallback case)`);
-      req.user = { uid: token, email: 'dev@dailydiary.in' };
+      req.user = { uid: token, email: `${token}@dailydiary.in` };
     } else {
       logger.info(`[Auth] Identity verified for UID: ${decoded.sub}`);
       req.user = { 
@@ -101,7 +103,7 @@ export const optionalAuthenticate = async (
       };
     } else if (token) {
       // Fallback for dev tokens
-      req.user = { uid: token, email: 'dev@dailydiary.in' };
+      req.user = { uid: token, email: `${token}@dailydiary.in` };
     }
     next();
   } catch {

@@ -43,5 +43,14 @@ images/
 # Debug / one-off test scripts (may contain hardcoded tokens or IDs)
 backend/check_*.ts
 backend/test_*.ts
+backend/test-save.ts
 frontend/src/app/test-*/
 uploads/
+
+# Performance and Diagnostic Results
+performance/
+summary.json
+summary.html
+k6-result.json
+*.heapsnapshot
+lighthouse.report.html

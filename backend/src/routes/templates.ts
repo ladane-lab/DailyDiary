@@ -1,14 +1,17 @@
 import { Router, Request, Response } from 'express';
 import prisma from '../lib/prisma.js';
+import { appCache } from '../lib/cache.js';
 
 const router = Router();
 
 // GET /api/templates - List all templates
 router.get('/', async (_req: Request, res: Response) => {
   try {
-    const templates = await prisma.template.findMany({
-      orderBy: { createdAt: 'asc' },
-    });
+    const templates = await appCache.getOrFetch('templates-all', async () => {
+      return await prisma.template.findMany({
+        orderBy: { createdAt: 'asc' },
+      });
+    }, 60 * 60 * 1000); // 1 hour TTL
     res.json(templates);
   } catch (error) {
     console.error('List templates error:', error);

@@ -36,33 +36,21 @@ router.post('/sync', authenticate, async (req: AuthRequest, res: Response) => {
 // GET /api/users/me - Get current user profile
 router.get('/me', async (req: AuthRequest, res: Response) => {
   try {
-    const currentEmail = req.user?.email || 'unknown@example.com';
     const userId = req.user!.uid;
 
-    const existingUserByEmail = await prisma.user.findUnique({ where: { email: currentEmail } });
-
-    if (existingUserByEmail && existingUserByEmail.id !== userId) {
-      logger.warn(`Identity mismatch detected for ${currentEmail}. Manual review needed.`, { existingUserId: existingUserByEmail.id, newUserId: userId });
-    }
-
-    const user = await prisma.user.upsert({
+    const user = await prisma.user.findUnique({
       where: { id: userId },
-      update: { 
-        email: currentEmail,
-        name: req.user?.name || undefined,
-        photoURL: req.user?.picture || undefined
-      },
-      create: {
-        id: userId,
-        email: currentEmail,
-        name: req.user?.name || currentEmail.split('@')[0] || 'Writer',
-        photoURL: req.user?.picture || undefined
-      },
       include: {
         userBadges: { include: { badge: true } },
         userChallenges: { include: { challenge: true } },
       },
     });
+
+    if (!user) {
+      // User not synced yet — return 404 so the client triggers /sync
+      res.status(404).json({ error: 'User not found. Please sync your account.' });
+      return;
+    }
 
     res.json(user);
   } catch (error) {

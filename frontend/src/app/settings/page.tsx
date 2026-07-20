@@ -6,8 +6,8 @@ import { useEffect, useState, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import { updateProfile } from "firebase/auth";
-import { 
-  Settings, LayoutDashboard, PenLine, CalendarDays, 
+import {
+  Settings, LayoutDashboard, PenLine, CalendarDays,
   Trophy, Medal, LogOut, Flame, BookOpen, CheckCircle2,
   Trash2, Download, Printer, Bookmark
 } from "lucide-react";
@@ -49,14 +49,14 @@ export default function SettingsPage() {
     try {
       const { ref, uploadBytes, getDownloadURL } = await import("firebase/storage");
       const { storage } = await import("@/lib/firebase");
-      
+
       const ext = file.name.split('.').pop();
       const fileName = `avatar-${Date.now()}.${ext}`;
       const imageRef = ref(storage, `avatars/${user.uid}/${fileName}`);
-      
+
       const snapshot = await uploadBytes(imageRef, file);
       const url = await getDownloadURL(snapshot.ref);
-      
+
       // Update Firebase Auth profile
       const { updateProfile } = await import("firebase/auth");
       await updateProfile(user, { photoURL: url });
@@ -77,7 +77,7 @@ export default function SettingsPage() {
           photoURL: url,
         }),
       });
-      
+
       const { auth } = await import("@/lib/firebase");
       await auth.currentUser?.reload();
     } catch (err: any) {
@@ -208,7 +208,7 @@ export default function SettingsPage() {
     try {
       const token = await user.getIdToken();
       const API = API_URL;
-      
+
       // 1. Delete data from backend DB
       const res = await fetch(`${API}/users`, {
         method: "DELETE",
@@ -283,7 +283,7 @@ export default function SettingsPage() {
             <div className={styles.profileEmail}>{user.email}</div>
             {stats && (
               <div className={styles.profileMeta}>
-                Joined {joinDate} · {stats.streak} day streak · {stats.totalEntries} entries
+                Joined {joinDate} · {stats.streak} day streak
               </div>
             )}
           </div>
@@ -321,25 +321,12 @@ export default function SettingsPage() {
               disabled={saving}
               id="save-profile"
             >
-              {saved ? <><CheckCircle2 size={16}/> Saved!</> : saving ? "Saving..." : "Save Changes"}
+              {saved ? <><CheckCircle2 size={16} /> Saved!</> : saving ? "Saving..." : "Save Changes"}
             </button>
           </form>
         </div>
 
-        {/* Stats */}
-        <div className={`glass-card ${styles.section}`}>
-          <h2 className={styles.sectionTitle}>Your Stats</h2>
-          <div className={styles.statsRow}>
-            <div className={styles.statItem}>
-              <span className={styles.statNum}>{stats?.streak ?? "—"}</span>
-              <span className={styles.statLbl} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Flame size={16} color="var(--streak)"/> Day Streak</span>
-            </div>
-            <div className={styles.statItem}>
-              <span className={styles.statNum}>{stats?.totalEntries ?? "—"}</span>
-              <span className={styles.statLbl} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><BookOpen size={16} color="var(--primary)"/> Total Entries</span>
-            </div>
-          </div>
-        </div>
+
 
 
         {/* Change Password */}
