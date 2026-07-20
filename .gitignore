@@ -44,6 +44,9 @@ images/
 backend/check_*.ts
 backend/test_*.ts
 backend/test-save.ts
+backend/api_bench.ts
+backend/db_ping.ts
+backend/perf_audit.ts
 frontend/src/app/test-*/
 uploads/
 
