@@ -47,7 +47,7 @@ frontend/src/app/test-*/
 uploads/
 
 # Performance and Diagnostic Results
-performance/results/
+performance/
 summary.json
 summary.html
 k6-result.json
