@@ -8,7 +8,7 @@ import { fileURLToPath } from 'url';
 
 import helmet from 'helmet';
 import compression from 'compression';
-import { authenticate, optionalAuthenticate } from './middleware/auth.js';
+import { authenticate } from './middleware/auth.js';
 import userRoutes from './routes/users.js';
 import entryRoutes from './routes/entries.js';
 import templateRoutes from './routes/templates.js';
@@ -181,12 +181,9 @@ app.get('/health', async (_req, res) => {
   }
 });
 
-// Templates are publicly readable
-app.use('/api/templates', templateRoutes);
-
-// Public entries feed (optional auth handled in router)
-// Protected routes (auth handled in router)
-app.use('/api/entries', entryRoutes);
+// Protected Routes (All API endpoints require authentication)
+app.use('/api/templates', authenticate, templateRoutes);
+app.use('/api/entries', authenticate, entryRoutes);
 
 // ─── Image Upload Route (authenticated) ─────────────────────────
 app.post('/api/upload', authenticate, upload.single('image'), (req: any, res) => {
@@ -219,9 +216,7 @@ app.listen(PORT, async () => {
     setTimeout(async () => {
       try {
         await Promise.all([
-          fetch(`http://localhost:${PORT}/api/entries/public`),
           fetch(`http://localhost:${PORT}/api/templates`),
-          fetch(`http://localhost:${PORT}/api/challenges`) // Assuming challenges might be cached in the future
         ]);
         logger.info('Cache warmed successfully!');
       } catch (warmErr) {

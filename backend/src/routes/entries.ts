@@ -1,6 +1,6 @@
 import { Router, Response } from 'express';
 import prisma from '../lib/prisma.js';
-import { AuthRequest, authenticate, optionalAuthenticate } from '../middleware/auth.js';
+import { AuthRequest, authenticate } from '../middleware/auth.js';
 import { checkAndAwardBadges } from '../services/badges.js';
 import crypto from 'crypto';
 import logger from '../lib/logger.js';
@@ -231,14 +231,15 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /api/entries/public - Social-media-style feed with ranking algorithm
-router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
+// GET /api/entries/feed (and legacy /api/entries/public) - Authenticated feed with ranking algorithm
+const handleFeed = async (req: AuthRequest, res: Response) => {
   const { page = '1', limit = '10' } = req.query;
   const pageNum = parseInt(page as string);
   const take = parseInt(limit as string);
+  const userId = req.user!.uid;
 
   try {
-    logger.info(`Fetching public feed`, { page, user: req.user?.uid || 'Guest' });
+    logger.info(`Fetching feed`, { page, user: userId });
 
     // Fetch a larger pool to rank from (3x the page size for better shuffling)
     const poolSize = Math.min(take * 3, 50);
@@ -308,20 +309,18 @@ router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Respon
     const userBookmarks = new Set<string>();
     const userFollowing = new Set<string>();
 
-    if (req.user) {
-      const entryIds = entries.map((e: any) => e.id);
-      const userIds = [...new Set(entries.map((e: any) => e.user.id))];
+    const entryIds = entries.map((e: any) => e.id);
+    const userIds = [...new Set(entries.map((e: any) => e.user.id))];
 
-      const [likes, bookmarks, follows] = await Promise.all([
-        prisma.like.findMany({ where: { userId: req.user.uid, entryId: { in: entryIds } }, select: { entryId: true } }),
-        prisma.bookmark.findMany({ where: { userId: req.user.uid, entryId: { in: entryIds } }, select: { entryId: true } }),
-        prisma.follow.findMany({ where: { followerId: req.user.uid, followingId: { in: userIds } }, select: { followingId: true } })
-      ]);
+    const [likes, bookmarks, follows] = await Promise.all([
+      prisma.like.findMany({ where: { userId, entryId: { in: entryIds } }, select: { entryId: true } }),
+      prisma.bookmark.findMany({ where: { userId, entryId: { in: entryIds } }, select: { entryId: true } }),
+      prisma.follow.findMany({ where: { followerId: userId, followingId: { in: userIds } }, select: { followingId: true } })
+    ]);
 
-      likes.forEach(l => userLikes.add(l.entryId));
-      bookmarks.forEach(b => userBookmarks.add(b.entryId));
-      follows.forEach(f => userFollowing.add(f.followingId));
-    }
+    likes.forEach(l => userLikes.add(l.entryId));
+    bookmarks.forEach(b => userBookmarks.add(b.entryId));
+    follows.forEach(f => userFollowing.add(f.followingId));
 
     // ── Social-media feed ranking algorithm ──
     const now = Date.now();
@@ -373,7 +372,10 @@ router.get('/public', optionalAuthenticate, async (req: AuthRequest, res: Respon
     logger.error('Public entries error', error);
     res.status(500).json({ error: 'Failed to fetch public entries', details: error.message });
   }
-});
+};
+
+router.get('/feed', authenticate, handleFeed);
+router.get('/public', authenticate, handleFeed);
 
 // GET /api/entries/my-public - Current user's public posts with full social data
 router.get('/my-public', authenticate, async (req: AuthRequest, res: Response) => {
@@ -619,11 +621,11 @@ router.post('/:id/comment', authenticate, async (req: AuthRequest, res: Response
 });
 
 // GET /api/entries/:id/comments - List Comments
-router.get('/:id/comments', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
+router.get('/:id/comments', authenticate, async (req: AuthRequest, res: Response) => {
   try {
     const entry = await prisma.entry.findUnique({ where: { id: req.params.id as string } });
     if (!entry) return res.status(404).json({ error: 'Entry not found' });
-    if (!entry.isPublic && entry.userId !== req.user?.uid) {
+    if (!entry.isPublic && entry.userId !== req.user!.uid) {
       return res.status(403).json({ error: 'Access denied' });
     }
 
@@ -698,8 +700,8 @@ router.get('/saved', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /api/entries/:id - Single entry
-router.get('/:id', optionalAuthenticate, async (req: AuthRequest, res: Response) => {
-  const userId = req.user?.uid;
+router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+  const userId = req.user!.uid;
   try {
     const entry = await prisma.entry.findUnique({
       where: { id: req.params.id as string },

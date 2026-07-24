@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       try {
         decryptedBody = CryptoService.decrypt(entry.body_encrypted, entry.iv);
       } catch (e) {
-        console.error(`Failed to decrypt public entry ${entry.id}`, e);
+        console.error(`Failed to decrypt feed entry ${entry.id}`, e);
         decryptedBody = '*(Encrypted content unavailable)*';
       }
 
@@ -39,19 +39,12 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    const response = NextResponse.json({
+    return NextResponse.json({
       entries: decryptedEntries,
       nextCursor,
     });
-
-    // Vercel Edge caching optimization: Cache public feed for 30s at edge, revalidate background up to 59s
-    response.headers.set('Cache-Control', 's-maxage=30, stale-while-revalidate=59');
-    
-    return response;
   } catch (error: any) {
-    console.error('Error fetching public entries:', error);
+    console.error('Error fetching feed entries:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
-
-

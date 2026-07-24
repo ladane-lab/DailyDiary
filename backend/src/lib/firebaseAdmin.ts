@@ -13,7 +13,10 @@ if (!admin.apps.length) {
       logger.error('[Firebase Admin] Failed to parse FIREBASE_SERVICE_ACCOUNT', { error });
     }
   } else {
-    logger.info('[Firebase Admin] No FIREBASE_SERVICE_ACCOUNT found. Skipping init (ok for local dev).');
+    admin.initializeApp({
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || 'dailydiary-f2cc6'
+    });
+    logger.info('[Firebase Admin] Initialized with default project ID.');
   }
 }
 

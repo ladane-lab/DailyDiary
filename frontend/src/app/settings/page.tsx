@@ -9,7 +9,7 @@ import { updateProfile } from "firebase/auth";
 import {
   Settings, LayoutDashboard, PenLine, CalendarDays,
   Trophy, Medal, LogOut, Flame, BookOpen, CheckCircle2,
-  Trash2, Download, Printer, Bookmark
+  Trash2, Download, Printer, Bookmark, Eye, EyeOff
 } from "lucide-react";
 import Image from "next/image";
 import Logo from "@/components/Logo/Logo";
@@ -26,6 +26,8 @@ export default function SettingsPage() {
   // Change Password states
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordSaved, setPasswordSaved] = useState(false);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -345,25 +347,47 @@ export default function SettingsPage() {
             )}
             <div className={styles.fieldGroup}>
               <label className={styles.label}>New Password</label>
-              <input
-                type="password"
-                className="input-field"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="Min 8 characters"
-                required
-              />
+              <div className={styles.passwordWrapper}>
+                <input
+                  type={showNewPassword ? "text" : "password"}
+                  className="input-field"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Min 8 characters"
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.eyeButton}
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  aria-label={showNewPassword ? "Hide password" : "Show password"}
+                  title={showNewPassword ? "Hide password" : "Show password"}
+                >
+                  {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <div className={styles.fieldGroup}>
               <label className={styles.label}>Confirm New Password</label>
-              <input
-                type="password"
-                className="input-field"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Confirm new password"
-                required
-              />
+              <div className={styles.passwordWrapper}>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="input-field"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm new password"
+                  required
+                />
+                <button
+                  type="button"
+                  className={styles.eyeButton}
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                  title={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
             <button
               type="submit"
@@ -405,7 +429,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px' }}>
-              <p className={styles.dangerText} style={{ marginBottom: '8px', color: 'var(--danger)' }}>Permanently delete your account and wipe all private records under the Indian DPDP Act.</p>
+              <p className={styles.dangerText} style={{ marginBottom: '8px', color: 'var(--danger)' }}>Permanently delete your account.</p>
               <button onClick={handleDeleteAccount} className="btn btn-danger" disabled={deleting} style={{ gap: '8px' }}>
                 <Trash2 size={18} /> {deleting ? "Deleting Account..." : "Delete Account"}
               </button>

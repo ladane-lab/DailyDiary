@@ -57,6 +57,38 @@
 .label { font-size: 0.85rem; font-weight: 500; color: var(--text-secondary); }
 .hint  { font-size: 0.78rem; color: var(--text-muted); }
 
+.passwordWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.passwordWrapper input {
+  padding-right: 42px;
+  width: 100%;
+}
+
+.eyeButton {
+  position: absolute;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border-radius: var(--radius-sm, 4px);
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.eyeButton:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
+}
+
 /* ── Stats Row ── */
 .statsRow { display: flex; gap: 32px; }
 .statItem { display: flex; flex-direction: column; align-items: center; gap: 4px; }

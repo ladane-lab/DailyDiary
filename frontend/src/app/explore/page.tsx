@@ -172,8 +172,9 @@ export default function ExplorePage() {
     try {
       const API = API_URL;
       const token = await user?.getIdToken();
-      const res = await fetch(`${API}/entries/public?page=${pageNum}&limit=10`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      if (!token) return;
+      const res = await fetch(`${API}/entries/feed?page=${pageNum}&limit=10`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
         const data = await res.json();
