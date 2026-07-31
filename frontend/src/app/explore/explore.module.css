@@ -891,3 +891,60 @@
     padding: 6px 10px !important;
   }
 }
+
+@media (min-width: 1025px) {
+  .page {
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .main {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0 32px;
+  }
+
+  .contentLayout {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .feedSection {
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 12px;
+    padding-bottom: 24px;
+  }
+
+  .tabStickyHeader {
+    margin-top: 0;
+    padding-top: 16px;
+    padding-bottom: 8px;
+  }
+
+  .sidebar {
+    height: 100%;
+    overflow-y: auto;
+    padding-top: 16px;
+    padding-bottom: 24px;
+    position: sticky;
+    top: 0;
+    scrollbar-width: none; /* Hide scrollbar for clean design */
+  }
+
+  .sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .feedContainer {
+    gap: 20px;
+  }
+
+  .feedCard {
+    padding: 20px 24px;
+  }
+}
