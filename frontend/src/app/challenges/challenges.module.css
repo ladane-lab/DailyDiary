@@ -38,7 +38,7 @@
 }
 
 .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 36px; }
-.title  { font-size: 1.8rem; font-weight: 700; }
+.title  { font-size: 1.2rem; font-weight: 700; }
 .subtitle { color: var(--text-muted); font-size: 0.9rem; margin-top: 4px; }
 
 .section { margin-bottom: 48px; }
@@ -157,7 +157,7 @@
 
 @media (max-width: 480px) {
   .title {
-    font-size: 1.3rem !important;
+    font-size: 1.0rem !important;
   }
   .sectionTitle {
     font-size: 1rem !important;

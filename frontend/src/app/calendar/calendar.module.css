@@ -32,7 +32,7 @@
 }
 
 .title {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
 }
@@ -419,7 +419,7 @@
   }
 
   .title {
-    font-size: 1.7rem;
+    font-size: 1.2rem;
   }
 
   .selectorDropdown {
@@ -450,7 +450,7 @@
   }
 
   .title {
-    font-size: 1.35rem !important;
+    font-size: 1.0rem !important;
   }
 
   .writeBtn {

@@ -405,9 +405,6 @@ function WritePageContent() {
         <main className={`${styles.main} animate-page-reveal`}>
 
           <div className={styles.writeHeader}>
-            <button onClick={() => router.push("/dashboard")} className={styles.backBtn}>
-              <ArrowLeft size={16} /> Back to Dashboard
-            </button>
             <h1 className={styles.title}>Choose Your Template</h1>
             <p className={styles.writeSubtitle}>Pick a structured format for today&apos;s entry</p>
           </div>

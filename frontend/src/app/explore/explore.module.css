@@ -164,7 +164,7 @@
 }
 
 .title {
-  font-size: 2.5rem;
+  font-size: 1.2rem;
   font-weight: 800;
   margin-bottom: 12px;
   background: linear-gradient(135deg, var(--primary), var(--secondary));
@@ -676,7 +676,7 @@
   }
 
   .title {
-    font-size: 1.8rem;
+    font-size: 1.1rem;
   }
 
   .feedCard {
@@ -812,7 +812,7 @@
   }
 
   .title {
-    font-size: 1.3rem !important;
+    font-size: 1.0rem !important;
   }
 
   .subtitle {

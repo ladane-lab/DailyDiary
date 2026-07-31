@@ -83,7 +83,7 @@
 }
 
 .title {
-  font-size: 1.8rem;
+  font-size: 1.2rem;
   font-weight: 700;
 }
 
@@ -371,7 +371,7 @@
   }
 
   .title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
   }
 
   .subtitle {
@@ -433,7 +433,7 @@
   }
 
   .title {
-    font-size: 1.25rem;
+    font-size: 1.0rem;
     gap: 6px !important;
   }
 
@@ -541,7 +541,7 @@
   }
 
   .title {
-    font-size: 1.15rem;
+    font-size: 0.95rem;
   }
 
   .headerActions a,

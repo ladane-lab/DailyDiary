@@ -28,7 +28,7 @@
 .main { flex: 1; padding: 40px 48px; max-width: 900px; }
 
 .mobileLogo { display: none; }
-.title { font-size: 1.8rem; font-weight: 700; margin-bottom: 32px; }
+.title { font-size: 1.2rem; font-weight: 700; margin-bottom: 32px; }
 
 /* ── Profile Card ── */
 .profileCard {
@@ -203,7 +203,7 @@
 
 @media (max-width: 480px) {
   .title {
-    font-size: 1.3rem !important;
+    font-size: 1.0rem !important;
     margin-bottom: 20px !important;
   }
   .profileCard {
