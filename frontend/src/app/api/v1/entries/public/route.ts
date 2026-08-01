@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
       nextCursor = nextItem?.id;
     }
 
-    const decryptedEntries = entries.map((entry) => {
+    const decryptedEntries = entries.map((entry: any) => {
       let decryptedBody = '';
       try {
         decryptedBody = CryptoService.decrypt(entry.body_encrypted, entry.iv);
