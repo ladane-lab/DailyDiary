@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1.4rem;
   font-weight: 700;
 }
@@ -502,7 +502,7 @@
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 800;
   font-size: 1.4rem;
   color: var(--text-primary);

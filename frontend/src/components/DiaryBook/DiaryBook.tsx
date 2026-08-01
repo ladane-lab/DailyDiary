@@ -242,7 +242,7 @@ export default function DiaryBook({
                 className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
                 style={{ 
                   color: config.textColor, 
-                  fontFamily: '"Inter", sans-serif',
+                  fontFamily: 'var(--font-inter), sans-serif',
                   transform: `translateY(-${contentOffset}px)`
                 }}
               >
@@ -251,7 +251,7 @@ export default function DiaryBook({
                   <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {entry.images.map((img: any) => (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} />
+                      <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} loading="lazy" />
                     ))}
                   </div>
                 )}
@@ -493,14 +493,14 @@ export default function DiaryBook({
               id={`measure-${entry.id}`} 
               key={`measure-${entry.id}`}
               className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
-              style={{ fontFamily: '"Inter", sans-serif' }}
+              style={{ fontFamily: 'var(--font-inter), sans-serif' }}
             >
               <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} />
               {entry.images && entry.images.length > 0 && (
                 <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {entry.images.map((img: any) => (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} />
+                    <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} loading="lazy" />
                   ))}
                 </div>
               )}

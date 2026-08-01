@@ -144,7 +144,7 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({
         <div className={styles.feedImages}>
           {entry.images.map((img: any) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} style={{ objectFit: "cover", width: "100%", height: "auto", borderRadius: 8 }} />
+            <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} style={{ objectFit: "cover", width: "100%", height: "auto", borderRadius: 8 }} loading="lazy" />
           ))}
         </div>
       )}

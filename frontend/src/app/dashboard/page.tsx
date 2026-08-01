@@ -106,9 +106,9 @@ export default function DashboardPage() {
             </h1>
             <p className={styles.date}>{formatDate(new Date())}</p>
           </div>
-          <a href="/write" className="btn btn-primary" id="write-entry-btn" style={{ gap: "8px" }}>
+          <Link href="/write" className="btn btn-primary" id="write-entry-btn" style={{ gap: "8px" }}>
             <PenLine size={18} /> Write Today
-          </a>
+          </Link>
         </header>
 
         {statsError && (
@@ -137,10 +137,10 @@ export default function DashboardPage() {
         <section className={styles.section}>
           <h2 className={styles.sectionTitle}>Quick Actions</h2>
           <div className={styles.quickGrid}>
-            <a href="/write"                       className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><PenLine size={32} color="var(--primary)" /></span><span className={styles.quickLabel}>Write Entry</span></a>
-            <a href="/write?template=gratitude"    className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Heart size={32} color="var(--danger)" /></span><span className={styles.quickLabel}>Gratitude</span></a>
-            <a href="/write?template=productivity" className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Zap size={32} color="var(--streak)" /></span><span className={styles.quickLabel}>Productivity</span></a>
-            <a href="/challenges"                  className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Trophy size={32} color="var(--success)" /></span><span className={styles.quickLabel}>Challenges</span></a>
+            <Link href="/write"                       className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><PenLine size={32} color="var(--primary)" /></span><span className={styles.quickLabel}>Write Entry</span></Link>
+            <Link href="/write?template=gratitude"    className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Heart size={32} color="var(--danger)" /></span><span className={styles.quickLabel}>Gratitude</span></Link>
+            <Link href="/write?template=productivity" className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Zap size={32} color="var(--streak)" /></span><span className={styles.quickLabel}>Productivity</span></Link>
+            <Link href="/challenges"                  className={`glass-card ${styles.quickCard}`}><span className={styles.quickEmoji}><Trophy size={32} color="var(--success)" /></span><span className={styles.quickLabel}>Challenges</span></Link>
           </div>
         </section>
 
@@ -148,7 +148,7 @@ export default function DashboardPage() {
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>Recent Entries</h2>
-            {recent.length > 0 && <a href="/timeline" className={styles.viewAll}>View All →</a>}
+            {recent.length > 0 && <Link href="/timeline" className={styles.viewAll}>View All →</Link>}
           </div>
 
           {statsLoading ? (
@@ -160,9 +160,9 @@ export default function DashboardPage() {
               <BookOpen size={48} className={styles.emptyIcon} color="var(--primary)" />
               <h3>No entries yet</h3>
               <p>Start your journaling journey by writing your first entry!</p>
-              <a href="/write" className="btn btn-primary" style={{ marginTop: "16px", gap: "8px" }}>
+              <Link href="/write" className="btn btn-primary" style={{ marginTop: "16px", gap: "8px" }}>
                 <PenLine size={18} /> Write Your First Entry
-              </a>
+              </Link>
             </div>
           ) : (
             <div className={styles.recentGrid}>

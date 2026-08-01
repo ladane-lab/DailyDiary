@@ -4,6 +4,7 @@ import { API_URL } from "@/lib/api";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuthStore } from "@/store/authStore";
 import styles from "./timeline.module.css";
 import DiaryBook, { DiaryTheme } from "@/components/DiaryBook/DiaryBook";
@@ -138,9 +139,9 @@ export default function TimelinePage() {
             >
               <Sparkles size={18} /> {isEditMode ? "Applied Changes" : "Change Style"}
             </button>
-            <a href="/write" className="btn btn-primary" style={{ gap: '8px' }}>
+            <Link href="/write" className="btn btn-primary" style={{ gap: '8px' }}>
               <PenLine size={18} /> Write Today
-            </a>
+            </Link>
           </div>
         </header>
 
@@ -221,9 +222,9 @@ export default function TimelinePage() {
             <BookOpen size={48} color="var(--primary)" strokeWidth={2} />
             <h3>Your library is empty</h3>
             <p>Start journaling to create your first book.</p>
-            <a href="/write" className="btn btn-primary" style={{ marginTop: 16, gap: '8px' }}>
+            <Link href="/write" className="btn btn-primary" style={{ marginTop: 16, gap: '8px' }}>
               <PenLine size={18} /> Write First Entry
-            </a>
+            </Link>
           </div>
         ) : (
           <div className={styles.timeline}>

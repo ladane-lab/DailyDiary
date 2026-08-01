@@ -1,6 +1,7 @@
 "use client";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { API_URL } from "@/lib/api";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -188,9 +189,9 @@ export default function CalendarPage() {
             </h1>
             <p className={styles.subtitle}>Browse your journal collections by date</p>
           </div>
-          <a href="/write" className={`btn btn-primary ${styles.writeBtn}`}>
+          <Link href="/write" className={`btn btn-primary ${styles.writeBtn}`}>
             <PenLine size={16} className={styles.btnIcon} /> Write Today
-          </a>
+          </Link>
         </header>
 
         <div className={styles.calendarLayout}>
@@ -286,7 +287,7 @@ export default function CalendarPage() {
               <div className={styles.emptyState}>
                 <CalendarIcon size={32} style={{ opacity: 0.3, marginBottom: '8px' }} />
                 <p>No entries recorded on this day.</p>
-                <a href="/write" className="btn btn-secondary btn-sm" style={{ marginTop: '12px', fontSize: '0.8rem', padding: '6px 16px' }}>Write for this date</a>
+                <Link href="/write" className="btn btn-secondary btn-sm" style={{ marginTop: '12px', fontSize: '0.8rem', padding: '6px 16px' }}>Write for this date</Link>
               </div>
             ) : (
               <div className={styles.entryList}>
@@ -360,7 +361,7 @@ export default function CalendarPage() {
                       {entry.images && entry.images.length > 0 && (
                         <div className={styles.entryMiniImages}>
                           {entry.images.map(img => (
-                            <img key={img.id} src={img.url} alt="Attachment" className={styles.entryMiniImg} />
+                            <img key={img.id} src={img.url} alt="Attachment" className={styles.entryMiniImg} loading="lazy" />
                           ))}
                         </div>
                       )}

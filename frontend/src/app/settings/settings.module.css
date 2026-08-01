@@ -9,7 +9,7 @@
 }
 .sidebarLogo {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+  font-family: var(--font-outfit), sans-serif; font-size: 1.2rem; font-weight: 700;
 }
 .sidebarNav { display: flex; flex-direction: column; gap: 4px; }
 .navItem {
@@ -44,7 +44,7 @@
   flex-shrink: 0; box-shadow: 0 0 20px rgba(95, 133, 117, 0.3);
 }
 .profileInfo { flex: 1; }
-.profileName  { font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700; }
+.profileName  { font-family: var(--font-outfit), sans-serif; font-size: 1.2rem; font-weight: 700; }
 .profileEmail { color: var(--text-muted); font-size: 0.85rem; margin-top: 2px; }
 .profileMeta  { color: var(--text-muted); font-size: 0.8rem; margin-top: 6px; }
 
@@ -92,7 +92,7 @@
 /* ── Stats Row ── */
 .statsRow { display: flex; gap: 32px; }
 .statItem { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.statNum { font-family: 'Outfit', sans-serif; font-size: 2rem; font-weight: 800; }
+.statNum { font-family: var(--font-outfit), sans-serif; font-size: 2rem; font-weight: 800; }
 .statLbl { font-size: 0.8rem; color: var(--text-muted); }
 
 /* ── Danger ── */
@@ -110,7 +110,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 0 20px;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-outfit), sans-serif;
     font-weight: 700;
     font-size: 1.2rem;
     color: var(--primary);

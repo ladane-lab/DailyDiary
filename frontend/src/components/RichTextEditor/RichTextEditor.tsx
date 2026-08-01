@@ -30,7 +30,7 @@ const COLORS = [
 ];
 
 const FONTS = [
-  { name: 'Inter', value: '"Inter", sans-serif' },
+  { name: 'Inter', value: 'var(--font-inter), sans-serif' },
   { name: 'Serif', value: 'Georgia, serif' },
   { name: 'Monospace', value: '"Courier New", monospace' },
   { name: 'Cursive', value: '"Comic Sans MS", cursive' },

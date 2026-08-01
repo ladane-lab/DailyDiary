@@ -206,7 +206,7 @@ export default function SavedPostsPage() {
                         <div className={styles.feedHeader}>
                           {entry.user?.photoURL ? (
                             // eslint-disable-next-line @next/next/no-img-element
-                            <img src={entry.user.photoURL} alt={authorName} className={styles.authorAvatarImage} />
+                            <img src={entry.user.photoURL} alt={authorName} className={styles.authorAvatarImage} loading="lazy" />
                           ) : (
                             <div className={styles.authorAvatar}>{authorName[0].toUpperCase()}</div>
                           )}
@@ -233,7 +233,7 @@ export default function SavedPostsPage() {
                         <div className={`${styles.feedBody} ${styles.tiptapContent}`} dangerouslySetInnerHTML={{ __html: sanitizeHtml(entry.body) }} />
 
                         {entry.images && entry.images.length > 0 && (
-                          <div className={styles.feedImages}>{entry.images.map((img: any) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} />)}</div>
+                          <div className={styles.feedImages}>{entry.images.map((img: any) => <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} loading="lazy" />)}</div>
                         )}
 
                         <div className={styles.feedActions}>

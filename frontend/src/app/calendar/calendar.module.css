@@ -15,7 +15,7 @@
 
 .mobileLogo {
   display: none;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 800;
   font-size: 1.3rem;
   color: var(--text-primary);
@@ -81,7 +81,7 @@
 }
 
 .selectorDropdown {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -199,7 +199,7 @@
 }
 
 .statsTitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -232,7 +232,7 @@
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-primary);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
 }
 
 .detailsCard {
@@ -244,7 +244,7 @@
 }
 
 .detailsTitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -312,7 +312,7 @@
 }
 
 .entryItemTitle {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--text-primary);

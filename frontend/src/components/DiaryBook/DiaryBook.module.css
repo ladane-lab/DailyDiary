@@ -720,7 +720,7 @@
   bottom: 16px;
   left: 24px;
   font-size: 11px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 600;
   opacity: 0.4;
 }
@@ -730,7 +730,7 @@
   bottom: 16px;
   right: 24px;
   font-size: 11px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 600;
   opacity: 0.4;
 }
@@ -741,7 +741,7 @@
   padding: 6px 16px;
   border-radius: 9999px;
   font-size: 12px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 600;
   letter-spacing: 0.05em;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);

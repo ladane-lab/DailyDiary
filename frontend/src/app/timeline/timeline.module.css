@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
 }
@@ -219,7 +219,7 @@
 }
 
 .selectorLabel {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 600;
   color: var(--text-primary);
   font-size: 1.1rem;

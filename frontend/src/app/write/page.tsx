@@ -375,6 +375,7 @@ function WritePageContent() {
           })),
           images: imageUrls,
           theme: selectedTheme,
+          timezoneOffset: new Date().getTimezoneOffset(),
         }),
       });
 

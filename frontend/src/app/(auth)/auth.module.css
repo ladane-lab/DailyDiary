@@ -52,7 +52,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-size: 1.5rem;
   font-weight: 700;
   margin-bottom: 32px;

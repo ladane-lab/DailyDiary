@@ -274,7 +274,8 @@ export default function ExplorePage() {
           body: savedPost, 
           isPublic: true, 
           templateId: "personal",
-          images: savedImages 
+          images: savedImages,
+          timezoneOffset: new Date().getTimezoneOffset(),
         })
       });
       

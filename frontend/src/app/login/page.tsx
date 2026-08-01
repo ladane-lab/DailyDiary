@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
@@ -44,9 +45,9 @@ export default function LoginPage() {
       </div>
 
       <div className={styles.authContainer}>
-        <a href="/" className={styles.authLogo} style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center' }}>
+        <Link href="/" className={styles.authLogo} style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center' }}>
           <Logo size={40} />
-        </a>
+        </Link>
 
         <div className={`glass-card ${styles.authCard}`}>
           <h1 className={styles.authTitle}>{forgotMode ? "Reset Password" : "Welcome Back"}</h1>
@@ -164,9 +165,9 @@ export default function LoginPage() {
 
               <p className={styles.authFooter}>
                 Don&apos;t have an account?{" "}
-                <a href="/register" className={styles.authLink}>
+                <Link href="/register" className={styles.authLink}>
                   Sign up free
-                </a>
+                </Link>
               </p>
             </>
           )}

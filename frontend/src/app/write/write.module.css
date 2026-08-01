@@ -13,7 +13,7 @@
 }
 .sidebarLogo {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+  font-family: var(--font-outfit), sans-serif; font-size: 1.2rem; font-weight: 700;
 }
 .sidebarNav { display: flex; flex-direction: column; gap: 4px; }
 .navItem {
@@ -46,7 +46,7 @@
   cursor: pointer;
   background: none;
   border: none;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   transition: color 0.2s;
 }
 
@@ -84,7 +84,7 @@
   background: var(--bg-glass);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   color: var(--text-primary);
   transition: all 0.3s ease;
   animation: slideUp 0.4s ease-out both;
@@ -101,7 +101,7 @@
 }
 
 .tplName {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
 }
@@ -188,7 +188,7 @@
   color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
 }
 
 .ratingBtn:hover {
@@ -277,7 +277,7 @@
   padding: 12px 20px;
   font-size: 0.9rem;
   font-weight: 600;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   border: 1.5px solid var(--border);
   background: transparent;
   border-radius: var(--radius-md);
@@ -397,7 +397,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 0 20px;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-outfit), sans-serif;
     font-weight: 700;
     font-size: 1.2rem;
     color: var(--primary);

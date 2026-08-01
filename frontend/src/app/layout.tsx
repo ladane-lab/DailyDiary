@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Lora } from "next/font/google";
+import { Plus_Jakarta_Sans, Lora, Inter, Outfit } from "next/font/google";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({ 
@@ -10,6 +10,16 @@ const jakarta = Plus_Jakarta_Sans({
 const lora = Lora({
   subsets: ["latin"],
   variable: "--font-serif",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
 });
 
 export const metadata: Metadata = {
@@ -35,7 +45,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${lora.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${lora.variable} ${inter.variable} ${outfit.variable}`}>
       <body>
         <Toaster position="top-right" />
         <ClientLayout>{children}</ClientLayout>

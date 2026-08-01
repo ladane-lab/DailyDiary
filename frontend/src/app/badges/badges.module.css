@@ -10,7 +10,7 @@
 }
 .sidebarLogo {
   display: flex; align-items: center; gap: 10px;
-  font-family: 'Outfit', sans-serif; font-size: 1.2rem; font-weight: 700;
+  font-family: var(--font-outfit), sans-serif; font-size: 1.2rem; font-weight: 700;
 }
 .sidebarNav { display: flex; flex-direction: column; gap: 4px; }
 .navItem {
@@ -118,7 +118,7 @@
     align-items: center;
     gap: 8px;
     padding: 10px 0 20px;
-    font-family: 'Outfit', sans-serif;
+    font-family: var(--font-outfit), sans-serif;
     font-weight: 700;
     font-size: 1.2rem;
     color: var(--primary);

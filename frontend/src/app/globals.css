@@ -1,13 +1,12 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
-
 :root {
   /* ── Sage Green & Coral Palette (Reference Image Inspired) ── */
-  --primary: #5F8575;          /* Sophisticated Sage Green */
-  --primary-hover: #4F7062;
+  --primary: #56796A;          /* Sophisticated Sage Green (Darkened for contrast) */
+  --primary-hover: #456155;
   --primary-light: #98C1AA;
-  --accent: #E88D67;           /* Vibrant Coral accent for CTAs */
-  --accent-hover: #D67A55;
+  --accent: #D0643D;           /* Vibrant Coral accent for CTAs (Darkened for contrast) */
+  --accent-hover: #B6512C;
   --streak: #F2A359;
+  --streak-text: #B25E00;      /* Dark orange for high-contrast badge text */
 
   /* ── Mood Pastels (Sage Variant) ── */
   --mood-happy: #CDEAC0;
@@ -24,7 +23,7 @@
   
   --text-primary: #1A2F23;     /* Dark Forest Green for extreme readability */
   --text-secondary: #4A5D52;   /* Muted Sage for secondary content */
-  --text-muted: #7A8D83;       
+  --text-muted: #62756A;       /* Sage gray (Darkened for contrast compliance) */
   
   --border: rgba(26, 47, 35, 0.08); /* Crisp green-tinted borders */
   --border-active: rgba(95, 133, 117, 0.4);
@@ -33,8 +32,8 @@
   --success: #66BB6A;
 
   /* ── Shadows & Gradients ── */
-  --gradient-primary: linear-gradient(135deg, #5F8575, #98C1AA);
-  --gradient-accent: linear-gradient(135deg, #E88D67, #F5A983);
+  --gradient-primary: linear-gradient(135deg, #56796A, #98C1AA);
+  --gradient-accent: linear-gradient(135deg, #D0643D, #F5A983);
   --shadow-sm: 0 4px 20px rgba(26, 47, 35, 0.04);
   --shadow-md: 0 12px 48px rgba(26, 47, 35, 0.08);
   --shadow-glow: 0 0 30px rgba(95, 133, 117, 0.15);
@@ -54,7 +53,8 @@ html.dark {
   
   --text-primary: #f8fafc;      /* Crisp white-gray */
   --text-secondary: #cbd5e1;    /* Muted gray */
-  --text-muted: #64748b;        /* Deep muted gray */
+  --text-muted: #94a3b8;        /* Slate gray (Lightened for dark mode contrast) */
+  --streak-text: #F2A359;       /* Light orange is accessible on dark backgrounds */
   
   --border: rgba(248, 250, 252, 0.08);
   --border-active: rgba(95, 133, 117, 0.5);
@@ -170,7 +170,7 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
   gap: 8px;
   padding: 12px 28px;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-inter), sans-serif;
   font-weight: 600;
   font-size: 0.95rem;
   border: none;
@@ -268,7 +268,7 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid rgba(255, 183, 3, 0.3);
   border-radius: 50px;
   font-weight: 700;
-  color: var(--streak);
+  color: var(--streak-text);
   box-shadow: var(--shadow-streak);
 }
 

@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
@@ -97,24 +98,24 @@ export default function HomePage() {
       {/* ── Navigation ── */}
       <nav className={styles.nav}>
         <div className={styles.navInner}>
-          <a href="/" className={styles.logo} style={{ textDecoration: 'none' }}>
+          <Link href="/" className={styles.logo} style={{ textDecoration: 'none' }}>
             <Logo size={28} />
-          </a>
+          </Link>
           <div className={styles.navLinks}>
             {initialized && user ? (
               <>
-                <a href="/dashboard" className={styles.navDashboardBtn}>
+                <Link href="/dashboard" className={styles.navDashboardBtn}>
                   Dashboard →
-                </a>
+                </Link>
               </>
             ) : (
               <>
-                <a href="/login" className={styles.navLoginBtn}>
+                <Link href="/login" className={styles.navLoginBtn}>
                   Log In
-                </a>
-                <a href="/register" className={styles.navRegisterBtn}>
+                </Link>
+                <Link href="/register" className={styles.navRegisterBtn}>
                   Get Started Free
-                </a>
+                </Link>
               </>
             )}
           </div>
@@ -141,9 +142,9 @@ export default function HomePage() {
             habit that transforms your life.
           </p>
           <div className={styles.heroCta}>
-            <a href="/register" className="btn btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem", gap: "8px" }}>
+            <Link href="/register" className="btn btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem", gap: "8px" }}>
               Start Writing Free <Flame size={20} strokeWidth={2.5} />
-            </a>
+            </Link>
             <a href="#features" className="btn btn-secondary" style={{ padding: "16px 32px", gap: "8px" }}>
               See Features
             </a>
@@ -228,9 +229,9 @@ export default function HomePage() {
           <p className={styles.ctaSub}>
             Begin your personal writing journey today with fully encrypted private journaling.
           </p>
-          <a href="/register" className="btn btn-primary" style={{ padding: "18px 48px", fontSize: "1.15rem", gap: "8px" }}>
+          <Link href="/register" className="btn btn-primary" style={{ padding: "18px 48px", fontSize: "1.15rem", gap: "8px" }}>
             <PenLine size={20} strokeWidth={2.5} /> Create Free Account
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -241,9 +242,9 @@ export default function HomePage() {
             <Logo size={24} />
           </div>
           <div className={styles.footerLinks}>
-            <a href="/privacy">Privacy Policy</a>
-            <a href="/terms">Terms of Service</a>
-            <a href="/contact">Contact</a>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/terms">Terms of Service</Link>
+            <Link href="/contact">Contact</Link>
           </div>
           <p className={styles.footerCopy}>
             © {new Date().getFullYear()} DailyDiary.in — All rights reserved.
