@@ -13,9 +13,9 @@ graph TD
     %% Nodes
     Client["💻 Client (Next.js + SWR)"]:::frontend
     
-    subgraph "External Services (Firebase)"
+    subgraph "External Services"
         Auth["🔐 Firebase Auth (JWT)"]:::external
-        Storage["🖼️ Firebase Storage (Media)"]:::external
+        Media["☁️ Cloudinary (Media CDN)"]:::external
     end
     
     subgraph "Backend Tier (Node.js / Express)"
@@ -32,8 +32,9 @@ graph TD
 
     %% Connections
     Client -- "1. Authenticate" --> Auth
-    Client -- "2. Direct Uploads" --> Storage
-    Client -- "3. API Requests (Bearer Token)" --> API
+    Client -- "2. Upload Image" --> API
+    API -- "3. Stream Buffer" --> Media
+    Client -- "4. API Requests (Bearer Token)" --> API
     
     API -. "Verify JWT" .-> Auth
     API -- "Encrypt / Decrypt Entries" --> Crypto
@@ -49,7 +50,7 @@ graph TD
 ### Component Breakdown
 
 1. **Client (Next.js + SWR)**: The React frontend uses SWR for aggressive client-side caching of personalized data (like the Dashboard).
-2. **Firebase Auth & Storage**: Handles user identity securely via JWTs. Images are uploaded directly from the client to Firebase Storage to offload bandwidth from the backend.
+2. **Firebase Auth & Cloudinary**: Handles user identity securely via JWTs. User-uploaded images are sent to the Express backend and securely streamed to Cloudinary's media CDN for persistent, high-speed hosting (completely free and without a credit card).
 3. **Express REST API**: The core backend processing engine. It validates Firebase JWTs using the Firebase Admin SDK.
 4. **LRU Cache**: A highly optimized in-memory cache protecting the database from burst traffic. It uses Promise-deduping (Stampede Protection) to ensure only a single database query executes when thousands of users hit an expired cache key simultaneously.
 5. **Crypto Service**: Handles server-side AES-GCM encryption and decryption. Database entries are stored encrypted at rest, and only decrypted when mapping payloads for authenticated requests or the public feed.
