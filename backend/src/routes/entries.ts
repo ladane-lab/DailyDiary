@@ -263,6 +263,7 @@ const handleFeed = async (req: AuthRequest, res: Response) => {
           body_encrypted: true,
           iv: true,
           createdAt: true,
+          userId: true,
           user: {
             select: {
               id: true,
@@ -289,6 +290,7 @@ const handleFeed = async (req: AuthRequest, res: Response) => {
           id: entry.id,
           body: decryptedBody,
           createdAt: entry.createdAt,
+          userId: entry.userId,
           user: entry.user,
           images: entry.images,
           _count: entry._count,
@@ -347,6 +349,7 @@ const handleFeed = async (req: AuthRequest, res: Response) => {
         id: entry.id,
         body: entry.body,
         createdAt: entry.createdAt,
+        userId: entry.userId,
         images: entry.images,
         isLiked: userLikes.has(entry.id),
         isBookmarked: userBookmarks.has(entry.id),
@@ -400,6 +403,7 @@ router.get('/my-public', authenticate, async (req: AuthRequest, res: Response) =
         body_encrypted: true,
         iv: true,
         createdAt: true,
+        userId: true,
         user: {
           select: {
             id: true,
@@ -513,8 +517,12 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
           theme: true,
           templateId: true,
           isPublic: true,
+          userId: true,
           template: {
             select: { name: true }
+          },
+          images: {
+            select: { id: true, url: true }
           }
         },
       }),

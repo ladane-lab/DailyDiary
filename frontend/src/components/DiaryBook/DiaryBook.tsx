@@ -17,6 +17,7 @@ interface EntryItem {
   template?: { name: string };
   theme?: string;
   responses?: { fieldLabel: string; value: string }[];
+  images?: { id: string; url: string }[];
 }
 
 interface ThemeConfig {
@@ -244,8 +245,17 @@ export default function DiaryBook({
                   fontFamily: '"Inter", sans-serif',
                   transform: `translateY(-${contentOffset}px)`
                 }}
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} 
-              />
+              >
+                <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} />
+                {entry.images && entry.images.length > 0 && (
+                  <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {entry.images.map((img: any) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Page Number Position Indicator */}
@@ -484,8 +494,17 @@ export default function DiaryBook({
               key={`measure-${entry.id}`}
               className={`text-[14px] leading-[24px] pr-2 font-medium ${styles.tiptapContent}`} 
               style={{ fontFamily: '"Inter", sans-serif' }}
-              dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} 
-            />
+            >
+              <div dangerouslySetInnerHTML={{ __html: sanitizeHtml(cleanBody) }} />
+              {entry.images && entry.images.length > 0 && (
+                <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {entry.images.map((img: any) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={img.id} src={img.url} alt="Media" className="max-w-full rounded-lg" style={{ height: '180px', width: '100%', objectFit: 'cover' }} />
+                  ))}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

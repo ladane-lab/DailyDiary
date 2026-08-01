@@ -19,6 +19,7 @@ interface EntryItem {
   templateId?: string | null;
   theme?: string;
   responses?: { fieldLabel: string; value: string }[];
+  images?: { id: string; url: string }[];
 }
 
 import { 
