@@ -18,13 +18,28 @@ import { seedTemplates, seedChallenges } from './services/seed.js';
 import prisma from './lib/prisma.js';
 import { rateLimit } from 'express-rate-limit';
 import logger from './lib/logger.js';
+import { v2 as cloudinary } from 'cloudinary';
 
 dotenv.config();
+
+const isCloudinaryConfigured = !!(
+  process.env.CLOUDINARY_CLOUD_NAME &&
+  process.env.CLOUDINARY_API_KEY &&
+  process.env.CLOUDINARY_API_SECRET
+);
+
+if (isCloudinaryConfigured) {
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+}
 
 // ─── Environment Validation ──────────────────────────────────────
 const requiredEnv = ['DATABASE_URL', 'JWT_SECRET'];
 if (process.env.NODE_ENV === 'production') {
-  requiredEnv.push('BACKEND_URL');
+  requiredEnv.push('BACKEND_URL', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET');
 }
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
 if (missingEnv.length > 0) {
@@ -58,17 +73,23 @@ app.use(compression());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const uploadsDir = path.join(__dirname, '../../uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+
+if (!isCloudinaryConfigured) {
+  if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 // ─── Multer storage config ───────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadsDir),
-  filename: (_req, file, cb) => {
-    const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-    const ext = path.extname(file.originalname);
-    cb(null, `${unique}${ext}`);
-  },
-});
+const storage = isCloudinaryConfigured
+  ? multer.memoryStorage()
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, uploadsDir),
+      filename: (_req, file, cb) => {
+        const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+        const ext = path.extname(file.originalname);
+        cb(null, `${unique}${ext}`);
+      },
+    });
+
 const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
@@ -151,12 +172,14 @@ app.use('/api/entries', (req, res, next) => {
 });
 
 // ─── Serve uploaded files statically ────────────────────────────
-app.use('/uploads', (req, res, next) => {
-  res.setHeader('Content-Security-Policy', "default-src 'none'");
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-  next();
-}, express.static(uploadsDir));
+if (!isCloudinaryConfigured) {
+  app.use('/uploads', (req, res, next) => {
+    res.setHeader('Content-Security-Policy', "default-src 'none'");
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  }, express.static(uploadsDir));
+}
 
 // ─── Public Routes ──────────────────────────────────────────────
 app.get('/health', async (_req, res) => {
@@ -186,13 +209,34 @@ app.use('/api/templates', authenticate, templateRoutes);
 app.use('/api/entries', authenticate, entryRoutes);
 
 // ─── Image Upload Route (authenticated) ─────────────────────────
-app.post('/api/upload', authenticate, upload.single('image'), (req: any, res) => {
+app.post('/api/upload', authenticate, upload.single('image'), async (req: any, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file provided' });
   }
-  const API = process.env.BACKEND_URL || `http://localhost:${PORT}`;
-  const url = `${API}/uploads/${req.file.filename}`;
-  return res.json({ url });
+
+  if (isCloudinaryConfigured) {
+    try {
+      const result = await new Promise<any>((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: 'dailydiary' },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(req.file.buffer);
+      });
+      return res.json({ url: result.secure_url });
+    } catch (uploadErr) {
+      logger.error('❌ Cloudinary Upload Error:', uploadErr);
+      return res.status(500).json({ error: 'Failed to upload image to cloud storage' });
+    }
+  } else {
+    // Local fallback
+    const API = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+    const url = `${API}/uploads/${req.file.filename}`;
+    return res.json({ url });
+  }
 });
 
 // ─── Protected Routes ───────────────────────────────────────────
