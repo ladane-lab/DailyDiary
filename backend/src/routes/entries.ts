@@ -479,7 +479,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
   const skip = (parseInt(page as string) - 1) * take;
 
   try {
-    const whereClause: any = { userId };
+    const whereClause: any = { userId, isPublic: false };
 
     if (search && typeof search === 'string' && search.trim() !== '') {
       const q = search.trim();
