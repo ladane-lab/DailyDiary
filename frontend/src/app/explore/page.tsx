@@ -93,26 +93,28 @@ export default function ExplorePage() {
 
   useEffect(() => { const unsub = initAuth(); return unsub; }, [initAuth]);
   
-  const uploadToFirebase = (file: File, userId: string): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}-${file.name}`;
-      const storageRef = ref(storage, `explore/${userId}/${uniqueName}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+  const uploadToCloudinary = async (file: File): Promise<string> => {
+    const token = await user?.getIdToken();
+    if (!token) throw new Error("User is not authenticated");
 
-      uploadTask.on(
-        "state_changed",
-        null,
-        (error) => reject(error),
-        async () => {
-          try {
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            resolve(downloadURL);
-          } catch (error) {
-            reject(error);
-          }
-        }
-      );
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const res = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      },
+      body: formData
     });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to upload image');
+    }
+
+    const data = await res.json();
+    return data.url;
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,7 +131,7 @@ export default function ExplorePage() {
     setIsUploading(true);
 
     try {
-      const downloadURL = await uploadToFirebase(file, user.uid);
+      const downloadURL = await uploadToCloudinary(file);
       setUploadedImages(prev => [...prev, downloadURL]);
     } catch (err: any) {
       console.error("[Upload] Error:", err);
@@ -146,7 +148,7 @@ export default function ExplorePage() {
     if (file.size > 5 * 1024 * 1024) { alert("Image too large (max 5MB)"); return; }
     setIsEditUploading(true);
     try {
-      const downloadURL = await uploadToFirebase(file, user.uid);
+      const downloadURL = await uploadToCloudinary(file);
       setEditUploadedImages(prev => [...prev, downloadURL]);
     } catch (err: any) {
       alert(`Upload failed: ${err?.message}`);

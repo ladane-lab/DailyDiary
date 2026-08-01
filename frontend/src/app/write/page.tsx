@@ -293,15 +293,28 @@ function WritePageContent() {
 
     setUploadingImage(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${ext}`;
-      const imageRef = ref(storage, `entries/${user.uid}/${fileName}`);
-      
       if (process.env.NODE_ENV === 'development') {
-        console.log("[Write] Uploading image to Firebase Storage...");
+        console.log("[Write] Uploading image to Cloudinary...");
       }
-      const snapshot = await uploadBytes(imageRef, file);
-      const url = await getDownloadURL(snapshot.ref);
+      const token = await user.getIdToken();
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch(`${API_URL}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || 'Failed to upload image');
+      }
+
+      const data = await res.json();
+      const url = data.url;
       
       setImageUrls((prev) => [...prev, url]);
       if (process.env.NODE_ENV === 'development') {
@@ -309,19 +322,14 @@ function WritePageContent() {
       }
     } catch (err: any) {
       console.error("Image upload failed:", err);
-      // Provide user-friendly feedback based on common Firebase errors
-      if (err.code === 'storage/unauthorized') {
-        toast.error("Upload failed: Permission denied. Please ensure you are logged in correctly.");
-      } else if (err.code === 'storage/canceled') {
-        toast.error("Upload canceled.");
-      } else {
-        toast.error(`Image upload failed: ${err.message || "Unknown error"}. Check your internet connection or Firebase configuration.`);
-      }
+      toast.error(`Image upload failed: ${err.message || "Unknown error"}. Check your connection.`);
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
+
+
 
   const removeImage = (indexToRemove: number) => {
     setImageUrls((prev) => prev.filter((_, idx) => idx !== indexToRemove));
