@@ -1,12 +1,10 @@
 import express from 'express';
-import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-import helmet from 'helmet';
 import compression from 'compression';
 import { authenticate } from './middleware/auth.js';
 import userRoutes from './routes/users.js';
@@ -14,11 +12,28 @@ import entryRoutes from './routes/entries.js';
 import templateRoutes from './routes/templates.js';
 import challengeRoutes from './routes/challenges.js';
 import dashboardRoutes from './routes/dashboard.js';
+import adminRoutes from './routes/admin.js';
 import { seedTemplates, seedChallenges } from './services/seed.js';
 import prisma from './lib/prisma.js';
-import { rateLimit } from 'express-rate-limit';
+import { admin } from './lib/firebaseAdmin.js';
 import logger from './lib/logger.js';
 import { v2 as cloudinary } from 'cloudinary';
+
+// Health and cleanup imports
+import { liveProbe, readyProbe, healthCheck } from './monitoring/health.js';
+import { initScheduledCleanup } from './monitoring/cleanup.js';
+
+// Security stack imports
+import {
+  configureHelmet,
+  configureCors,
+  limitPayloadSize,
+  globalSecurityGuard,
+  authenticatedSecurityGuard,
+  validateFileUpload,
+} from './middleware/securityMiddleware.js';
+import { authorizeAdmin } from './middleware/authorizeAdmin.js';
+import redisService from './services/redisService.js';
 
 dotenv.config();
 
@@ -66,7 +81,14 @@ app.use((req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
+// Apply global security headers & CORS whitelisting
+app.use(configureHelmet);
+app.use(configureCors);
+
+// Enforce global request payload size limit (1MB for json)
+app.use(limitPayloadSize);
+app.use(express.json());
+
 app.use(compression());
 
 // ─── Ensure uploads directory exists ────────────────────────────
@@ -92,83 +114,12 @@ const storage = isCloudinaryConfigured
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max overall
   fileFilter: (_req, file, cb) => {
     const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (allowed.includes(file.mimetype)) cb(null, true);
     else cb(new Error('Only image files are allowed'));
   },
-});
-
-// ─── Middleware ─────────────────────────────────────────────────
-const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'http://localhost:3002',
-].filter(Boolean) as string[];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    // If no origin (e.g. mobile apps, curl, or server-to-server), allow it
-    if (!origin) {
-      callback(null, true);
-      return;
-    }
-
-    const isAllowed = allowedOrigins.includes(origin) ||
-      origin.startsWith('http://localhost:') ||
-      origin.startsWith('http://127.0.0.1:') ||
-      /\.vercel\.app$/.test(new URL(origin).hostname) ||
-      /(^|\.)dailydiary\.in$/.test(new URL(origin).hostname);
-
-    if (isAllowed) {
-      callback(null, true);
-    } else {
-      callback(null, false);
-    }
-  },
-  credentials: true,
-}));
-app.use(express.json());
-
-// ─── Rate Limiting ──────────────────────────────────────────────
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: process.env.NODE_ENV === 'production' ? 100 : 10000,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
-});
-
-const strictLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: process.env.NODE_ENV === 'production' ? 15 : 1500,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many write/sync requests from this IP, please try again after 15 minutes' },
-});
-
-const authLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  limit: process.env.NODE_ENV === 'production' ? 5 : 500,
-  standardHeaders: 'draft-7',
-  legacyHeaders: false,
-  message: { error: 'Too many auth requests from this IP, please try again after 1 minute' },
-});
-
-// Apply global rate limiter
-app.use(globalLimiter);
-
-// Apply strict limiter on sensitive endpoints
-app.use('/api/upload', strictLimiter);
-app.use('/api/users/sync', authLimiter);
-app.use('/api/users/theme', strictLimiter);
-app.use('/api/entries', (req, res, next) => {
-  if (req.method !== 'GET') {
-    return strictLimiter(req, res, next);
-  }
-  next();
 });
 
 // ─── Serve uploaded files statically ────────────────────────────
@@ -182,34 +133,19 @@ if (!isCloudinaryConfigured) {
 }
 
 // ─── Public Routes ──────────────────────────────────────────────
-app.get('/health', async (_req, res) => {
-  try {
-    // Verify database connection
-    await prisma.$queryRaw`SELECT 1`;
-    res.json({
-      status: '✅ DailyDiary API is running',
-      version: '1.0.0',
-      database: 'connected',
-      timestamp: new Date().toISOString(),
-    });
-  } catch (dbError) {
-    console.error('❌ Healthcheck DB Connection Error:', dbError);
-    res.status(500).json({
-      status: '❌ DailyDiary API is unhealthy',
-      version: '1.0.0',
-      database: 'disconnected',
-      error: dbError instanceof Error ? dbError.message : String(dbError),
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
+app.get('/live', liveProbe);
+app.get('/ready', readyProbe);
+app.get('/health', healthCheck);
 
-// Protected Routes (All API endpoints require authentication)
-app.use('/api/templates', authenticate, templateRoutes);
-app.use('/api/entries', authenticate, entryRoutes);
+// ─── Application Endpoint Security Guard (Applies CSRF, Rate Limiting, Risk Analysis) ───
+app.use('/api', globalSecurityGuard);
+
+// ─── Protected Routes ───
+app.use('/api/templates', authenticate, authenticatedSecurityGuard, templateRoutes);
+app.use('/api/entries', authenticate, authenticatedSecurityGuard, entryRoutes);
 
 // ─── Image Upload Route (authenticated) ─────────────────────────
-app.post('/api/upload', authenticate, upload.single('image'), async (req: any, res) => {
+app.post('/api/upload', authenticate, authenticatedSecurityGuard, upload.single('image'), validateFileUpload, async (req: any, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No image file provided' });
   }
@@ -239,12 +175,15 @@ app.post('/api/upload', authenticate, upload.single('image'), async (req: any, r
   }
 });
 
-// ─── Protected Routes ───────────────────────────────────────────
-app.use('/api/users', authenticate, userRoutes);
-app.use('/api/challenges', authenticate, challengeRoutes);
-app.use('/api/dashboard', authenticate, dashboardRoutes);
+// ─── Protected Routes continued ─────────────────────────────────
+app.use('/api/users', authenticate, authenticatedSecurityGuard, userRoutes);
+app.use('/api/challenges', authenticate, authenticatedSecurityGuard, challengeRoutes);
+app.use('/api/dashboard', authenticate, authenticatedSecurityGuard, dashboardRoutes);
+app.use('/api/admin', authenticate, authorizeAdmin, authenticatedSecurityGuard, adminRoutes);
 
 // ─── Server Start ───────────────────────────────────────────────
+initScheduledCleanup();
+
 app.listen(PORT, async () => {
   logger.info(`DailyDiary API Server starting on http://localhost:${PORT}`);
 

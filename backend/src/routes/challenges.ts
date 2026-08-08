@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { appCache } from '../lib/cache.js';
 import { AuthRequest } from '../middleware/auth.js';
+import { validateParams, idParamSchema } from '../security/validation.js';
 
 const router = Router();
 
@@ -18,7 +19,7 @@ router.get('/', async (_req: AuthRequest, res: Response) => {
 });
 
 // POST /api/challenges/:id/join - Join a challenge
-router.post('/:id/join', async (req: AuthRequest, res: Response) => {
+router.post('/:id/join', validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const challengeId = req.params.id as string;
 

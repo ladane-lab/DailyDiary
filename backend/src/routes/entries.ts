@@ -5,6 +5,8 @@ import { checkAndAwardBadges } from '../services/badges.js';
 import crypto from 'crypto';
 import logger from '../lib/logger.js';
 import { appCache } from '../lib/cache.js';
+import { sanitizeRichText } from '../security/sanitizer.js';
+import { validateBody, validateQuery, validateParams, entryCreateSchema, entryUpdateSchema, idParamSchema, commentBodySchema, paginationQuerySchema } from '../security/validation.js';
 
 const router = Router();
 
@@ -79,7 +81,7 @@ function decrypt(encryptedText: string, ivHex: string): string {
 
 
 // POST /api/entries - Create a new diary entry
-router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/', authenticate, validateBody(entryCreateSchema), async (req: AuthRequest, res: Response) => {
   const { templateId, body, isPublic, responses, images, theme } = req.body;
   const userId = req.user!.uid;
   
@@ -91,7 +93,7 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
     res.status(400).json({ error: 'Journal content or an image is required' });
     return;
   }
-  const safeBody = body || '';
+  const safeBody = sanitizeRichText(body || '');
 
   logger.info(`Creating entry for user`, { userId, templateId: templateId || 'None' });
 
@@ -233,13 +235,13 @@ router.post('/', authenticate, async (req: AuthRequest, res: Response) => {
 
 // GET /api/entries/feed (and legacy /api/entries/public) - Authenticated feed with ranking algorithm
 const handleFeed = async (req: AuthRequest, res: Response) => {
-  const { page = '1', limit = '10' } = req.query;
-  const pageNum = parseInt(page as string);
-  const take = parseInt(limit as string);
+  // Query params are pre-validated and coerced to numbers by validateQuery(paginationQuerySchema)
+  const pageNum = (req.query as any).page as number;
+  const take = (req.query as any).limit as number;
   const userId = req.user!.uid;
 
   try {
-    logger.info(`Fetching feed`, { page, user: userId });
+    logger.info(`Fetching feed`, { page: pageNum, user: userId });
 
     // Fetch a larger pool to rank from (3x the page size for better shuffling)
     const poolSize = Math.min(take * 3, 50);
@@ -377,8 +379,8 @@ const handleFeed = async (req: AuthRequest, res: Response) => {
   }
 };
 
-router.get('/feed', authenticate, handleFeed);
-router.get('/public', authenticate, handleFeed);
+router.get('/feed', authenticate, validateQuery(paginationQuerySchema), handleFeed);
+router.get('/public', authenticate, validateQuery(paginationQuerySchema), handleFeed);
 
 // GET /api/entries/my-public - Current user's public posts with full social data
 router.get('/my-public', authenticate, async (req: AuthRequest, res: Response) => {
@@ -568,7 +570,7 @@ router.get('/', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // POST /api/entries/:id/like - Toggle Like
-router.post('/:id/like', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/:id/like', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   try {
@@ -590,7 +592,7 @@ router.post('/:id/like', authenticate, async (req: AuthRequest, res: Response) =
 });
 
 // POST /api/entries/:id/bookmark - Toggle Bookmark
-router.post('/:id/bookmark', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/:id/bookmark', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   try {
@@ -612,11 +614,10 @@ router.post('/:id/bookmark', authenticate, async (req: AuthRequest, res: Respons
 });
 
 // POST /api/entries/:id/comment - Add Comment
-router.post('/:id/comment', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/:id/comment', authenticate, validateParams(idParamSchema), validateBody(commentBodySchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   const { content } = req.body;
-  if (!content || content.trim().length === 0) return res.status(400).json({ error: 'Comment required' });
   try {
     const comment = await prisma.comment.create({
       data: { userId, entryId, content },
@@ -629,7 +630,7 @@ router.post('/:id/comment', authenticate, async (req: AuthRequest, res: Response
 });
 
 // GET /api/entries/:id/comments - List Comments
-router.get('/:id/comments', authenticate, async (req: AuthRequest, res: Response) => {
+router.get('/:id/comments', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   try {
     const entry = await prisma.entry.findUnique({ where: { id: req.params.id as string } });
     if (!entry) return res.status(404).json({ error: 'Entry not found' });
@@ -708,7 +709,7 @@ router.get('/saved', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // GET /api/entries/:id - Single entry
-router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+router.get('/:id', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   try {
     const entry = await prisma.entry.findUnique({
@@ -729,7 +730,7 @@ router.get('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // DELETE /api/entries/:id
-router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+router.delete('/:id', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const entryId = req.params.id as string;
   try {
@@ -750,7 +751,7 @@ router.delete('/:id', authenticate, async (req: AuthRequest, res: Response) => {
 });
 
 // PATCH /api/entries/:id - Update an entry
-router.patch('/:id', authenticate, async (req: AuthRequest, res: Response) => {
+router.patch('/:id', authenticate, validateParams(idParamSchema), validateBody(entryUpdateSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
   const { body, isPublic, theme, images, responses } = req.body;
   const entryId = req.params.id as string;
@@ -760,12 +761,13 @@ router.patch('/:id', authenticate, async (req: AuthRequest, res: Response) => {
     
     const updateData: any = {};
     if (body !== undefined) {
+      const sanitizedBody = sanitizeRichText(body || '');
       if (entry.templateId === 'personal') {
-        const { encrypted, iv } = encrypt(body);
+        const { encrypted, iv } = encrypt(sanitizedBody);
         updateData.body_encrypted = encrypted;
         updateData.iv = iv;
       } else {
-        updateData.body_encrypted = body;
+        updateData.body_encrypted = sanitizedBody;
         updateData.iv = '';
       }
     }

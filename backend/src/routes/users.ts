@@ -2,18 +2,15 @@ import { Router, Response } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthRequest, authenticate } from '../middleware/auth.js';
 import logger from '../lib/logger.js';
+import { validateBody, userSyncSchema } from '../security/validation.js';
+import { trustDeviceFingerprint } from '../security/fingerprint.js';
 
 const router = Router();
 
 // POST /api/users/sync - Create or update user after Firebase login
-router.post('/sync', authenticate, async (req: AuthRequest, res: Response) => {
+router.post('/sync', authenticate, validateBody(userSyncSchema), async (req: AuthRequest, res: Response) => {
   const { email, name, photoURL } = req.body;
   const firebaseId = req.user!.uid;
-
-  if (!email || !name) {
-    res.status(400).json({ error: 'email and name are required' });
-    return;
-  }
 
   try {
     const user = await prisma.user.upsert({
@@ -26,6 +23,13 @@ router.post('/sync', authenticate, async (req: AuthRequest, res: Response) => {
         photoURL,
       },
     });
+
+    // Sync the device fingerprint as trusted on successful profile verification
+    const fingerprint = (req.headers['x-device-fingerprint'] || req.body.deviceFingerprint) as string;
+    if (fingerprint) {
+      await trustDeviceFingerprint(firebaseId, fingerprint);
+    }
+
     res.json(user);
   } catch (error) {
     logger.error('User sync error', error);

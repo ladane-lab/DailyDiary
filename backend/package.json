@@ -22,6 +22,7 @@
     "@prisma/adapter-neon": "^5.15.0",
     "@prisma/client": "^5.15.0",
     "@types/multer": "^2.1.0",
+    "@upstash/redis": "^1.38.2",
     "bufferutil": "^4.1.0",
     "cloudinary": "^2.10.0",
     "compression": "^1.8.1",
@@ -34,7 +35,10 @@
     "jsonwebtoken": "^9.0.2",
     "lru-cache": "^5.1.1",
     "multer": "^2.1.1",
-    "ws": "^8.20.0"
+    "node-cron": "^4.6.0",
+    "sanitize-html": "^2.17.6",
+    "ws": "^8.20.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/compression": "^1.8.1",
@@ -43,6 +47,8 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/lru-cache": "^7.10.9",
     "@types/node": "^20.19.39",
+    "@types/node-cron": "^3.0.11",
+    "@types/sanitize-html": "^2.16.1",
     "@types/ws": "^8.18.1",
     "dotenv-cli": "^11.0.0",
     "nodemon": "^3.1.14",

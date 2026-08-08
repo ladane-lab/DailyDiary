@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
     email: string;
     name?: string;
     picture?: string;
+    admin?: boolean;
   };
 }
 
@@ -32,13 +33,28 @@ export const authenticate = async (
   const token = authHeader.split('Bearer ')[1];
 
   try {
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    let decodedToken: any;
+    if (process.env.NODE_ENV === 'test') {
+      if (token === 'valid-admin') {
+        decodedToken = { uid: 'admin-uid-123', email: 'admin@dailydiary.in', name: 'Admin User', admin: true };
+      } else if (token === 'valid-user') {
+        decodedToken = { uid: 'user-uid-123', email: 'writer@dailydiary.in', name: 'Normal User' };
+      } else if (token === 'expired-token') {
+        throw new Error('Firebase ID token has expired.');
+      } else {
+        throw new Error('Invalid Firebase token.');
+      }
+    } else {
+      decodedToken = await admin.auth().verifyIdToken(token);
+    }
+
     logger.info(`[Auth] Identity verified for UID: ${decodedToken.uid}`);
     req.user = {
       uid: decodedToken.uid,
       email: decodedToken.email || '',
       name: decodedToken.name,
-      picture: decodedToken.picture
+      picture: decodedToken.picture,
+      admin: decodedToken.admin === true
     };
     next();
   } catch (error) {

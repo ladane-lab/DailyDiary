@@ -10,6 +10,7 @@ import {
   User,
   updateProfile,
   sendPasswordResetEmail,
+  signInWithCustomToken,
 } from 'firebase/auth';
 import firebaseConfig from './firebase.config';
 import { getStorage } from 'firebase/storage';
@@ -31,6 +32,7 @@ export {
   onAuthStateChanged,
   updateProfile,
   sendPasswordResetEmail,
+  signInWithCustomToken,
 };
 
 export type { User };

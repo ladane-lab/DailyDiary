@@ -13,23 +13,29 @@ datasource db {
 }
 
 model User {
-  id             String          @id @default(uuid())
-  name           String
-  email          String          @unique
-  photoURL       String?
-  createdAt      DateTime        @default(now())
-  streakCount    Int             @default(0)
-  lastEntryDate  DateTime?
-  entries        Entry[]
-  userChallenges UserChallenge[]
-  userBadges     UserBadge[]
-  trackers       Tracker[]
-  preferredThemes Json?           // { [templateId: string]: string }
-  likes          Like[]
-  comments       Comment[]
-  bookmarks      Bookmark[]
-  followers      Follow[]        @relation("followers")
-  following      Follow[]        @relation("following")
+  id                 String          @id @default(uuid())
+  name               String
+  email              String          @unique
+  photoURL           String?
+  createdAt          DateTime        @default(now())
+  streakCount        Int             @default(0)
+  lastEntryDate      DateTime?
+  entries            Entry[]
+  userChallenges     UserChallenge[]
+  userBadges         UserBadge[]
+  trackers           Tracker[]
+  preferredThemes    Json?           // { [templateId: string]: string }
+  likes              Like[]
+  comments           Comment[]
+  bookmarks          Bookmark[]
+  followers          Follow[]        @relation("followers")
+  following          Follow[]        @relation("following")
+
+  // Security Fields
+  failedAttempts     Int             @default(0)
+  lockUntil          DateTime?
+  lastFailedAttempt  DateTime?
+  trustedDevices     TrustedDevice[] // Managed via services/trustedDeviceService.ts
 }
 
 model Entry {
@@ -161,4 +167,42 @@ model Comment {
   entry     Entry    @relation(fields: [entryId], references: [id])
   content   String
   createdAt DateTime @default(now())
+}
+
+model SecurityEvent {
+  id         String   @id @default(uuid())
+  ip         String
+  country    String?
+  browser    String?
+  endpoint   String
+  eventType  String   // e.g., 'LOGIN_SUCCESS', 'LOGIN_FAILURE', 'RATE_LIMIT', 'BLOCKED', 'CSRF_FAILURE', 'SQLI_ATTEMPT'
+  reason     String?
+  riskScore  Int
+  timestamp  DateTime @default(now())
+
+  @@index([ip, timestamp])
+  @@index([eventType, timestamp])
+}
+
+model BlockedIP {
+  id        String   @id @default(uuid())
+  ip        String   @unique
+  reason    String?
+  blockedAt DateTime @default(now())
+  expiresAt DateTime
+
+  @@index([expiresAt])
+}
+
+model TrustedDevice {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fingerprintHash String
+  createdAt       DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  deviceName      String?
+
+  @@unique([userId, fingerprintHash])
+  @@index([userId])
 }

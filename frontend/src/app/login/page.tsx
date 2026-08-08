@@ -1,11 +1,14 @@
 "use client";
 import Link from "next/link";
+import Script from "next/script";
 
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import Logo from "@/components/Logo/Logo";
 import styles from "./auth.module.css";
+
+const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -14,31 +17,59 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
-
   
+  // Security challenge states
+  const [showTurnstile, setShowTurnstile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState("");
+
   useEffect(() => {
     if (initialized && user) {
       router.push("/dashboard");
     }
   }, [user, initialized, router]);
 
+  // Bind Turnstile callback to window
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).onTurnstileCallback = (token: string) => {
+        setTurnstileToken(token);
+        clearError();
+      };
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).onTurnstileCallback;
+      }
+    };
+  }, [clearError]);
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+
     if (forgotMode) {
       try {
         await sendPasswordReset(email);
         setResetSent(true);
       } catch (err) {
-        // Error state handled in store
+        // Handle client-side reset error
       }
     } else {
-      await login(email, password);
+      try {
+        await login(email, password, turnstileToken);
+      } catch (err: any) {
+        if (err instanceof Error && err.message === 'SECURITY_CHALLENGE_REQUIRED') {
+          setShowTurnstile(true);
+        }
+      }
     }
   };
 
   return (
     <div className={styles.authPage}>
+      {/* Cloudflare Turnstile script */}
+      <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer />
+
       <div className={styles.authBg}>
         <div className={styles.authOrb1} />
         <div className={styles.authOrb2} />
@@ -57,7 +88,7 @@ export default function LoginPage() {
               : "Sign in to continue journaling"}
           </p>
 
-          {error && (
+          {error && error !== 'SECURITY_CHALLENGE_REQUIRED' && (
             <div className={styles.authError}>
               <span>⚠️</span> {error}
             </div>
@@ -70,6 +101,12 @@ export default function LoginPage() {
           )}
 
           <form onSubmit={handleSubmit} className={styles.authForm}>
+            {/* Honeypot Fields (display:none) */}
+            <div style={{ display: 'none' }} aria-hidden="true">
+              <input type="text" name="website_honey" tabIndex={-1} autoComplete="off" />
+              <input type="text" name="email_honey" tabIndex={-1} autoComplete="off" />
+            </div>
+
             <div className={styles.fieldGroup}>
               <label className={styles.fieldLabel}>Email</label>
               <input
@@ -89,7 +126,7 @@ export default function LoginPage() {
                   <label className={styles.fieldLabel} style={{ marginBottom: 0 }}>Password</label>
                   <button 
                     type="button" 
-                    onClick={() => { setForgotMode(true); setResetSent(false); clearError(); }} 
+                    onClick={() => { setForgotMode(true); setResetSent(false); clearError(); setShowTurnstile(false); setTurnstileToken(""); }} 
                     style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.8rem', fontWeight: 500, cursor: 'pointer', padding: 0 }}
                   >
                     Forgot Password?
@@ -107,10 +144,22 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Cloudflare Turnstile Challenge Container */}
+            {showTurnstile && (
+              <div style={{ margin: '12px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Please solve the challenge below:</p>
+                <div 
+                  className="cf-turnstile" 
+                  data-sitekey={TURNSTILE_SITE_KEY}
+                  data-callback="onTurnstileCallback"
+                />
+              </div>
+            )}
+
             <button
               type="submit"
               className={`btn btn-primary ${styles.authBtn}`}
-              disabled={loading}
+              disabled={loading || (showTurnstile && !turnstileToken)}
               id="login-submit"
             >
               {loading 
@@ -123,7 +172,7 @@ export default function LoginPage() {
             <p className={styles.authFooter}>
               <button 
                 type="button" 
-                onClick={() => { setForgotMode(false); setResetSent(false); clearError(); }} 
+                onClick={() => { setForgotMode(false); setResetSent(false); clearError(); setShowTurnstile(false); setTurnstileToken(""); }} 
                 className={styles.authLink}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
               >
