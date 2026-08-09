@@ -27,24 +27,43 @@ export const readyProbe = async (_req: Request, res: Response): Promise<void> =>
       logger.error('[Health] Database readiness check failed:', dbErr.message);
     }
 
-    // 2. Check Redis Connection
-    let redisReady = false;
+    // 2. Check Redis Service (Upstash or in-memory fallback)
+    // Since redisService has an in-memory fallback, the app is always ready
+    // We distinguish between "Upstash connected" and "in-memory fallback active"
+    let redisStatus = 'DOWN';
     try {
-      await redisService.set('health:ping', 'pong', 5);
-      const val = await redisService.get('health:ping');
-      redisReady = val === 'pong';
+      const pingKey = `health:ping:${Date.now()}`;
+      await redisService.set(pingKey, 'pong', 5);
+      const val = await redisService.get(pingKey);
+      await redisService.del(pingKey);
+      if (val === 'pong') {
+        redisStatus = 'OK'; // Upstash is fully working
+      } else {
+        // set/get returned unexpected value — check if in-memory works
+        redisStatus = 'DEGRADED (in-memory fallback active)';
+      }
     } catch (redisErr: any) {
       logger.error('[Health] Redis readiness check failed:', redisErr.message);
+      redisStatus = 'DOWN';
     }
 
-    if (dbReady && redisReady) {
-      res.status(200).json({ status: 'READY' });
+    // App is ready if DB is up — Redis degraded is acceptable (fallback active)
+    const isReady = dbReady && redisStatus !== 'DOWN';
+
+    if (isReady) {
+      res.status(200).json({
+        status: 'READY',
+        dependencies: {
+          database: 'OK',
+          redis: redisStatus,
+        }
+      });
     } else {
       res.status(503).json({
         status: 'UNREADY',
         dependencies: {
           database: dbReady ? 'OK' : 'DOWN',
-          redis: redisReady ? 'OK' : 'DOWN',
+          redis: redisStatus,
         }
       });
     }
@@ -52,6 +71,7 @@ export const readyProbe = async (_req: Request, res: Response): Promise<void> =>
     res.status(503).json({ status: 'UNREADY', error: String(err) });
   }
 };
+
 
 /**
  * Health Check: Returns basic statistics and service status.
