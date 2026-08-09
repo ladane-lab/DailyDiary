@@ -11,10 +11,15 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 async function getEntry(id: string) {
   try {
-    const res = await fetch(`${API_URL}/entries/public/${id}`, { next: { revalidate: 60 } });
-    if (!res.ok) return null;
+    const res = await fetch(`${API_URL}/entries/public/${id}`, { cache: 'no-store' });
+    if (!res.ok) {
+      console.error('getEntry failed:', res.status, res.statusText);
+      try { console.error(await res.text()); } catch(e) {}
+      return null;
+    }
     return res.json();
   } catch (err) {
+    console.error('getEntry threw error:', err);
     return null;
   }
 }
@@ -58,11 +63,8 @@ export async function generateMetadata(
 export default async function Page(props: Props) {
   const params = await props.params;
   const id = params.id;
-  const entry = await getEntry(id);
-
-  if (!entry) {
-    notFound();
-  }
+  // We still fetch the entry to log it, but we don't block the redirect
+  await getEntry(id);
 
   // Render the client component that will redirect real users to the feed
   return <RedirectToExplore id={id} />;
