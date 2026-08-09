@@ -358,6 +358,14 @@ function WritePageContent() {
       if (process.env.NODE_ENV === 'development') {
         console.log("[Write] Sending entry to backend at:", endpoint);
       }
+
+      // Only send templateId if it's a real UUID from the backend.
+      // Fallback templates have non-UUID ids (e.g. "personal", "gratitude").
+      const isValidUUID = (id?: string | null) =>
+        !!id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+      const safeTemplateId = isValidUUID(selectedTemplate?.id) ? selectedTemplate!.id : null;
+
       const url = editId ? `${apiBase}/entries/${editId}` : endpoint;
       const res = await fetch(url, {
         method: editId ? "PATCH" : "POST",
@@ -366,7 +374,7 @@ function WritePageContent() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          templateId: selectedTemplate.id,
+          templateId: safeTemplateId,
           body,
           isPublic,
           responses: Object.entries(responses).map(([fieldLabel, value]) => ({
@@ -378,6 +386,7 @@ function WritePageContent() {
           timezoneOffset: new Date().getTimezoneOffset(),
         }),
       });
+
 
       if (!res.ok) {
         const responseText = await res.text();
