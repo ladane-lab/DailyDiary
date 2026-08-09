@@ -1,6 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
-import ExplorePage from '../page'; // We can just render the explore page, or a specific single entry view.
+import RedirectToExplore from './RedirectToExplore';
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -64,36 +64,6 @@ export default async function Page(props: Props) {
     notFound();
   }
 
-  // We want to open the specific post. The easiest way is to render the ExplorePage 
-  // but maybe pass a prop? Wait, the user said "when someone click on that shared link that perticular post should be open but it is opening like that fix this also"
-  // Image 2 shows a 404 page! 
-  // We can just redirect them to `/explore?entryId=${id}` or we can render a custom page for the single entry.
-  // Wait! A custom page for a single entry would require building a whole component.
-  // If we just render a simple client component that redirects to explore and opens a modal?
-  // Or we can just build a simple read-only view of the entry?
-  return (
-    <div style={{ maxWidth: 800, margin: '40px auto', padding: '20px', fontFamily: 'sans-serif' }}>
-      <h1>{entry.user?.name}'s Reflection</h1>
-      <p style={{ color: '#666' }}>{new Date(entry.createdAt).toLocaleDateString()}</p>
-      
-      <div 
-        style={{ marginTop: '20px', fontSize: '18px', lineHeight: '1.6' }}
-        dangerouslySetInnerHTML={{ __html: entry.body }} 
-      />
-
-      {entry.images && entry.images.length > 0 && (
-        <div style={{ display: 'flex', gap: '10px', marginTop: '20px', flexWrap: 'wrap' }}>
-          {entry.images.map((img: any) => (
-            <img key={img.id} src={img.url} alt="entry attachment" style={{ maxWidth: '100%', borderRadius: '8px' }} />
-          ))}
-        </div>
-      )}
-
-      <div style={{ marginTop: '40px' }}>
-        <a href="/explore" style={{ color: '#0070f3', textDecoration: 'none', fontWeight: 'bold' }}>
-          &larr; Back to Explore
-        </a>
-      </div>
-    </div>
-  );
+  // Render the client component that will redirect real users to the feed
+  return <RedirectToExplore id={id} />;
 }

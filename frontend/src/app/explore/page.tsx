@@ -181,6 +181,26 @@ export default function ExplorePage() {
       if (res.ok) {
         const data = await res.json();
         if (pageNum === 1) {
+          const params = new URLSearchParams(window.location.search);
+          const entryIdToFocus = params.get('entryId');
+          if (entryIdToFocus) {
+            // Check if the specific entry is already in the feed
+            const existingIdx = data.entries.findIndex((e: any) => e.id === entryIdToFocus);
+            if (existingIdx === -1) {
+              // It's not in the first page, let's fetch it individually and prepend
+              try {
+                const singleRes = await fetch(`${API}/entries/public/${entryIdToFocus}`);
+                if (singleRes.ok) {
+                  const singleEntry = await singleRes.json();
+                  data.entries.unshift(singleEntry);
+                }
+              } catch (e) { console.error("Could not fetch shared entry"); }
+            } else if (existingIdx > 0) {
+              // It is in the feed, but not at the top. Move it to the top.
+              const [focused] = data.entries.splice(existingIdx, 1);
+              data.entries.unshift(focused);
+            }
+          }
           setEntries(data.entries);
         } else {
           setEntries(prev => [...prev, ...data.entries]);

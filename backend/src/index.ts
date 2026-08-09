@@ -9,6 +9,7 @@ import compression from 'compression';
 import { authenticate } from './middleware/auth.js';
 import userRoutes from './routes/users.js';
 import entryRoutes from './routes/entries.js';
+import publicEntriesRoutes from './routes/publicEntries.js';
 import templateRoutes from './routes/templates.js';
 import challengeRoutes from './routes/challenges.js';
 import dashboardRoutes from './routes/dashboard.js';
@@ -142,6 +143,7 @@ app.use('/api', globalSecurityGuard);
 
 // ─── Protected Routes ───
 app.use('/api/templates', authenticate, authenticatedSecurityGuard, templateRoutes);
+app.use('/api/entries/public', publicEntriesRoutes);
 app.use('/api/entries', authenticate, authenticatedSecurityGuard, entryRoutes);
 
 // ─── Image Upload Route (authenticated) ─────────────────────────

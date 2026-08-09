@@ -739,31 +739,6 @@ router.get('/:id', authenticate, validateParams(idParamSchema), async (req: Auth
   }
 });
 
-// GET /api/entries/public/:id - Single public entry (unauthenticated, for OG tags)
-router.get('/public/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
-  try {
-    const entry = await prisma.entry.findUnique({
-      where: { id: req.params.id as string },
-      include: { images: true, user: { select: { name: true } } },
-    });
-    if (!entry || !entry.isPublic) return res.status(404).json({ error: 'Entry not found' });
-    
-    let body = "[Secure Content]";
-    try {
-      body = decrypt(entry.body_encrypted, entry.iv);
-    } catch (e) {}
-
-    res.json({
-      ...entry,
-      body,
-      body_encrypted: undefined,
-      iv: undefined,
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to get entry' });
-  }
-});
-
 // DELETE /api/entries/:id
 router.delete('/:id', authenticate, validateParams(idParamSchema), async (req: AuthRequest, res: Response) => {
   const userId = req.user!.uid;
