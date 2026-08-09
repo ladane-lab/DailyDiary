@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [localError, setLocalError] = useState<string | null>(null);
   
   // Security challenge states
   const [showTurnstile, setShowTurnstile] = useState(false);
@@ -46,17 +47,33 @@ export default function LoginPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     clearError();
+    setLocalError(null);
+
+    const emailRegex = /^(?!\d+@)[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setLocalError("Please enter a valid email address");
+      return;
+    }
 
     if (forgotMode) {
       try {
-        await sendPasswordReset(email);
+        await sendPasswordReset(email.trim().toLowerCase());
         setResetSent(true);
       } catch (err) {
         // Handle client-side reset error
       }
     } else {
+      if (!password) {
+        setLocalError("Password is required");
+        return;
+      }
+      if (password.length > 128) {
+        setLocalError("Password must not exceed 128 characters");
+        return;
+      }
+
       try {
-        await login(email, password, turnstileToken);
+        await login(email.trim().toLowerCase(), password, turnstileToken);
       } catch (err: any) {
         if (err instanceof Error && err.message === 'SECURITY_CHALLENGE_REQUIRED') {
           setShowTurnstile(true);
@@ -88,9 +105,9 @@ export default function LoginPage() {
               : "Sign in to continue journaling"}
           </p>
 
-          {error && error !== 'SECURITY_CHALLENGE_REQUIRED' && (
+          {(localError || (error && error !== 'SECURITY_CHALLENGE_REQUIRED')) && (
             <div className={styles.authError}>
-              <span>⚠️</span> {error}
+              <span>⚠️</span> {localError || error}
             </div>
           )}
 

@@ -17,7 +17,7 @@ import logger from '../lib/logger.js';
 // Basic safe parameter schemas
 export const COMMON_SCHEMAS = {
   id: z.string().uuid({ message: 'Invalid identifier format (UUID required)' }),
-  email: z.string().email({ message: 'Invalid email address format' }),
+  email: z.string().trim().email({ message: 'Invalid email address format' }).transform((email) => email.toLowerCase()),
   limit: z.coerce.number().int().min(1).max(100).default(20),
   cursor: z.string().regex(/^[a-zA-Z0-9_-]+$/, { message: 'Invalid pagination cursor format' }).optional(),
 };

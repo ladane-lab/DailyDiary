@@ -47,14 +47,30 @@ export default function RegisterPage() {
     e.preventDefault();
     clearError();
     setLocalError(null);
+
+    const emailRegex = /^(?!\d+@)[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setLocalError("Please enter a valid email address");
+      return;
+    }
     
+    if (/^\d+$/.test(name)) {
+      setLocalError("Name cannot contain only numbers.");
+      return;
+    }
+
     if (password.length < 8) {
       setLocalError("Password must be at least 8 characters long.");
       return;
     }
 
+    if (password.length > 128) {
+      setLocalError("Password must not exceed 128 characters.");
+      return;
+    }
+
     try {
-      await register(name, email, password, turnstileToken);
+      await register(name.trim(), email.trim().toLowerCase(), password, turnstileToken);
     } catch (err: any) {
       if (err instanceof Error && err.message === 'SECURITY_CHALLENGE_REQUIRED') {
         setShowTurnstile(true);
