@@ -23,7 +23,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "DailyDiary.in — Your Encrypted Journal",
+  title: "DailyDiary.in",
   description:
     "A secure, habit-driven journaling platform with templates, challenges, and gamification. Write daily, build streaks, earn badges.",
   keywords: [
