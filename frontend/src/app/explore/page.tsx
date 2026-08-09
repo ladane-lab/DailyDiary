@@ -392,10 +392,22 @@ export default function ExplorePage() {
   }, [user]);
 
   const handleShare = useCallback((entryId: string) => {
+    const entry = [...entries, ...userEntries].find(e => e.id === entryId);
+    const plainText = entry ? entry.body.replace(/<[^>]+>/g, '').substring(0, 100) + '...' : 'Check out this reflection on DailyDiary!';
+    const author = entry?.user?.name || 'Someone';
     const url = `${window.location.origin}/explore/${entryId}`;
-    if (navigator.share) navigator.share({ title: 'DailyDiary Entry', text: 'Check out this reflection on DailyDiary!', url }).catch(() => {});
-    else { navigator.clipboard.writeText(url); alert("Link copied to clipboard!"); }
-  }, []);
+    
+    if (navigator.share) {
+      navigator.share({ 
+        title: `${author}'s Reflection - DailyDiary`, 
+        text: plainText, 
+        url 
+      }).catch(() => {});
+    } else { 
+      navigator.clipboard.writeText(url); 
+      alert("Link copied to clipboard!"); 
+    }
+  }, [entries, userEntries]);
 
     const handleToggleMenu = useCallback((id: string | null) => {
     setShowMenuId(id);

@@ -1,4 +1,4 @@
-import { Router, Response } from 'express';
+import { Router, Response, Request } from 'express';
 import prisma from '../lib/prisma.js';
 import { AuthRequest, authenticate } from '../middleware/auth.js';
 import { checkAndAwardBadges } from '../services/badges.js';
@@ -581,9 +581,11 @@ router.post('/:id/like', authenticate, validateParams(idParamSchema), async (req
     const existing = await prisma.like.findUnique({ where: { userId_entryId: { userId, entryId } } });
     if (existing) {
       await prisma.like.delete({ where: { userId_entryId: { userId, entryId } } });
+      if (entry.isPublic) appCache.invalidatePrefix('public-feed-');
       res.json({ liked: false });
     } else {
       await prisma.like.create({ data: { userId, entryId } });
+      if (entry.isPublic) appCache.invalidatePrefix('public-feed-');
       res.json({ liked: true });
     }
   } catch (err) {
@@ -603,9 +605,11 @@ router.post('/:id/bookmark', authenticate, validateParams(idParamSchema), async 
     const existing = await prisma.bookmark.findUnique({ where: { userId_entryId: { userId, entryId } } });
     if (existing) {
       await prisma.bookmark.delete({ where: { userId_entryId: { userId, entryId } } });
+      if (entry.isPublic) appCache.invalidatePrefix('public-feed-');
       res.json({ bookmarked: false });
     } else {
       await prisma.bookmark.create({ data: { userId, entryId } });
+      if (entry.isPublic) appCache.invalidatePrefix('public-feed-');
       res.json({ bookmarked: true });
     }
   } catch (err) {
@@ -623,6 +627,12 @@ router.post('/:id/comment', authenticate, validateParams(idParamSchema), validat
       data: { userId, entryId, content },
       include: { user: { select: { name: true } } }
     });
+    
+    const entry = await prisma.entry.findUnique({ where: { id: entryId } });
+    if (entry?.isPublic) {
+      appCache.invalidatePrefix('public-feed-');
+    }
+    
     res.json(comment);
   } catch (err) {
     res.status(500).json({ error: 'Failed to add comment' });
@@ -721,6 +731,31 @@ router.get('/:id', authenticate, validateParams(idParamSchema), async (req: Auth
     res.json({
       ...entry,
       body: decrypt(entry.body_encrypted, entry.iv),
+      body_encrypted: undefined,
+      iv: undefined,
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get entry' });
+  }
+});
+
+// GET /api/entries/public/:id - Single public entry (unauthenticated, for OG tags)
+router.get('/public/:id', validateParams(idParamSchema), async (req: Request, res: Response) => {
+  try {
+    const entry = await prisma.entry.findUnique({
+      where: { id: req.params.id as string },
+      include: { images: true, user: { select: { name: true } } },
+    });
+    if (!entry || !entry.isPublic) return res.status(404).json({ error: 'Entry not found' });
+    
+    let body = "[Secure Content]";
+    try {
+      body = decrypt(entry.body_encrypted, entry.iv);
+    } catch (e) {}
+
+    res.json({
+      ...entry,
+      body,
       body_encrypted: undefined,
       iv: undefined,
     });
