@@ -294,11 +294,12 @@ export default function ExplorePage() {
         setEntries(replaceOptimistic);
         setUserEntries(replaceOptimistic);
       } else {
-        throw new Error("Failed to post");
+        const errText = await res.text();
+        throw new Error(`Failed to post: ${errText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to post:", err);
-      alert("Failed to share post.");
+      alert(`Error sharing post: ${err.message || 'Unknown error'}`);
       fetchPublicEntries(1, false);
       fetchUserPublicEntries();
     } finally {
