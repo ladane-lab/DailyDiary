@@ -8,6 +8,20 @@ import {
 import styles from "./explore.module.css";
 import RichTextEditor, { EditorToolbar } from "@/components/RichTextEditor";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { API_URL } from "@/lib/api";
+
+const getFixedImageUrl = (url: string) => {
+  if (url && url.startsWith("http://localhost")) {
+    try {
+      const backendOrigin = new URL(API_URL).origin;
+      const path = new URL(url).pathname; // e.g. /uploads/image.png
+      return `${backendOrigin}${path}`;
+    } catch {
+      return url;
+    }
+  }
+  return url;
+};
 
 interface FeedCardProps {
   entry: any;
@@ -117,7 +131,7 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({
               {editUploadedImages.map((url, i) => (
                 <div key={i} className={styles.previewItem}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={url} alt="Upload" />
+                  <img src={getFixedImageUrl(url)} alt="Upload" />
                   <button onClick={() => onRemoveEditImage(i)}><X size={14} /></button>
                 </div>
               ))}
@@ -144,7 +158,7 @@ const FeedCardComponent: React.FC<FeedCardProps> = ({
         <div className={styles.feedImages}>
           {entry.images.map((img: any) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img key={img.id} src={img.url} alt="Media" className={styles.feedImage} style={{ objectFit: "cover", width: "100%", height: "auto", borderRadius: 8 }} loading="lazy" />
+            <img key={img.id} src={getFixedImageUrl(img.url)} alt="Media" className={styles.feedImage} style={{ objectFit: "cover", width: "100%", height: "auto", borderRadius: 8 }} loading="lazy" />
           ))}
         </div>
       )}

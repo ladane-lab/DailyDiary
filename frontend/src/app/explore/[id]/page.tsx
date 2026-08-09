@@ -42,6 +42,15 @@ export async function generateMetadata(
   const plainTextBody = entry.body.replace(/<[^>]+>/g, '').substring(0, 150) + (entry.body.length > 150 ? '...' : '');
   const authorName = entry.user?.name || 'Someone';
 
+  let imageUrl = entry.images?.length > 0 ? entry.images[0].url : null;
+  if (imageUrl && imageUrl.startsWith('http://localhost')) {
+    try {
+      const backendOrigin = new URL(API_URL).origin;
+      const path = new URL(imageUrl).pathname;
+      imageUrl = `${backendOrigin}${path}`;
+    } catch {}
+  }
+
   return {
     title: `${authorName}'s Reflection - DailyDiary`,
     description: plainTextBody || 'Check out this reflection on DailyDiary.',
@@ -49,13 +58,13 @@ export async function generateMetadata(
       title: `${authorName}'s Reflection - DailyDiary`,
       description: plainTextBody || 'Check out this reflection on DailyDiary.',
       url: `/explore/${id}`,
-      images: entry.images?.length > 0 ? [{ url: entry.images[0].url }] : [],
+      images: imageUrl ? [{ url: imageUrl }] : [],
     },
     twitter: {
       card: 'summary_large_image',
       title: `${authorName}'s Reflection - DailyDiary`,
       description: plainTextBody || 'Check out this reflection on DailyDiary.',
-      images: entry.images?.length > 0 ? [entry.images[0].url] : [],
+      images: imageUrl ? [imageUrl] : [],
     },
   };
 }

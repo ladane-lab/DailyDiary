@@ -171,7 +171,10 @@ app.post('/api/upload', authenticate, authenticatedSecurityGuard, upload.single(
     }
   } else {
     // Local fallback
-    const API = process.env.BACKEND_URL || `http://localhost:${PORT}`;
+    // Generate URL dynamically based on the incoming request so it works in production without BACKEND_URL
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const host = req.headers['x-forwarded-host'] || req.get('host');
+    const API = process.env.BACKEND_URL || `${protocol}://${host}`;
     const url = `${API}/uploads/${req.file.filename}`;
     return res.json({ url });
   }
