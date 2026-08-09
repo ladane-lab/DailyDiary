@@ -7,9 +7,9 @@ import { useAuthStore } from "@/store/authStore";
 import { API_URL } from "@/lib/api";
 import { storage } from "@/lib/firebase";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { 
+import {
   Globe, PenLine, CalendarDays, Clock,
-  Heart, Zap, Sparkles, BookHeart, MessageCircle, 
+  Heart, Zap, Sparkles, BookHeart, MessageCircle,
   Share2, Bookmark, MoreHorizontal, Send, Image as ImageIcon,
   Smile, Users, X, Check, Trash2, Edit3, User as UserIcon, Rss,
   ExternalLink, ImagePlus
@@ -64,10 +64,10 @@ export default function ExplorePage() {
   const [hasMore, setHasMore] = useState(true);
   const [page, setPage] = useState(1);
   const [loadingUser, setLoadingUser] = useState(false);
-  
+
   // Tabs & Views
   const [activeTab, setActiveTab] = useState<"community" | "personal">("community");
-  
+
   // Compose & Edit state
   const [newPost, setNewPost] = useState("");
   const [writing, setWriting] = useState(false);
@@ -75,8 +75,8 @@ export default function ExplorePage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [showMenuId, setShowMenuId] = useState<string | null>(null);
-  const [resetKey, setResetKey] = useState(0); 
-  
+  const [resetKey, setResetKey] = useState(0);
+
   // Image & Emoji state
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -92,7 +92,7 @@ export default function ExplorePage() {
   const [editEditor, setEditEditor] = useState<Editor | null>(null);
 
   useEffect(() => { const unsub = initAuth(); return unsub; }, [initAuth]);
-  
+
   const uploadToCloudinary = async (file: File): Promise<string> => {
     const token = await user?.getIdToken();
     if (!token) throw new Error("User is not authenticated");
@@ -119,9 +119,9 @@ export default function ExplorePage() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || !e.target.files[0] || !user) return;
-    
+
     const file = e.target.files[0];
-    
+
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       alert("Image is too large. Please choose an image under 5MB.");
@@ -258,7 +258,7 @@ export default function ExplorePage() {
     if (!hasText && !hasImages) return;
     if (!user) return;
     setIsPosting(true);
-    
+
     const optimisticEntry: ExploreEntry = {
       id: `temp-${Date.now()}`,
       userId: user.uid,
@@ -276,8 +276,8 @@ export default function ExplorePage() {
 
     setEntries(prev => [optimisticEntry, ...prev]);
     setUserEntries(prev => [optimisticEntry, ...prev]);
-    
-    const savedPost = newPost; 
+
+    const savedPost = newPost;
     const savedImages = [...uploadedImages];
     setNewPost("");
     setUploadedImages([]);
@@ -290,15 +290,15 @@ export default function ExplorePage() {
       const res = await fetch(`${API}/entries`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ 
-          body: savedPost, 
-          isPublic: true, 
+        body: JSON.stringify({
+          body: savedPost,
+          isPublic: true,
           templateId: null,
           images: savedImages,
           timezoneOffset: new Date().getTimezoneOffset(),
         })
       });
-      
+
       if (res.ok) {
         const realEntry: ExploreEntry = await res.json();
         const replaceOptimistic = (prev: ExploreEntry[]) =>
@@ -340,7 +340,7 @@ export default function ExplorePage() {
       if (res.ok) {
         const data = await res.json();
         const updateEntry = (prev: ExploreEntry[]) => prev.map(e =>
-          e.id === id 
+          e.id === id
             ? { ...e, body: editBody, images: [...(e.images || []), ...(data.images?.filter((ni: any) => !(e.images || []).some((ei) => ei.id === ni.id)) || [])] }
             : e
         );
@@ -413,23 +413,23 @@ export default function ExplorePage() {
 
   const handleShare = useCallback((entryId: string) => {
     const entry = [...entries, ...userEntries].find(e => e.id === entryId);
-    const plainText = entry ? entry.body.replace(/<[^>]+>/g, '').substring(0, 100) + '...' : 'Check out this reflection on DailyDiary!';
+    const plainText = entry ? entry.body.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().substring(0, 100) + '...' : 'Check out this reflection on DailyDiary!';
     const author = entry?.user?.name || 'Someone';
     const url = `${window.location.origin}/explore/${entryId}`;
-    
+
     if (navigator.share) {
-      navigator.share({ 
-        title: `${author}'s Reflection - DailyDiary`, 
-        text: plainText, 
-        url 
-      }).catch(() => {});
-    } else { 
-      navigator.clipboard.writeText(url); 
-      alert("Link copied to clipboard!"); 
+      navigator.share({
+        title: `${author}'s Reflection - DailyDiary`,
+        text: plainText,
+        url
+      }).catch(() => { });
+    } else {
+      navigator.clipboard.writeText(url);
+      alert("Link copied to clipboard!");
     }
   }, [entries, userEntries]);
 
-    const handleToggleMenu = useCallback((id: string | null) => {
+  const handleToggleMenu = useCallback((id: string | null) => {
     setShowMenuId(id);
   }, []);
 
@@ -444,7 +444,7 @@ export default function ExplorePage() {
 
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Use refs to avoid stale closures in IntersectionObserver callback
   const loadingMoreRef = useRef(loadingMore);
   const hasMoreRef = useRef(hasMore);
@@ -474,7 +474,7 @@ export default function ExplorePage() {
   }, [loading, hasMore, activeTab]);
 
   if (!initialized || !user) return <div className={styles.loadingPage}><div className={styles.loadingSpin} /><p>Verifying session...</p></div>;
-  
+
   const currentLoading = activeTab === "community" ? (loading && entries.length === 0) : (loadingUser && userEntries.length === 0);
   const filteredEntries = activeTab === "community" ? entries : userEntries;
 
@@ -486,13 +486,13 @@ export default function ExplorePage() {
             {/* ... Tab Switcher ... */}
             <div className={styles.tabStickyHeader}>
               <div className={styles.tabContainer}>
-                <button 
+                <button
                   className={`${styles.tabBtn} ${activeTab === "community" ? styles.activeTab : ""}`}
                   onClick={() => setActiveTab("community")}
                 >
                   <Globe size={18} /> Community Feed
                 </button>
-                <button 
+                <button
                   className={`${styles.tabBtn} ${activeTab === "personal" ? styles.activeTab : ""}`}
                   onClick={() => setActiveTab("personal")}
                 >
@@ -515,14 +515,14 @@ export default function ExplorePage() {
                         <EditorToolbar editor={activeEditor} />
                       </div>
                     )}
-                    <RichTextEditor 
+                    <RichTextEditor
                       key={resetKey}
-                      value={newPost} 
-                      onChange={setNewPost} 
-                      placeholder="What's on your mind? Share a public reflection..." 
+                      value={newPost}
+                      onChange={setNewPost}
+                      placeholder="What's on your mind? Share a public reflection..."
                       onFocus={(editor) => setActiveEditor(editor)}
                     />
-                    
+
                     {uploadedImages.length > 0 && (
                       <div className={styles.composePreviews}>
                         {uploadedImages.map((url, i) => (
@@ -537,31 +537,31 @@ export default function ExplorePage() {
 
                   <div className={styles.composeActions}>
                     <div className={styles.composeTools}>
-                      <input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        style={{ display: 'none' }} 
-                        accept="image/*" 
-                        onChange={handleImageUpload} 
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        style={{ display: 'none' }}
+                        accept="image/*"
+                        onChange={handleImageUpload}
                       />
-                      <button 
-                        className={styles.toolBtn} 
-                        title="Add Image" 
+                      <button
+                        className={styles.toolBtn}
+                        title="Add Image"
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isUploading}
                       >
                         {isUploading ? <div className={styles.loadingSpinSmall} /> : <ImageIcon size={20} />}
                       </button>
-                      
+
                       <div style={{ position: 'relative' }}>
-                        <button 
-                          className={styles.toolBtn} 
-                          title="Add Mood" 
+                        <button
+                          className={styles.toolBtn}
+                          title="Add Mood"
                           onClick={() => setShowEmojiPicker(!showEmojiPicker)}
                         >
                           <Smile size={20} />
                         </button>
-                        
+
                         {showEmojiPicker && (
                           <div className={styles.emojiPicker}>
                             {[
@@ -585,12 +585,12 @@ export default function ExplorePage() {
                         )}
                       </div>
                     </div>
-                    
+
                     <div className="flex-1" />
 
-                    <button 
-                      className={styles.postBtn} 
-                      disabled={isPosting || (!newPost.trim() && uploadedImages.length === 0) || newPost === "<p></p>"} 
+                    <button
+                      className={styles.postBtn}
+                      disabled={isPosting || (!newPost.trim() && uploadedImages.length === 0) || newPost === "<p></p>"}
                       onClick={handlePost}
                     >
                       {isPosting ? "Posting..." : <><Send size={18} /> Post Publicly</>}
@@ -628,14 +628,14 @@ export default function ExplorePage() {
                   const isEditing = editingId === entry.id;
 
                   return (
-                    <div 
-                      key={entry.id} 
-                      className={`${styles.feedItem} ${ (showMenuId === entry.id || editingId === entry.id) ? styles.activeItem : "" }`} 
+                    <div
+                      key={entry.id}
+                      className={`${styles.feedItem} ${(showMenuId === entry.id || editingId === entry.id) ? styles.activeItem : ""}`}
                       style={{ animationDelay: `${(index % 10) * 0.1}s` }}
                     >
 
-                      
-                                            <FeedCard
+
+                      <FeedCard
                         entry={entry}
                         user={user}
                         activeTab={activeTab}
@@ -665,7 +665,7 @@ export default function ExplorePage() {
                     </div>
                   );
                 })}
-                
+
                 {/* Infinite Scroll Trigger */}
                 {activeTab === "community" && hasMore && (
                   <div ref={loadMoreRef} className={styles.loadMoreTrigger}>
@@ -692,7 +692,7 @@ export default function ExplorePage() {
                 <li>Do not post spam, hate speech, or explicit images.</li>
               </ul>
             </div>
-            
+
             <div className={`glass-card ${styles.sidebarCard}`} style={{ padding: '24px' }}>
               <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--primary)', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 ✨ About Community Feed
