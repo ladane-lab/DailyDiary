@@ -273,7 +273,7 @@ export default function ExplorePage() {
         body: JSON.stringify({ 
           body: savedPost, 
           isPublic: true, 
-          templateId: "personal",
+          templateId: null,
           images: savedImages,
           timezoneOffset: new Date().getTimezoneOffset(),
         })
